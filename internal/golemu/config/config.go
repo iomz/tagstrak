@@ -33,7 +33,7 @@ var (
 	// Server mode
 	Server  = App.Command("server", "Run as an LLRP tag stream server.")
 	APIPort = Server.Flag("apiPort", "The port for the API endpoint.").Default("3000").Int()
-	File    = Server.Flag("file", "The file containing Tag data.").Short('f').Default("tags.gob").String()
+	File    = Server.Flag("file", "Versioned JSON inventory file.").Short('f').Default("tags.json").String()
 
 	// Simulator mode
 	Simulator     = App.Command("simulator", "Run in the simulator mode.")

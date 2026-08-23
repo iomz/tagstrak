@@ -9,8 +9,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/iomz/tagstrak/v2/internal/binutil"
-	"github.com/iomz/tagstrak/v2/llrp"
+	"github.com/iomz/tagstrak/v2/internal/inventory"
 )
 
 func TestNewSimulator(t *testing.T) {
@@ -58,19 +57,15 @@ func TestSimulatorNextMessageID(t *testing.T) {
 func TestSimulator_loadSimulationFiles(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	// Create test .gob files
-	file1 := filepath.Join(tmpDir, "cycle1.gob")
-	file2 := filepath.Join(tmpDir, "cycle2.gob")
-	file3 := filepath.Join(tmpDir, "notagob.txt") // Should be ignored
+	file1 := filepath.Join(tmpDir, "cycle1.json")
+	file2 := filepath.Join(tmpDir, "cycle2.json")
+	file3 := filepath.Join(tmpDir, "notinventory.txt")
 
-	tags1 := llrp.Tags{}
-	err := binutil.Save(file1, tags1)
+	err := inventory.SaveFile(file1, nil, inventory.DefaultLimits())
 	if err != nil {
 		t.Fatalf("failed to create test file: %v", err)
 	}
-
-	tags2 := llrp.Tags{}
-	err = binutil.Save(file2, tags2)
+	err = inventory.SaveFile(file2, nil, inventory.DefaultLimits())
 	if err != nil {
 		t.Fatalf("failed to create test file: %v", err)
 	}
@@ -88,21 +83,21 @@ func TestSimulator_loadSimulationFiles(t *testing.T) {
 	}
 
 	if len(files) != 2 {
-		t.Errorf("expected 2 .gob files, got %d", len(files))
+		t.Errorf("expected 2 .json files, got %d", len(files))
 	}
 
 	// Verify files are sorted/ordered correctly
 	found1 := false
 	found2 := false
 	for _, f := range files {
-		if filepath.Base(f) == "cycle1.gob" {
+		if filepath.Base(f) == "cycle1.json" {
 			found1 = true
 		}
-		if filepath.Base(f) == "cycle2.gob" {
+		if filepath.Base(f) == "cycle2.json" {
 			found2 = true
 		}
-		if filepath.Base(f) == "notagob.txt" {
-			t.Error("should not include non-.gob files")
+		if filepath.Base(f) == "notinventory.txt" {
+			t.Error("should not include non-.json files")
 		}
 	}
 	if !found1 || !found2 {
@@ -117,7 +112,7 @@ func TestSimulator_loadSimulationFiles_NoFiles(t *testing.T) {
 
 	_, err := sim.loadSimulationFiles()
 	if err == nil {
-		t.Error("expected error when no .gob files found")
+		t.Error("expected error when no .json files found")
 	}
 }
 
@@ -131,31 +126,28 @@ func TestSimulator_loadSimulationFiles_InvalidDir(t *testing.T) {
 }
 
 func TestSimulator_loadTagsForNextEventCycle(t *testing.T) {
-	t.Skip("Skipping due to binutil.Load issues with gob encoding - this is a library issue, not a code issue")
 	tmpDir := t.TempDir()
 
-	tag1, err := llrp.NewTag(&llrp.TagRecord{PCBits: "3000", EPC: "001100000111001000100111011000100111111100101110101001001000000000000000000000000001110001101010"})
+	tag1, err := inventory.ParseTag("3000")
 	if err != nil {
 		t.Fatalf("failed to create tag1: %v", err)
 	}
 
 	// Create test files
-	file1 := filepath.Join(tmpDir, "cycle1.gob")
-	file2 := filepath.Join(tmpDir, "cycle2.gob")
+	file1 := filepath.Join(tmpDir, "cycle1.json")
+	file2 := filepath.Join(tmpDir, "cycle2.json")
 
-	tags1 := llrp.Tags{tag1}
-	err = binutil.Save(file1, tags1)
+	err = inventory.SaveFile(file1, []inventory.Tag{tag1}, inventory.DefaultLimits())
 	if err != nil {
 		t.Fatalf("failed to create test file: %v", err)
 	}
 
 	// Create a second tag for the second cycle
-	tag2, err := llrp.NewTag(&llrp.TagRecord{PCBits: "3000", EPC: "001100000111001000100111011000100111111100101110101001001000000000000000000000000001110001101011"})
+	tag2, err := inventory.ParseTag("3002")
 	if err != nil {
 		t.Fatalf("failed to create tag2: %v", err)
 	}
-	tags2 := llrp.Tags{tag2}
-	err = binutil.Save(file2, tags2)
+	err = inventory.SaveFile(file2, []inventory.Tag{tag2}, inventory.DefaultLimits())
 	if err != nil {
 		t.Fatalf("failed to create test file: %v", err)
 	}
@@ -181,25 +173,19 @@ func TestSimulator_loadTagsForNextEventCycle(t *testing.T) {
 	simulationFiles := []string{file1, file2}
 	eventCycle := 0
 
-	// Load first cycle - test the wrap-around logic
 	tags, err := sim.loadTagsForNextEventCycle(simulationFiles, &eventCycle)
 	if err != nil {
-		// If loading fails due to gob issues, that's a binutil issue, not our code
-		// Just verify the eventCycle logic works
-		t.Logf("loadTagsForNextEventCycle failed (may be binutil issue): %v", err)
-		if eventCycle != 1 {
-			t.Errorf("expected eventCycle to be 1 after failed load, got %d", eventCycle)
-		}
-		return
+		t.Fatal(err)
 	}
 	if len(tags) != 1 {
 		t.Errorf("expected 1 tag in cycle 0, got %d", len(tags))
 	}
-	if eventCycle != 1 {
-		t.Errorf("expected eventCycle to be 1, got %d", eventCycle)
+	if eventCycle != 0 {
+		t.Errorf("expected loader not to advance eventCycle, got %d", eventCycle)
 	}
 
 	// Load second cycle
+	eventCycle = 1
 	tags, err = sim.loadTagsForNextEventCycle(simulationFiles, &eventCycle)
 	if err != nil {
 		t.Fatalf("loadTagsForNextEventCycle failed: %v", err)
@@ -207,11 +193,12 @@ func TestSimulator_loadTagsForNextEventCycle(t *testing.T) {
 	if len(tags) != 1 {
 		t.Errorf("expected 1 tag in cycle 1, got %d", len(tags))
 	}
-	if eventCycle != 2 {
-		t.Errorf("expected eventCycle to be 2, got %d", eventCycle)
+	if eventCycle != 1 {
+		t.Errorf("expected loader not to advance eventCycle, got %d", eventCycle)
 	}
 
 	// Should wrap around
+	eventCycle = 2
 	tags, err = sim.loadTagsForNextEventCycle(simulationFiles, &eventCycle)
 	if err != nil {
 		t.Fatalf("loadTagsForNextEventCycle failed: %v", err)
@@ -227,8 +214,8 @@ func TestSimulator_loadTagsForNextEventCycle(t *testing.T) {
 func TestSimulator_loadTagsForNextEventCycle_InvalidFile(t *testing.T) {
 	tmpDir := t.TempDir()
 
-	file1 := filepath.Join(tmpDir, "cycle1.gob")
-	err := os.WriteFile(file1, []byte("invalid gob data"), 0644)
+	file1 := filepath.Join(tmpDir, "cycle1.json")
+	err := os.WriteFile(file1, []byte("invalid inventory data"), 0644)
 	if err != nil {
 		t.Fatalf("failed to create test file: %v", err)
 	}
