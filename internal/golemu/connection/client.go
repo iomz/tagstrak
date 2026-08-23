@@ -118,7 +118,11 @@ func (c *Client) handleMessage(conn net.Conn, header uint16, messageID uint32, m
 			"Message ID": messageID,
 		}).Info(">>> SET_READER_CONFIG_RESPONSE")
 	case llrp.ROAccessReportHeader:
-		res := llrp.UnmarshalROAccessReportBody(messageValue)
+		res, err := llrp.DecodeReadEvents(messageValue, llrp.DefaultLimits())
+		if err != nil {
+			log.Errorf("invalid RO_ACCESS_REPORT: %v", err)
+			return
+		}
 		log.WithFields(log.Fields{
 			"Message ID": messageID,
 			"#Events":    len(res),
