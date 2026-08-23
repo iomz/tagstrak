@@ -79,19 +79,8 @@ func TestClient_handleMessage_ROAccessReport(t *testing.T) {
 	conn := &mockConn{writer: &writeBuf}
 
 	messageID := uint32(1001)
-	// Create a minimal valid RO_ACCESS_REPORT message body
-	// RO_ACCESS_REPORT body: TagReportDataCount (2 bytes) = 0, no TagReportData entries
-	// Minimum valid body is at least 2 bytes for the count
-	messageValue := []byte{0x00, 0x00} // TagReportDataCount = 0
-
-	// Call handleMessage - it may panic on invalid data, but that's acceptable for this test
-	// We're just testing that the function handles RO_ACCESS_REPORT header correctly
-	defer func() {
-		if r := recover(); r != nil {
-			// Panic is acceptable if message body is invalid - that's a data issue, not a code issue
-			t.Logf("handleMessage panicked (expected for invalid message body): %v", r)
-		}
-	}()
+	// One decodable TagReportData parameter with a 96-bit EPC.
+	messageValue := llrp.NewTagReportDataParam(&llrp.Tag{EPC: make([]byte, 12)})
 
 	client.handleMessage(conn, llrp.Message{Header: llrp.Header{Type: llrp.ROAccessReportHeader, ID: messageID}, Payload: messageValue})
 
