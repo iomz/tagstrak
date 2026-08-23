@@ -6,15 +6,16 @@ package connection
 
 import (
 	"encoding/binary"
-	"fmt"
 	"io"
 	"net"
+
+	"github.com/iomz/tagstrak/v2/llrp"
 )
 
 const (
 	// LLRPHeaderSize is the size of the LLRP message header in bytes.
 	// The header consists of: 2 bytes (message type) + 4 bytes (message length) + 4 bytes (message ID).
-	LLRPHeaderSize = 10
+	LLRPHeaderSize = llrp.MessageHeaderSize
 )
 
 // LLRPHeader represents the header portion of an LLRP message.
@@ -58,27 +59,13 @@ func ReadLLRPHeader(conn net.Conn) (*LLRPHeader, error) {
 // Returns the parsed header, message body bytes, and an error if the message cannot be read
 // or if the message length is invalid.
 func ReadLLRPMessage(conn net.Conn) (*LLRPHeader, []byte, error) {
-	hdr, err := ReadLLRPHeader(conn)
+	message, err := llrp.ReadMessage(conn, llrp.DefaultLimits())
 	if err != nil {
 		return nil, nil, err
 	}
-
-	// guard against malicious or malformed LLRP packets
-	if hdr.Length < LLRPHeaderSize {
-		return nil, nil, fmt.Errorf("invalid LLRP message length: %d (must be at least %d)", hdr.Length, LLRPHeaderSize)
-	}
-
-	var messageValue []byte
-	messageSize := int64(hdr.Length) - int64(LLRPHeaderSize)
-	if messageSize > int64(int(^uint(0)>>1)) {
-		return nil, nil, fmt.Errorf("invalid LLRP body length: %d exceeds host capacity", hdr.Length)
-	}
-	if messageSize > 0 {
-		messageValue = make([]byte, int(messageSize))
-		if _, err = io.ReadFull(conn, messageValue); err != nil {
-			return nil, nil, err
-		}
-	}
-
-	return hdr, messageValue, nil
+	return &LLRPHeader{
+		Header:    message.Header.Type,
+		Length:    message.Header.Length,
+		MessageID: message.Header.ID,
+	}, message.Payload, nil
 }
