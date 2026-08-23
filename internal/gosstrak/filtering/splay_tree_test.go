@@ -6,14 +6,11 @@
 package filtering
 
 import (
-	"bytes"
-	"encoding/binary"
 	"fmt"
 	"math/rand"
 	"testing"
 	"time"
 
-	"github.com/iomz/tagstrak/v2/internal/binutil"
 	"github.com/iomz/tagstrak/v2/llrp"
 )
 
@@ -112,21 +109,13 @@ func benchmarkFilterSplayNTagsNSubs(nTags int, nSubs int, b *testing.B) {
 	splayEngine := NewSplayTree(sub)
 
 	// prepare the workload
-	largeTagsGOB := fmt.Sprintf("../test/data/bench-%vsubs-tags.gob", nSubs)
-	var largeTags llrp.Tags
-	binutil.Load(largeTagsGOB, &largeTags)
+	largeTags := benchmarkReadEvents(nTags)
 
 	var res []*llrp.ReadEvent
 	perms := rand.Perm(len(largeTags))
 	for count, i := range perms {
 		if count < nTags {
-			t := largeTags[i]
-			buf := new(bytes.Buffer)
-			err := binary.Write(buf, binary.BigEndian, t.PCBits)
-			if err != nil {
-				b.Fatal(err)
-			}
-			res = append(res, &llrp.ReadEvent{PC: buf.Bytes(), ID: t.EPC})
+			res = append(res, largeTags[i])
 		} else {
 			break
 		}

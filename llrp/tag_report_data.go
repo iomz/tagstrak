@@ -12,14 +12,11 @@ type TagReportData struct {
 	TagCount uint
 }
 
-// BuildTagReportDataParameter takes one Tag struct and build TagReportData parameter payload in []byte
-// FIXME: Take SetReaderConfig or ROSpec configuration parameters
-func NewTagReportDataParam(tag *Tag) []byte {
-	// EPCData
-	// Calculate the right length fro, epc and pcbits
-	epcLengthBits := len(tag.EPC) * 8 // # bytes * 8 = # bits
-	length := 4 + 2 + len(tag.EPC)    // header + epcLengthBits + epc
-	epcd := EPCData(uint16(length), uint16(epcLengthBits), tag.EPC)
+// NewTagReportDataParam encodes one LLRP TagReportData parameter from wire values.
+func NewTagReportDataParam(epc []byte, pcBits uint16) []byte {
+	epcLengthBits := len(epc) * 8
+	length := 4 + 2 + len(epc)
+	epcd := EPCData(uint16(length), uint16(epcLengthBits), epc)
 
 	// ChannlenIndex
 	//chIndex := ChannelIndex()
@@ -31,7 +28,7 @@ func NewTagReportDataParam(tag *Tag) []byte {
 	//tagSeenCount := TagSeenCount()
 
 	// AirProtocolTagData
-	aptd := C1G2PC(tag.PCBits)
+	aptd := C1G2PC(pcBits)
 
 	//tagReportDataLength := 4 + len(epcd) + len(chIndex) + len(timestamp) + len(tagSeenCount) // Rsvd+Type+length->32bits=4bytes
 	tagReportDataLength := len(epcd) + len(aptd) + 4 // Rsvd+Type+length->32bits=4bytes

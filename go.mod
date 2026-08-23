@@ -4,7 +4,6 @@ go 1.23.2
 
 require (
 	github.com/alecthomas/kingpin/v2 v2.4.0
-	github.com/fatih/structs v1.1.0
 	github.com/gin-gonic/gin v1.3.0
 	github.com/influxdata/influxdb1-client v0.0.0-20220302092344-a9ab5670611c
 	github.com/looplab/fsm v1.0.2

@@ -103,3 +103,17 @@ func TestServiceConcurrentUpsertsPersistDeterministically(t *testing.T) {
 		t.Fatalf("persisted count = %d", len(loaded))
 	}
 }
+
+func TestLoadCSV(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "tags.csv")
+	if err := os.WriteFile(path, []byte("3000,0011000000000000\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	tags, err := LoadCSV(path, DefaultLimits())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(tags) != 1 || tags[0].Hex() != "3000" {
+		t.Fatalf("tags = %#v", tags)
+	}
+}
