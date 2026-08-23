@@ -74,11 +74,21 @@ func TestUnmarshalROAccessReportBody(t *testing.T) {
 	var res []*ReadEvent
 	for i, trd := range trds {
 		roar := NewROAccessReport(trd.Data, uint32(i))
-		res = append(res, UnmarshalROAccessReportBody(roar.data[10:])...)
+		events, err := UnmarshalROAccessReportBody(roar.data[10:])
+		if err != nil {
+			t.Fatal(err)
+		}
+		res = append(res, events...)
 	}
 
 	if len(res) != size {
 		t.Errorf("UnmarshalROAccessReport() = %v", res)
+	}
+}
+
+func TestUnmarshalROAccessReportBodyPreservesDecodeError(t *testing.T) {
+	if _, err := UnmarshalROAccessReportBody([]byte{0x00}); err == nil {
+		t.Fatal("expected malformed report error")
 	}
 }
 
@@ -126,7 +136,11 @@ func BenchmarkUnmarshalLargeROAR(b *testing.B) {
 			b.StopTimer()
 			roar := NewROAccessReport(trd.Data, uint32(i))
 			b.StartTimer()
-			res = append(res, UnmarshalROAccessReportBody(roar.data[10:])...)
+			events, err := UnmarshalROAccessReportBody(roar.data[10:])
+			if err != nil {
+				b.Fatal(err)
+			}
+			res = append(res, events...)
 		}
 	}
 
@@ -172,7 +186,10 @@ func benchmarkUnmarshalNTags(nTags int, b *testing.B) {
 			b.StopTimer()
 			roar := NewROAccessReport(trd.Data, uint32(i))
 			b.StartTimer()
-			res := UnmarshalROAccessReportBody(roar.data[10:])
+			res, err := UnmarshalROAccessReportBody(roar.data[10:])
+			if err != nil {
+				b.Fatal(err)
+			}
 			count += len(res)
 		}
 		if count != nTags {
