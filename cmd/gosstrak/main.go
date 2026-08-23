@@ -16,9 +16,9 @@ import (
 	"time"
 
 	"github.com/alecthomas/kingpin/v2"
-	"github.com/iomz/tagstrak/internal/gosstrak/filtering"
-	"github.com/iomz/tagstrak/internal/gosstrak/monitoring"
-	"github.com/iomz/tagstrak/llrp"
+	"github.com/iomz/tagstrak/v2/internal/gosstrak/filtering"
+	"github.com/iomz/tagstrak/v2/internal/gosstrak/monitoring"
+	"github.com/iomz/tagstrak/v2/llrp"
 	"github.com/moby/spdystream"
 )
 

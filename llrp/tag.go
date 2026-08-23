@@ -10,7 +10,7 @@ import (
 	"encoding/gob"
 	"strconv"
 
-	"github.com/iomz/tagstrak/internal/binutil"
+	"github.com/iomz/tagstrak/v2/internal/binutil"
 )
 
 // Tag holds a single virtual tag content

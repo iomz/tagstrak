@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/iomz/tagstrak/internal/binutil"
+	"github.com/iomz/tagstrak/v2/internal/binutil"
 	"io"
 	"os"
 	"strconv"

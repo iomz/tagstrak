@@ -11,7 +11,7 @@ import (
 	"math"
 	"strconv"
 
-	"github.com/iomz/tagstrak/internal/binutil"
+	"github.com/iomz/tagstrak/v2/internal/binutil"
 )
 
 // PartitionTableKey is used for PartitionTables

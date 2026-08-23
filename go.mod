@@ -1,4 +1,4 @@
-module github.com/iomz/tagstrak
+module github.com/iomz/tagstrak/v2
 
 go 1.23.2
 

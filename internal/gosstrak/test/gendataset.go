@@ -12,8 +12,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/iomz/tagstrak/internal/binutil"
-	"github.com/iomz/tagstrak/internal/gosstrak/scheme"
+	"github.com/iomz/tagstrak/v2/internal/binutil"
+	"github.com/iomz/tagstrak/v2/internal/gosstrak/scheme"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
 

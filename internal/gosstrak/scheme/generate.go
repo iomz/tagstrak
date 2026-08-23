@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/iomz/tagstrak/internal/binutil"
+	"github.com/iomz/tagstrak/v2/internal/binutil"
 )
 
 // CheckIfStringInSlice checks if string exists in a string slice

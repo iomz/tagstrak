@@ -9,7 +9,7 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/iomz/tagstrak/llrp"
+	"github.com/iomz/tagstrak/v2/llrp"
 )
 
 // ManagerService provides thread-safe tag management operations including adding,

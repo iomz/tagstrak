@@ -10,7 +10,7 @@ import (
 	"sync/atomic"
 	"time"
 
-	"github.com/iomz/tagstrak/llrp"
+	"github.com/iomz/tagstrak/v2/llrp"
 	log "github.com/sirupsen/logrus"
 )
 

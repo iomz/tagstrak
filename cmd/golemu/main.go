@@ -8,9 +8,9 @@ import (
 	"os"
 
 	"github.com/gin-gonic/gin"
-	"github.com/iomz/tagstrak/internal/golemu/config"
-	"github.com/iomz/tagstrak/internal/golemu/connection"
-	"github.com/iomz/tagstrak/internal/golemu/server"
+	"github.com/iomz/tagstrak/v2/internal/golemu/config"
+	"github.com/iomz/tagstrak/v2/internal/golemu/connection"
+	"github.com/iomz/tagstrak/v2/internal/golemu/server"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/alecthomas/kingpin.v2"
 )

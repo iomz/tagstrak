@@ -13,8 +13,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/iomz/tagstrak/internal/binutil"
-	"github.com/iomz/tagstrak/llrp"
+	"github.com/iomz/tagstrak/v2/internal/binutil"
+	"github.com/iomz/tagstrak/v2/llrp"
 )
 
 /*

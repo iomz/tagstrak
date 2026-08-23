@@ -12,11 +12,11 @@ import (
 	"sync/atomic"
 	"syscall"
 
-	"github.com/iomz/tagstrak/internal/binutil"
-	"github.com/iomz/tagstrak/internal/golemu/api"
-	"github.com/iomz/tagstrak/internal/golemu/connection"
-	"github.com/iomz/tagstrak/internal/golemu/tag"
-	"github.com/iomz/tagstrak/llrp"
+	"github.com/iomz/tagstrak/v2/internal/binutil"
+	"github.com/iomz/tagstrak/v2/internal/golemu/api"
+	"github.com/iomz/tagstrak/v2/internal/golemu/connection"
+	"github.com/iomz/tagstrak/v2/internal/golemu/tag"
+	"github.com/iomz/tagstrak/v2/llrp"
 	log "github.com/sirupsen/logrus"
 )
 

@@ -14,9 +14,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/iomz/tagstrak/internal/binutil"
-	_ "github.com/iomz/tagstrak/internal/gosstrak/tdt"
-	"github.com/iomz/tagstrak/llrp"
+	"github.com/iomz/tagstrak/v2/internal/binutil"
+	_ "github.com/iomz/tagstrak/v2/internal/gosstrak/tdt"
+	"github.com/iomz/tagstrak/v2/llrp"
 )
 
 func TestList_MarshalBinary(t *testing.T) {
