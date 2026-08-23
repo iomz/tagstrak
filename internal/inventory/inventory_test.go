@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"sync"
 	"testing"
+	"time"
 )
 
 func mustTag(t *testing.T, hex string) Tag {
@@ -33,6 +34,21 @@ func TestNewTagValidatesAndCopiesEPC(t *testing.T) {
 	epc[0] = 0
 	if got := tag.Hex(); got != "3001" {
 		t.Fatalf("tag EPC = %s", got)
+	}
+}
+
+func TestNewObservationValidatesMetadata(t *testing.T) {
+	tag := mustTag(t, "3000")
+	if _, err := NewObservation(tag, time.Time{}, "reader-a"); !errors.Is(err, ErrInvalidObservation) {
+		t.Fatalf("zero observation time error = %v", err)
+	}
+	seenAt := time.Date(2026, 8, 23, 0, 0, 0, 0, time.FixedZone("JST", 9*60*60))
+	observation, err := NewObservation(tag, seenAt, "reader-a")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if observation.Tag().Hex() != "3000" || observation.SeenAt().Location() != time.UTC || observation.Source() != "reader-a" {
+		t.Fatalf("observation = %#v", observation)
 	}
 }
 
