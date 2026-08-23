@@ -117,3 +117,44 @@ func TestLoadCSV(t *testing.T) {
 		t.Fatalf("tags = %#v", tags)
 	}
 }
+
+func benchmarkTags(b *testing.B, count int) []Tag {
+	b.Helper()
+	tags := make([]Tag, count)
+	for i := range tags {
+		var err error
+		tags[i], err = NewTag([]byte{0x30, 0x00, byte(i >> 8), byte(i)})
+		if err != nil {
+			b.Fatal(err)
+		}
+	}
+	return tags
+}
+
+func BenchmarkStoreSnapshot100(b *testing.B) {
+	store := NewStore()
+	if err := store.Replace(benchmarkTags(b, 100)); err != nil {
+		b.Fatal(err)
+	}
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		_ = store.Snapshot()
+	}
+}
+
+func BenchmarkJSONRoundTrip1000(b *testing.B) {
+	path := filepath.Join(b.TempDir(), "inventory.json")
+	tags := benchmarkTags(b, 1000)
+	limits := DefaultLimits()
+	b.ReportAllocs()
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		if err := SaveFile(path, tags, limits); err != nil {
+			b.Fatal(err)
+		}
+		if _, err := LoadFile(path, limits); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
