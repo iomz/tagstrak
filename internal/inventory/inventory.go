@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"slices"
 	"sync"
+	"time"
 )
 
 const (
@@ -18,8 +19,9 @@ const (
 )
 
 var (
-	ErrInvalidEPCLength = errors.New("inventory: invalid EPC length")
-	ErrInvalidEPC       = errors.New("inventory: invalid EPC encoding")
+	ErrInvalidEPCLength   = errors.New("inventory: invalid EPC length")
+	ErrInvalidEPC         = errors.New("inventory: invalid EPC encoding")
+	ErrInvalidObservation = errors.New("inventory: invalid observation")
 )
 
 // Tag is immutable RFID tag identity. Its EPC bytes are never exposed directly.
@@ -57,6 +59,33 @@ func (t Tag) Hex() string {
 func (t Tag) key() string {
 	return t.epc
 }
+
+// Observation records an immutable sighting of one tag outside the LLRP wire model.
+type Observation struct {
+	tag    Tag
+	seenAt time.Time
+	source string
+}
+
+// NewObservation validates observation metadata and preserves tag identity by value.
+func NewObservation(tag Tag, seenAt time.Time, source string) (Observation, error) {
+	if _, err := NewTag(tag.EPC()); err != nil {
+		return Observation{}, err
+	}
+	if seenAt.IsZero() || len(source) > 256 {
+		return Observation{}, ErrInvalidObservation
+	}
+	return Observation{tag: tag, seenAt: seenAt.UTC(), source: source}, nil
+}
+
+// Tag returns observation identity.
+func (o Observation) Tag() Tag { return o.tag }
+
+// SeenAt returns normalized observation time.
+func (o Observation) SeenAt() time.Time { return o.seenAt }
+
+// Source returns caller-provided observation source.
+func (o Observation) Source() string { return o.source }
 
 // Store provides concurrent, deterministic inventory snapshots.
 type Store struct {
