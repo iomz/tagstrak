@@ -103,14 +103,14 @@ func (c *Client) handleMessage(conn net.Conn, header uint16, messageID uint32, m
 		log.WithFields(log.Fields{
 			"Message ID": messageID,
 		}).Info(">>> READER_EVENT_NOTIFICATION")
-		if _, err := conn.Write(llrp.SetReaderConfig(nextMessageID)); err != nil {
+		if err := llrp.WriteMessage(conn, llrp.SetReaderConfigMessage(nextMessageID), llrp.DefaultLimits()); err != nil {
 			log.Errorf("failed to write SetReaderConfig: %v", err)
 		}
 	case llrp.KeepaliveHeader:
 		log.WithFields(log.Fields{
 			"Message ID": messageID,
 		}).Info(">>> KEEP_ALIVE")
-		if _, err := conn.Write(llrp.KeepaliveAck(nextMessageID)); err != nil {
+		if err := llrp.WriteMessage(conn, llrp.KeepaliveAckMessage(nextMessageID), llrp.DefaultLimits()); err != nil {
 			log.Errorf("failed to write KeepaliveAck: %v", err)
 		}
 	case llrp.SetReaderConfigResponseHeader:

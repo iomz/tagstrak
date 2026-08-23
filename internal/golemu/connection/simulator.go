@@ -100,7 +100,7 @@ func (s *Simulator) Run() int {
 
 	// Send READER_EVENT_NOTIFICATION
 	currentTime := uint64(time.Now().UTC().UnixNano() / 1000)
-	if _, err := conn.Write(llrp.ReaderEventNotification(*s.currentMessageID, currentTime)); err != nil {
+	if err := llrp.WriteMessage(conn, llrp.ReaderEventNotificationMessage(*s.currentMessageID, currentTime), llrp.DefaultLimits()); err != nil {
 		log.Fatalf("error sending READER_EVENT_NOTIFICATION: %v", err)
 	}
 	log.Info("<<< READER_EVENT_NOTIFICATION")
@@ -134,7 +134,7 @@ func (s *Simulator) Run() int {
 			}
 
 			if result.hdr.Header == llrp.SetReaderConfigHeader {
-				if _, err := conn.Write(llrp.SetReaderConfigResponse(*s.currentMessageID)); err != nil {
+				if err := llrp.WriteMessage(conn, llrp.SetReaderConfigResponseMessage(*s.currentMessageID), llrp.DefaultLimits()); err != nil {
 					log.Fatalf("error writing SET_READER_CONFIG_RESPONSE: %v", err)
 				}
 				atomic.AddUint32(s.currentMessageID, 1)
@@ -207,8 +207,7 @@ func (s *Simulator) startSimulationLoop(conn net.Conn, simulationFiles []string,
 
 			log.Infof("<<< Simulated Event Cycle %v, %v tags, %v roars", *eventCycle-1, len(tags), len(trds))
 			for _, trd := range trds {
-				roar := llrp.NewROAccessReport(trd.Data, *s.currentMessageID)
-				if err := roar.Send(conn); err != nil {
+				if err := llrp.WriteMessage(conn, llrp.ROAccessReportMessage(trd.Data, *s.currentMessageID), llrp.DefaultLimits()); err != nil {
 					log.Errorf("error sending RO_ACCESS_REPORT: %v", err)
 					return
 				}

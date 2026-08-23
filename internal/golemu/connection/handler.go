@@ -74,7 +74,7 @@ func (h *Handler) HandleRequest(conn net.Conn, tags llrp.Tags) {
 		switch hdr.Header {
 		case llrp.SetReaderConfigHeader:
 			log.Info(">>> SET_READER_CONFIG")
-			if _, err := conn.Write(llrp.SetReaderConfigResponse(*h.currentMessageID)); err != nil {
+			if err := llrp.WriteMessage(conn, llrp.SetReaderConfigResponseMessage(*h.currentMessageID), llrp.DefaultLimits()); err != nil {
 				log.Warnf("error writing SET_READER_CONFIG_RESPONSE: %v", err)
 				return
 			}
@@ -114,8 +114,7 @@ func (h *Handler) startReportLoop(conn net.Conn, trds llrp.TagReportDataStack) {
 			"Total tags": trds.TotalTagCounts(),
 		}).Info("<<< RO_ACCESS_REPORT")
 		for _, trd := range trds {
-			roar := llrp.NewROAccessReport(trd.Data, *h.currentMessageID)
-			err := roar.Send(conn)
+			err := llrp.WriteMessage(conn, llrp.ROAccessReportMessage(trd.Data, *h.currentMessageID), llrp.DefaultLimits())
 			atomic.AddUint32(h.currentMessageID, 1)
 			if err != nil {
 				log.Warn(err)
@@ -135,8 +134,7 @@ func (h *Handler) startReportLoop(conn net.Conn, trds llrp.TagReportDataStack) {
 					"Total tags": trds.TotalTagCounts(),
 				}).Info("<<< RO_ACCESS_REPORT")
 				for _, trd := range trds {
-					roar := llrp.NewROAccessReport(trd.Data, *h.currentMessageID)
-					err := roar.Send(conn)
+					err := llrp.WriteMessage(conn, llrp.ROAccessReportMessage(trd.Data, *h.currentMessageID), llrp.DefaultLimits())
 					atomic.AddUint32(h.currentMessageID, 1)
 					if err != nil {
 						log.Warn(err)
@@ -146,7 +144,7 @@ func (h *Handler) startReportLoop(conn net.Conn, trds llrp.TagReportDataStack) {
 				}
 			case <-keepaliveTicker.C:
 				log.Info("<<< KEEP_ALIVE")
-				if _, err := conn.Write(llrp.Keepalive(*h.currentMessageID)); err != nil {
+				if err := llrp.WriteMessage(conn, llrp.KeepaliveMessage(*h.currentMessageID), llrp.DefaultLimits()); err != nil {
 					log.Warnf("error writing KEEP_ALIVE: %v", err)
 					h.isConnAlive.Store(false)
 				} else {
@@ -170,7 +168,7 @@ func (h *Handler) startReportLoop(conn net.Conn, trds llrp.TagReportDataStack) {
 // Returns an error if the message cannot be written to the connection.
 func (h *Handler) SendReaderEventNotification(conn net.Conn) error {
 	currentTime := uint64(time.Now().UTC().Nanosecond() / 1000)
-	if _, err := conn.Write(llrp.ReaderEventNotification(*h.currentMessageID, currentTime)); err != nil {
+	if err := llrp.WriteMessage(conn, llrp.ReaderEventNotificationMessage(*h.currentMessageID, currentTime), llrp.DefaultLimits()); err != nil {
 		return err
 	}
 	log.Info("<<< READER_EVENT_NOTIFICATION")
