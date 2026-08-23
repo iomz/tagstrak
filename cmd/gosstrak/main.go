@@ -288,10 +288,14 @@ func run() {
 		switch h {
 		case llrp.ReaderEventNotificationHeader:
 			log.Printf("[LLRP] %v >>> READER_EVENT_NOTIFICATION[%v]", conn.RemoteAddr(), mid)
-			conn.Write(llrp.SetReaderConfig(currentMessageID))
+			if err := llrp.WriteMessage(conn, llrp.SetReaderConfigMessage(currentMessageID), llrp.DefaultLimits()); err != nil {
+				log.Printf("failed to write SET_READER_CONFIG: %v", err)
+			}
 		case llrp.KeepaliveHeader:
 			log.Printf("[LLRP] %v >>> KEEP_ALIVE[%v]", conn.RemoteAddr(), mid)
-			conn.Write(llrp.KeepaliveAck(currentMessageID))
+			if err := llrp.WriteMessage(conn, llrp.KeepaliveAckMessage(currentMessageID), llrp.DefaultLimits()); err != nil {
+				log.Printf("failed to write KEEPALIVE_ACK: %v", err)
+			}
 		case llrp.SetReaderConfigResponseHeader:
 			log.Printf("[LLRP] %v >>> SET_READER_CONFIG_RESPONSE[%v]", conn.RemoteAddr(), mid)
 		case llrp.ROAccessReportHeader:
