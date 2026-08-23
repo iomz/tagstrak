@@ -7,13 +7,12 @@ import (
 )
 
 func TestDecodeReadEvents(t *testing.T) {
-	tag := &Tag{EPC: []byte{0x30, 0x2d, 0xb3, 0x19, 0xa0, 0, 0, 0x40, 0, 0, 0, 3}, PCBits: 0x3000}
-	body := NewTagReportDataParam(tag)
+	body := NewTagReportDataParam([]byte{0x30, 0x2d, 0xb3, 0x19, 0xa0, 0, 0, 0x40, 0, 0, 0, 3}, 0x3000)
 	events, err := DecodeReadEvents(body, DefaultLimits())
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(events) != 1 || !bytes.Equal(events[0].ID, tag.EPC) || !bytes.Equal(events[0].PC, []byte{0x30, 0}) {
+	if len(events) != 1 || !bytes.Equal(events[0].ID, []byte{0x30, 0x2d, 0xb3, 0x19, 0xa0, 0, 0, 0x40, 0, 0, 0, 3}) || !bytes.Equal(events[0].PC, []byte{0x30, 0}) {
 		t.Fatalf("events = %#v", events)
 	}
 }

@@ -6,12 +6,9 @@
 package tdt
 
 import (
-	"bytes"
-	"encoding/binary"
 	"math/rand"
 	"testing"
 
-	"github.com/iomz/tagstrak/v2/internal/binutil"
 	"github.com/iomz/tagstrak/v2/llrp"
 )
 
@@ -268,23 +265,14 @@ func Test_core_Translate(t *testing.T) {
 }
 
 func benchmarkTranslateNTags(nTags int, b *testing.B) {
-	largeTagsGOB := "../test/data/bench-100subs-tags.gob"
-	// load up the tags from the file
-	var largeTags llrp.Tags
-	binutil.Load(largeTagsGOB, &largeTags)
+	largeTags := benchmarkReadEvents(nTags)
 	tdtCore := NewCore()
 
 	var limitedTags []*llrp.ReadEvent
 	perms := rand.Perm(len(largeTags))
 	for count, i := range perms {
 		if count < nTags {
-			t := largeTags[i]
-			buf := new(bytes.Buffer)
-			err := binary.Write(buf, binary.BigEndian, t.PCBits)
-			if err != nil {
-				b.Fatal(err)
-			}
-			limitedTags = append(limitedTags, &llrp.ReadEvent{PC: buf.Bytes(), ID: t.EPC})
+			limitedTags = append(limitedTags, largeTags[i])
 		} else {
 			break
 		}

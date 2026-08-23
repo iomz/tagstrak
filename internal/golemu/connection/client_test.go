@@ -80,7 +80,7 @@ func TestClient_handleMessage_ROAccessReport(t *testing.T) {
 
 	messageID := uint32(1001)
 	// One decodable TagReportData parameter with a 96-bit EPC.
-	messageValue := llrp.NewTagReportDataParam(&llrp.Tag{EPC: make([]byte, 12)})
+	messageValue := llrp.NewTagReportDataParam(make([]byte, 12), 0x3000)
 
 	client.handleMessage(conn, llrp.Message{Header: llrp.Header{Type: llrp.ROAccessReportHeader, ID: messageID}, Payload: messageValue})
 
