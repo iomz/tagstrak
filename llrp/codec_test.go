@@ -79,6 +79,30 @@ func TestDecodeParametersPreservesTLVAndKnownTV(t *testing.T) {
 	}
 }
 
+func TestEncodeParametersRoundTrip(t *testing.T) {
+	want := []Parameter{
+		{Type: 240, Data: []byte{1, 2}},
+		{Type: 12, TV: true, Data: []byte{0x30, 0}},
+	}
+	encoded, err := EncodeParameters(want, DefaultLimits())
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := DecodeParameters(encoded, DefaultLimits())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != len(want) || got[0].Type != want[0].Type || got[1].Type != want[1].Type || !bytes.Equal(got[0].Data, want[0].Data) || !bytes.Equal(got[1].Data, want[1].Data) {
+		t.Fatalf("got %#v, want %#v", got, want)
+	}
+}
+
+func TestEncodeParametersRejectsUnknownTV(t *testing.T) {
+	if _, err := EncodeParameters([]Parameter{{Type: 1, TV: true, Data: []byte{0}}}, DefaultLimits()); !errors.Is(err, ErrUnsupportedParameter) {
+		t.Fatalf("error = %v, want ErrUnsupportedParameter", err)
+	}
+}
+
 func TestDecodeParametersRejectsUnsafeTVAndTruncation(t *testing.T) {
 	if _, err := DecodeParameters([]byte{0x80}, DefaultLimits()); !errors.Is(err, ErrUnsupportedParameter) {
 		t.Fatalf("unknown TV error = %v", err)
@@ -115,6 +139,24 @@ func BenchmarkDecodeMessage(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		if _, err := DecodeMessage(frame, DefaultLimits()); err != nil {
+			b.Fatal(err)
+		}
+	}
+}
+
+func BenchmarkDecodeParameters(b *testing.B) {
+	data, err := EncodeParameters([]Parameter{
+		{Type: 240, Data: bytes.Repeat([]byte{0xaa}, 256)},
+		{Type: 12, TV: true, Data: []byte{0x30, 0}},
+	}, DefaultLimits())
+	if err != nil {
+		b.Fatal(err)
+	}
+	b.ReportAllocs()
+	b.SetBytes(int64(len(data)))
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		if _, err := DecodeParameters(data, DefaultLimits()); err != nil {
 			b.Fatal(err)
 		}
 	}

@@ -176,6 +176,13 @@ func EncodeParameter(p Parameter) ([]byte, error) {
 		if p.Type > 0x7f {
 			return nil, fmt.Errorf("%w: TV type %d", ErrMalformedHeader, p.Type)
 		}
+		total, ok := tvParameterSize(p.Type)
+		if !ok {
+			return nil, fmt.Errorf("%w: type %d", ErrUnsupportedParameter, p.Type)
+		}
+		if total != 1+len(p.Data) {
+			return nil, fmt.Errorf("%w: TV type %d length %d", ErrLengthMismatch, p.Type, len(p.Data)+1)
+		}
 		return append([]byte{byte(0x80 | p.Type)}, p.Data...), nil
 	}
 	if p.Type > 0x03ff {
@@ -189,6 +196,26 @@ func EncodeParameter(p Parameter) ([]byte, error) {
 	binary.BigEndian.PutUint16(encoded[0:2], p.Type)
 	binary.BigEndian.PutUint16(encoded[2:4], uint16(length))
 	copy(encoded[4:], p.Data)
+	return encoded, nil
+}
+
+// EncodeParameters encodes a bounded sequence of parameters.
+func EncodeParameters(parameters []Parameter, limits Limits) ([]byte, error) {
+	limits = limits.normalized()
+	if len(parameters) > limits.MaxParameters {
+		return nil, ErrParameterLimit
+	}
+	encoded := make([]byte, 0)
+	for _, parameter := range parameters {
+		value, err := EncodeParameter(parameter)
+		if err != nil {
+			return nil, err
+		}
+		if len(value) > int(limits.MaxParameterSize) {
+			return nil, ErrParameterTooLarge
+		}
+		encoded = append(encoded, value...)
+	}
 	return encoded, nil
 }
 
