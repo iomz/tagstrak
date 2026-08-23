@@ -56,8 +56,7 @@ type ReadEvent struct {
 	PC []byte
 }
 
-// UnmarshalROAccessReportBody extract ReadEvent from the message value in the ROAccessReport
-func UnmarshalROAccessReportBody(roarBody []byte) []*ReadEvent {
-	res, _ := DecodeReadEvents(roarBody, DefaultLimits())
-	return res
+// UnmarshalROAccessReportBody extracts ReadEvent values from an RO_ACCESS_REPORT body.
+func UnmarshalROAccessReportBody(roarBody []byte) ([]*ReadEvent, error) {
+	return DecodeReadEvents(roarBody, DefaultLimits())
 }

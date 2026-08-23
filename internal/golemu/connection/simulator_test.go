@@ -45,6 +45,16 @@ func TestNewSimulator(t *testing.T) {
 	}
 }
 
+func TestSimulatorNextMessageID(t *testing.T) {
+	sim := NewSimulator("127.0.0.1", 5084, 1500, 10000, "/tmp/sim", 1000)
+	if got := sim.nextMessageID(); got != 1000 {
+		t.Fatalf("first message ID = %d, want 1000", got)
+	}
+	if got := sim.nextMessageID(); got != 1001 {
+		t.Fatalf("second message ID = %d, want 1001", got)
+	}
+}
+
 func TestSimulator_loadSimulationFiles(t *testing.T) {
 	tmpDir := t.TempDir()
 

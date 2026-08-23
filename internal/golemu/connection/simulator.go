@@ -37,6 +37,10 @@ type Simulator struct {
 	loopStarted      *atomic.Bool
 }
 
+func (s *Simulator) nextMessageID() uint32 {
+	return atomic.AddUint32(s.currentMessageID, 1) - 1
+}
+
 // NewSimulator creates a new simulator instance with the specified configuration.
 //
 // Parameters:
@@ -100,11 +104,10 @@ func (s *Simulator) Run() int {
 
 	// Send READER_EVENT_NOTIFICATION
 	currentTime := uint64(time.Now().UTC().UnixNano() / 1000)
-	if err := llrp.WriteMessage(conn, llrp.ReaderEventNotificationMessage(*s.currentMessageID, currentTime), llrp.DefaultLimits()); err != nil {
+	if err := llrp.WriteMessage(conn, llrp.ReaderEventNotificationMessage(s.nextMessageID(), currentTime), llrp.DefaultLimits()); err != nil {
 		log.Fatalf("error sending READER_EVENT_NOTIFICATION: %v", err)
 	}
 	log.Info("<<< READER_EVENT_NOTIFICATION")
-	atomic.AddUint32(s.currentMessageID, 1)
 
 	eventCycle := 0
 	roarTicker := time.NewTicker(time.Duration(s.reportInterval) * time.Millisecond)
@@ -134,10 +137,9 @@ func (s *Simulator) Run() int {
 			}
 
 			if result.message.Header.Type == llrp.SetReaderConfigHeader {
-				if err := llrp.WriteMessage(conn, llrp.SetReaderConfigResponseMessage(*s.currentMessageID), llrp.DefaultLimits()); err != nil {
+				if err := llrp.WriteMessage(conn, llrp.SetReaderConfigResponseMessage(s.nextMessageID()), llrp.DefaultLimits()); err != nil {
 					log.Fatalf("error writing SET_READER_CONFIG_RESPONSE: %v", err)
 				}
-				atomic.AddUint32(s.currentMessageID, 1)
 
 				if s.loopStarted.CompareAndSwap(false, true) {
 					simulationDone = s.startSimulationLoop(conn, simulationFiles, &eventCycle, roarTicker)
@@ -207,11 +209,10 @@ func (s *Simulator) startSimulationLoop(conn net.Conn, simulationFiles []string,
 
 			log.Infof("<<< Simulated Event Cycle %v, %v tags, %v roars", *eventCycle-1, len(tags), len(trds))
 			for _, trd := range trds {
-				if err := llrp.WriteMessage(conn, llrp.ROAccessReportMessage(trd.Data, *s.currentMessageID), llrp.DefaultLimits()); err != nil {
+				if err := llrp.WriteMessage(conn, llrp.ROAccessReportMessage(trd.Data, s.nextMessageID()), llrp.DefaultLimits()); err != nil {
 					log.Errorf("error sending RO_ACCESS_REPORT: %v", err)
 					return
 				}
-				atomic.AddUint32(s.currentMessageID, 1)
 			}
 		}
 	}()
