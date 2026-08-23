@@ -11,8 +11,8 @@ import (
 
 	"github.com/fatih/structs"
 	"github.com/gin-gonic/gin"
-	"github.com/iomz/tagstrak/internal/golemu/tag"
-	"github.com/iomz/tagstrak/llrp"
+	"github.com/iomz/tagstrak/v2/internal/golemu/tag"
+	"github.com/iomz/tagstrak/v2/llrp"
 	log "github.com/sirupsen/logrus"
 )
 

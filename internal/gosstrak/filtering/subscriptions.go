@@ -17,7 +17,7 @@ import (
 	//"strconv"
 	"strings"
 
-	"github.com/iomz/tagstrak/internal/gosstrak/tdt"
+	"github.com/iomz/tagstrak/v2/internal/gosstrak/tdt"
 )
 
 // ByteSubscriptions contains filter string as key and PartialSubscription as value

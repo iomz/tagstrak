@@ -11,8 +11,8 @@ import (
 	"math/rand"
 	"testing"
 
-	"github.com/iomz/tagstrak/internal/binutil"
-	"github.com/iomz/tagstrak/llrp"
+	"github.com/iomz/tagstrak/v2/internal/binutil"
+	"github.com/iomz/tagstrak/v2/llrp"
 )
 
 func Test_parse6BitEncodedByteSliceToString(t *testing.T) {

@@ -13,8 +13,8 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/iomz/tagstrak/internal/golemu/tag"
-	"github.com/iomz/tagstrak/llrp"
+	"github.com/iomz/tagstrak/v2/internal/golemu/tag"
+	"github.com/iomz/tagstrak/v2/llrp"
 )
 
 func setupRouter() *gin.Engine {

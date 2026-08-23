@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/iomz/tagstrak/internal/binutil"
+	"github.com/iomz/tagstrak/v2/internal/binutil"
 )
 
 func sixenc2bin(sixenc []rune) []rune {

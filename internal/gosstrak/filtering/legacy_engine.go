@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/iomz/tagstrak/internal/gosstrak/tdt"
-	"github.com/iomz/tagstrak/llrp"
+	"github.com/iomz/tagstrak/v2/internal/gosstrak/tdt"
+	"github.com/iomz/tagstrak/v2/llrp"
 )
 
 // LegacyEngine is a engine based-on text match

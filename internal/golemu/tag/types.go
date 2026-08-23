@@ -4,7 +4,7 @@
 
 package tag
 
-import "github.com/iomz/tagstrak/llrp"
+import "github.com/iomz/tagstrak/v2/llrp"
 
 // ManagementAction represents the type of operation to perform on tags.
 type ManagementAction int

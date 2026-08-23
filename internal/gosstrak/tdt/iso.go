@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/iomz/tagstrak/internal/binutil"
+	"github.com/iomz/tagstrak/v2/internal/binutil"
 )
 
 // getISO6346CD returns check digit for container serial number

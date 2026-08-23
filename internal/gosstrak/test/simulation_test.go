@@ -11,7 +11,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/iomz/tagstrak/internal/gosstrak/filtering"
+	"github.com/iomz/tagstrak/v2/internal/gosstrak/filtering"
 )
 
 func BenchmarkSimulatedEngineCreation(b *testing.B) {

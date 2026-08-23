@@ -8,7 +8,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/iomz/tagstrak/internal/golemu/tag"
+	"github.com/iomz/tagstrak/v2/internal/golemu/tag"
 )
 
 // Server provides an HTTP API server for tag management operations.

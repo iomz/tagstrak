@@ -10,7 +10,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/iomz/tagstrak/llrp"
+	"github.com/iomz/tagstrak/v2/llrp"
 )
 
 // Engine provides interface for the filtering engines
