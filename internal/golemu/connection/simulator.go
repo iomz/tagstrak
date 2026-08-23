@@ -114,13 +114,13 @@ func (s *Simulator) Run() int {
 	for {
 		// Use a channel to read messages asynchronously so we can select on done signal
 		type readResult struct {
-			hdr *LLRPHeader
-			err error
+			message llrp.Message
+			err     error
 		}
 		readCh := make(chan readResult, 1)
 		go func() {
-			hdr, _, err := ReadLLRPMessage(conn)
-			readCh <- readResult{hdr: hdr, err: err}
+			message, err := llrp.ReadMessage(conn, llrp.DefaultLimits())
+			readCh <- readResult{message: message, err: err}
 		}()
 
 		select {
@@ -133,7 +133,7 @@ func (s *Simulator) Run() int {
 				log.Fatalf("error reading LLRP message: %v", result.err)
 			}
 
-			if result.hdr.Header == llrp.SetReaderConfigHeader {
+			if result.message.Header.Type == llrp.SetReaderConfigHeader {
 				if err := llrp.WriteMessage(conn, llrp.SetReaderConfigResponseMessage(*s.currentMessageID), llrp.DefaultLimits()); err != nil {
 					log.Fatalf("error writing SET_READER_CONFIG_RESPONSE: %v", err)
 				}
@@ -145,7 +145,7 @@ func (s *Simulator) Run() int {
 					log.Warn("simulation loop already running; ignoring duplicate SET_READER_CONFIG")
 				}
 			} else {
-				log.Warnf(">>> header: %v", result.hdr.Header)
+				log.Warnf(">>> header: %v", result.message.Header.Type)
 			}
 		case <-simulationDone:
 			log.Info("simulation loop terminated, exiting read loop")

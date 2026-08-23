@@ -34,7 +34,7 @@ func TestClient_handleMessage_ReaderEventNotification(t *testing.T) {
 	conn := &mockConn{writer: &writeBuf}
 
 	messageID := uint32(1001)
-	client.handleMessage(conn, llrp.ReaderEventNotificationHeader, messageID, nil)
+	client.handleMessage(conn, llrp.Message{Header: llrp.Header{Type: llrp.ReaderEventNotificationHeader, ID: messageID}})
 
 	// Verify response was written
 	if writeBuf.Len() == 0 {
@@ -49,7 +49,7 @@ func TestClient_handleMessage_Keepalive(t *testing.T) {
 	conn := &mockConn{writer: &writeBuf}
 
 	messageID := uint32(1001)
-	client.handleMessage(conn, llrp.KeepaliveHeader, messageID, nil)
+	client.handleMessage(conn, llrp.Message{Header: llrp.Header{Type: llrp.KeepaliveHeader, ID: messageID}})
 
 	// Verify response was written
 	if writeBuf.Len() == 0 {
@@ -64,7 +64,7 @@ func TestClient_handleMessage_SetReaderConfigResponse(t *testing.T) {
 	conn := &mockConn{writer: &writeBuf}
 
 	messageID := uint32(1001)
-	client.handleMessage(conn, llrp.SetReaderConfigResponseHeader, messageID, nil)
+	client.handleMessage(conn, llrp.Message{Header: llrp.Header{Type: llrp.SetReaderConfigResponseHeader, ID: messageID}})
 
 	// Should not write anything for response messages
 	if writeBuf.Len() != 0 {
@@ -93,7 +93,7 @@ func TestClient_handleMessage_ROAccessReport(t *testing.T) {
 		}
 	}()
 
-	client.handleMessage(conn, llrp.ROAccessReportHeader, messageID, messageValue)
+	client.handleMessage(conn, llrp.Message{Header: llrp.Header{Type: llrp.ROAccessReportHeader, ID: messageID}, Payload: messageValue})
 
 	// Should not write anything for RO_ACCESS_REPORT
 	if writeBuf.Len() != 0 {
@@ -110,7 +110,7 @@ func TestClient_handleMessage_UnknownHeader(t *testing.T) {
 	messageID := uint32(1001)
 	unknownHeader := uint16(0xFFFF)
 
-	client.handleMessage(conn, unknownHeader, messageID, nil)
+	client.handleMessage(conn, llrp.Message{Header: llrp.Header{Type: unknownHeader, ID: messageID}})
 
 	// Should not write anything for unknown headers
 	if writeBuf.Len() != 0 {
@@ -131,12 +131,12 @@ func TestClient_Run_EOF(t *testing.T) {
 	var msgBuf bytes.Buffer
 	msgBuf.Write(msg)
 
-	hdr, _, err := ReadLLRPMessage(&mockConn{reader: &msgBuf})
+	message, err := llrp.ReadMessage(&mockConn{reader: &msgBuf}, llrp.DefaultLimits())
 	if err != nil {
-		t.Fatalf("ReadLLRPMessage failed: %v", err)
+		t.Fatalf("ReadMessage failed: %v", err)
 	}
 
-	client.handleMessage(conn, hdr.Header, hdr.MessageID, nil)
+	client.handleMessage(conn, message)
 	if writeBuf.Len() == 0 {
 		t.Error("expected response to be written")
 	}
@@ -151,12 +151,12 @@ func TestClient_Run_ReadError(t *testing.T) {
 	conn := &mockConn{reader: &buf}
 
 	// This would be called in Run() loop
-	hdr, _, err := ReadLLRPMessage(conn)
+	message, err := llrp.ReadMessage(conn, llrp.DefaultLimits())
 	if err == nil {
 		t.Error("expected error for incomplete message")
 	}
-	if hdr != nil {
-		t.Error("expected nil header on error")
+	if message.Header != (llrp.Header{}) {
+		t.Error("expected zero message on error")
 	}
 }
 

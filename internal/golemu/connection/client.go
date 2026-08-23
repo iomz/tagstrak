@@ -78,7 +78,7 @@ func (c *Client) RunWithContext(ctx context.Context) int {
 
 	// Process incoming messages
 	for {
-		hdr, msgBody, err := ReadLLRPMessage(conn)
+		message, err := llrp.ReadMessage(conn, llrp.DefaultLimits())
 		if err == io.EOF {
 			log.Info("server disconnected, closing connection")
 			return 0
@@ -87,11 +87,13 @@ func (c *Client) RunWithContext(ctx context.Context) int {
 			return 1
 		}
 
-		c.handleMessage(conn, hdr.Header, hdr.MessageID, msgBody)
+		c.handleMessage(conn, message)
 	}
 }
 
-func (c *Client) handleMessage(conn net.Conn, header uint16, messageID uint32, messageValue []byte) {
+func (c *Client) handleMessage(conn net.Conn, message llrp.Message) {
+	header := message.Header.Type
+	messageID := message.Header.ID
 	// Handle messageID overflow
 	nextMessageID := messageID + 1
 	if nextMessageID == 0 {
@@ -118,7 +120,7 @@ func (c *Client) handleMessage(conn net.Conn, header uint16, messageID uint32, m
 			"Message ID": messageID,
 		}).Info(">>> SET_READER_CONFIG_RESPONSE")
 	case llrp.ROAccessReportHeader:
-		res, err := llrp.DecodeReadEvents(messageValue, llrp.DefaultLimits())
+		res, err := llrp.DecodeReadEvents(message.Payload, llrp.DefaultLimits())
 		if err != nil {
 			log.Errorf("invalid RO_ACCESS_REPORT: %v", err)
 			return

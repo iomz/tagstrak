@@ -62,7 +62,7 @@ func (h *Handler) HandleRequest(conn net.Conn, tags llrp.Tags) {
 	trds := tags.BuildTagReportDataStack(h.pdu)
 
 	for {
-		hdr, _, err := ReadLLRPMessage(conn)
+		message, err := llrp.ReadMessage(conn, llrp.DefaultLimits())
 		if err == io.EOF {
 			log.Info("the client is disconnected, closing LLRP connection")
 			return
@@ -71,7 +71,7 @@ func (h *Handler) HandleRequest(conn net.Conn, tags llrp.Tags) {
 			return
 		}
 
-		switch hdr.Header {
+		switch message.Header.Type {
 		case llrp.SetReaderConfigHeader:
 			log.Info(">>> SET_READER_CONFIG")
 			if err := llrp.WriteMessage(conn, llrp.SetReaderConfigResponseMessage(*h.currentMessageID), llrp.DefaultLimits()); err != nil {
@@ -89,7 +89,7 @@ func (h *Handler) HandleRequest(conn net.Conn, tags llrp.Tags) {
 				h.startReportLoop(conn, trds)
 			}
 		default:
-			log.Warnf("unknown header: %v", hdr.Header)
+			log.Warnf("unknown header: %v", message.Header.Type)
 			return
 		}
 	}
