@@ -19,7 +19,7 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/iomz/tagstrak/v2/internal/binutil"
+	"github.com/iomz/tagstrak/v2/internal/inventory"
 	"github.com/iomz/tagstrak/v2/llrp"
 	log "github.com/sirupsen/logrus"
 )
@@ -48,7 +48,7 @@ func (s *Simulator) nextMessageID() uint32 {
 //   - port: Port number to listen on
 //   - pdu: Maximum Protocol Data Unit size in bytes
 //   - reportInterval: Interval in milliseconds between RO_ACCESS_REPORT messages
-//   - simulationDir: Directory containing .gob files for each event cycle
+//   - simulationDir: Directory containing JSON inventory files for each event cycle
 //   - initialMessageID: Starting message ID for LLRP messages
 func NewSimulator(ip string, port, pdu, reportInterval int, simulationDir string, initialMessageID int) *Simulator {
 	msgID := uint32(initialMessageID)
@@ -167,7 +167,7 @@ func (s *Simulator) loadSimulationFiles() ([]string, error) {
 	}
 	simulationFiles := []string{}
 	for _, f := range files {
-		if strings.HasSuffix(f.Name(), ".gob") {
+		if strings.HasSuffix(f.Name(), ".json") {
 			simulationFiles = append(simulationFiles, path.Join(dir, f.Name()))
 		}
 	}
@@ -177,18 +177,18 @@ func (s *Simulator) loadSimulationFiles() ([]string, error) {
 	return simulationFiles, nil
 }
 
-func (s *Simulator) loadTagsForNextEventCycle(simulationFiles []string, eventCycle *int) (llrp.Tags, error) {
-	tags := llrp.Tags{}
+func (s *Simulator) loadTagsForNextEventCycle(simulationFiles []string, eventCycle *int) ([]inventory.Tag, error) {
+	tags := []inventory.Tag{}
 	if len(simulationFiles) <= *eventCycle {
 		log.Debugf("Total iteration: %v, current event cycle: %v", len(simulationFiles), eventCycle)
 		log.Infof("Resetting event cycle from %v to 0", *eventCycle)
 		*eventCycle = 0
 	}
-	err := binutil.Load(simulationFiles[*eventCycle], &tags)
+	loaded, err := inventory.LoadFile(simulationFiles[*eventCycle], inventory.DefaultLimits())
 	if err != nil {
 		return tags, err
 	}
-	return tags, nil
+	return loaded, nil
 }
 
 func (s *Simulator) startSimulationLoop(conn net.Conn, simulationFiles []string, eventCycle *int, roarTicker *time.Ticker) chan struct{} {
@@ -205,7 +205,7 @@ func (s *Simulator) startSimulationLoop(conn net.Conn, simulationFiles []string,
 				continue
 			}
 			*eventCycle++
-			trds := tags.BuildTagReportDataStack(s.pdu)
+			trds := buildTagReportDataStack(tags, s.pdu)
 
 			log.Infof("<<< Simulated Event Cycle %v, %v tags, %v roars", *eventCycle-1, len(tags), len(trds))
 			for _, trd := range trds {

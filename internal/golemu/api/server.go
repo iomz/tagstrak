@@ -8,7 +8,7 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-	"github.com/iomz/tagstrak/v2/internal/golemu/tag"
+	"github.com/iomz/tagstrak/v2/internal/inventory"
 )
 
 // Server provides an HTTP API server for tag management operations.
@@ -22,10 +22,10 @@ type Server struct {
 //
 // Parameters:
 //   - port: Port number to listen on
-//   - tagManagerChan: Channel for tag management operations
-func NewServer(port int, tagManagerChan chan tag.Manager) *Server {
+//   - inventory: Inventory service used by tag operations
+func NewServer(port int, inventory *inventory.Service) *Server {
 	return &Server{
-		handler: NewHandler(tagManagerChan),
+		handler: NewHandler(inventory),
 		port:    port,
 	}
 }
