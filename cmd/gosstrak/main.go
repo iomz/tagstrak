@@ -6,8 +6,6 @@
 package main
 
 import (
-	"encoding/binary"
-	"io"
 	"log"
 	"net"
 	"os"
@@ -254,37 +252,14 @@ func run() {
 	}
 	log.Printf("establised an LLRP connection to the interrogator %v", conn.RemoteAddr())
 
-	// prepare LLRP header storage
-	header := make([]byte, 2)
-	length := make([]byte, 4)
-	messageID := make([]byte, 4)
 	for {
-		_, err = io.ReadFull(conn, header)
+		message, err := llrp.ReadMessage(conn, llrp.DefaultLimits())
 		if err != nil {
-			log.Fatal(err)
+			log.Printf("LLRP connection closed: %v", err)
+			return
 		}
-		_, err = io.ReadFull(conn, length)
-		if err != nil {
-			log.Fatal(err)
-		}
-		_, err = io.ReadFull(conn, messageID)
-		if err != nil {
-			log.Fatal(err)
-		}
-		// length containts the size of the entire message in octets
-		// starting from bit offset 0, hence, the message size is
-		// length - 10 bytes
-		var messageValue []byte
-		if messageSize := binary.BigEndian.Uint32(length) - 10; messageSize != 0 {
-			messageValue = make([]byte, binary.BigEndian.Uint32(length)-10)
-			_, err = io.ReadFull(conn, messageValue)
-			if err != nil {
-				log.Fatal(err)
-			}
-		}
-
-		h := binary.BigEndian.Uint16(header)
-		mid := binary.BigEndian.Uint32(messageID)
+		h := message.Header.Type
+		mid := message.Header.ID
 		switch h {
 		case llrp.ReaderEventNotificationHeader:
 			log.Printf("[LLRP] %v >>> READER_EVENT_NOTIFICATION[%v]", conn.RemoteAddr(), mid)
@@ -300,7 +275,12 @@ func run() {
 			log.Printf("[LLRP] %v >>> SET_READER_CONFIG_RESPONSE[%v]", conn.RemoteAddr(), mid)
 		case llrp.ROAccessReportHeader:
 			log.Printf("[LLRP] %v >>> RO_ACCESS_REPORT[%v]", conn.RemoteAddr(), mid)
-			rq <- llrp.UnmarshalROAccessReportBody(messageValue)
+			events, err := llrp.DecodeReadEvents(message.Payload, llrp.DefaultLimits())
+			if err != nil {
+				log.Printf("invalid RO_ACCESS_REPORT: %v", err)
+				return
+			}
+			rq <- events
 		default:
 			log.Fatalf("Unknown LLRP Message Header: %v\n", h)
 		}
