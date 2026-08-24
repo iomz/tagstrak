@@ -31,7 +31,10 @@ func TestHandlerUsesInventorySnapshots(t *testing.T) {
 	if handler.inventory != service {
 		t.Fatal("inventory not retained")
 	}
-	reports := buildTagReportDataStack(service.Snapshot(), 1500)
+	reports, err := buildTagReportDataStack(service.Snapshot(), 1500)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if len(reports) != 1 || reports[0].TagCount != 1 {
 		t.Fatalf("reports = %#v", reports)
 	}
@@ -53,7 +56,10 @@ func TestHandlerSendsReaderEventNotification(t *testing.T) {
 }
 
 func TestBuildTagReportDataStackDerivesPCFromEPC(t *testing.T) {
-	reports := buildTagReportDataStack(newInventory(t, "3000").Snapshot(), 1500)
+	reports, err := buildTagReportDataStack(newInventory(t, "3000").Snapshot(), 1500)
+	if err != nil {
+		t.Fatal(err)
+	}
 	events, err := llrp.DecodeReadEvents(reports[0].Data, llrp.DefaultLimits())
 	if err != nil {
 		t.Fatal(err)

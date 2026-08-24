@@ -53,7 +53,7 @@ func LoadFile(path string, limits Limits) ([]Tag, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
+	defer func() { _ = file.Close() }()
 
 	decoder := json.NewDecoder(io.LimitReader(file, limits.MaxInputBytes+1))
 	return decodeDocument(decoder, limits)
@@ -174,23 +174,23 @@ func SaveFile(path string, tags []Tag, limits Limits) error {
 		return err
 	}
 	tempName := temp.Name()
-	defer os.Remove(tempName)
+	defer func() { _ = os.Remove(tempName) }()
 	if err := temp.Chmod(0o600); err != nil {
-		temp.Close()
+		_ = temp.Close()
 		return err
 	}
 
 	writer := bufio.NewWriter(&limitedWriter{writer: temp, remaining: limits.MaxInputBytes})
 	if err := writeDocument(writer, tags); err != nil {
-		temp.Close()
+		_ = temp.Close()
 		return err
 	}
 	if err := writer.Flush(); err != nil {
-		temp.Close()
+		_ = temp.Close()
 		return err
 	}
 	if err := temp.Sync(); err != nil {
-		temp.Close()
+		_ = temp.Close()
 		return err
 	}
 	if err := temp.Close(); err != nil {
@@ -203,7 +203,7 @@ func SaveFile(path string, tags []Tag, limits Limits) error {
 	if err != nil {
 		return err
 	}
-	defer directory.Close()
+	defer func() { _ = directory.Close() }()
 	return directory.Sync()
 }
 

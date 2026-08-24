@@ -6,7 +6,10 @@ import (
 )
 
 func TestTypedMessagesEncodeLikeLegacyBuilders(t *testing.T) {
-	trd := NewTagReportDataParam(make([]byte, 12), 0x3000)
+	trd, err := NewTagReportDataParam(make([]byte, 12), 0x3000)
+	if err != nil {
+		t.Fatal(err)
+	}
 	tests := []struct {
 		name string
 		new  Message

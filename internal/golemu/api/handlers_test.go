@@ -2,6 +2,7 @@ package api
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -25,7 +26,7 @@ func newRouter(handler *Handler) *gin.Engine {
 }
 
 func request(router *gin.Engine, method string, body string) *httptest.ResponseRecorder {
-	req := httptest.NewRequest(method, "/tags", bytes.NewBufferString(body))
+	req := httptest.NewRequestWithContext(context.Background(), method, "/tags", bytes.NewBufferString(body))
 	req.Header.Set("Content-Type", "application/json")
 	response := httptest.NewRecorder()
 	router.ServeHTTP(response, req)
@@ -74,5 +75,17 @@ func TestHandlerRejectsInvalidOrMissingTags(t *testing.T) {
 	}
 	if response := request(router, http.MethodDelete, `[{"epc":"3000"}]`); response.Code != http.StatusNotFound {
 		t.Fatalf("missing DELETE status = %d", response.Code)
+	}
+}
+
+func TestHandlerRejectsInvalidBatchWithoutMutation(t *testing.T) {
+	router := newRouter(newHandler())
+	response := request(router, http.MethodPost, `[{"epc":"3000"},{"epc":"odd"}]`)
+	if response.Code != http.StatusBadRequest {
+		t.Fatalf("POST status = %d", response.Code)
+	}
+	response = request(router, http.MethodGet, "")
+	if response.Code != http.StatusOK || response.Body.String() != "[]" {
+		t.Fatalf("GET = %d %s", response.Code, response.Body.String())
 	}
 }

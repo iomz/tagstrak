@@ -22,6 +22,11 @@ func (s *Service) Snapshot() []Tag {
 
 // Load replaces state with persisted inventory.
 func (s *Service) Load() error {
+	if s.path == "" {
+		return nil
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	tags, err := LoadFile(s.path, s.limits)
 	if err != nil {
 		return err
