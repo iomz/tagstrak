@@ -180,7 +180,7 @@ func (s *Simulator) loadSimulationFiles() ([]string, error) {
 func (s *Simulator) loadTagsForNextEventCycle(simulationFiles []string, eventCycle *int) ([]inventory.Tag, error) {
 	tags := []inventory.Tag{}
 	if len(simulationFiles) <= *eventCycle {
-		log.Debugf("Total iteration: %v, current event cycle: %v", len(simulationFiles), eventCycle)
+		log.Debugf("Total iteration: %v, current event cycle: %v", len(simulationFiles), *eventCycle)
 		log.Infof("Resetting event cycle from %v to 0", *eventCycle)
 		*eventCycle = 0
 	}
@@ -205,7 +205,11 @@ func (s *Simulator) startSimulationLoop(conn net.Conn, simulationFiles []string,
 				continue
 			}
 			*eventCycle++
-			trds := buildTagReportDataStack(tags, s.pdu)
+			trds, err := buildTagReportDataStack(tags, s.pdu)
+			if err != nil {
+				log.Warn(err)
+				continue
+			}
 
 			log.Infof("<<< Simulated Event Cycle %v, %v tags, %v roars", *eventCycle-1, len(tags), len(trds))
 			for _, trd := range trds {

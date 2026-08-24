@@ -134,6 +134,18 @@ func TestLoadCSV(t *testing.T) {
 	}
 }
 
+func TestLoadCSVRejectsOversizedInput(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "tags.csv")
+	if err := os.WriteFile(path, []byte("3000,0011000000000000\n3000,0011000000000001\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	limits := DefaultLimits()
+	limits.MaxInputBytes = 24
+	if _, err := LoadCSV(path, limits); !errors.Is(err, ErrInputTooLarge) {
+		t.Fatalf("error = %v", err)
+	}
+}
+
 func benchmarkTags(b *testing.B, count int) []Tag {
 	b.Helper()
 	tags := make([]Tag, count)

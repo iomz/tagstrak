@@ -33,6 +33,8 @@ func (h *Handler) nextMessageID() uint32 {
 
 func (h *Handler) HandleRequest(conn net.Conn) {
 	defer conn.Close()
+	done := make(chan struct{})
+	defer close(done)
 	for {
 		message, err := llrp.ReadMessage(conn, llrp.DefaultLimits())
 		if err == io.EOF {
@@ -50,11 +52,11 @@ func (h *Handler) HandleRequest(conn net.Conn) {
 				return
 			}
 			if h.reportLoopStarted.CompareAndSwap(false, true) {
-				h.startReportLoop(conn)
+				h.startReportLoop(conn, done)
 			}
 		case llrp.KeepaliveAckHeader:
 			if h.reportLoopStarted.CompareAndSwap(false, true) {
-				h.startReportLoop(conn)
+				h.startReportLoop(conn, done)
 			}
 		default:
 			log.Warnf("unknown header: %v", message.Header.Type)
@@ -63,7 +65,7 @@ func (h *Handler) HandleRequest(conn net.Conn) {
 	}
 }
 
-func (h *Handler) startReportLoop(conn net.Conn) {
+func (h *Handler) startReportLoop(conn net.Conn, done <-chan struct{}) {
 	reportTicker := time.NewTicker(time.Duration(h.reportInterval) * time.Millisecond)
 	go func() {
 		defer reportTicker.Stop()
@@ -74,10 +76,12 @@ func (h *Handler) startReportLoop(conn net.Conn) {
 			defer ticker.Stop()
 			keepaliveTicker = ticker.C
 		}
-		h.sendReports(conn)
 		h.isConnAlive.Store(true)
+		h.sendReports(conn)
 		for h.isConnAlive.Load() {
 			select {
+			case <-done:
+				return
 			case <-reportTicker.C:
 				h.sendReports(conn)
 			case <-keepaliveTicker:
@@ -91,7 +95,13 @@ func (h *Handler) startReportLoop(conn net.Conn) {
 }
 
 func (h *Handler) sendReports(conn net.Conn) {
-	for _, report := range buildTagReportDataStack(h.inventory.Snapshot(), h.pdu) {
+	reports, err := buildTagReportDataStack(h.inventory.Snapshot(), h.pdu)
+	if err != nil {
+		log.Warn(err)
+		h.isConnAlive.Store(false)
+		return
+	}
+	for _, report := range reports {
 		if err := llrp.WriteMessage(conn, llrp.ROAccessReportMessage(report.Data, h.nextMessageID()), llrp.DefaultLimits()); err != nil {
 			log.Warn(err)
 			h.isConnAlive.Store(false)

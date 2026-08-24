@@ -1,6 +1,7 @@
 package server
 
 import (
+	"context"
 	"errors"
 	"net"
 	"os"
@@ -42,8 +43,11 @@ func NewServer(ip string, port, apiPort, pdu, reportInterval, keepaliveInterval,
 }
 
 func (s *Server) Run() int {
-	s.loadInventory()
-	listener, err := net.Listen("tcp", s.ip+":"+strconv.Itoa(s.port))
+	if err := s.loadInventory(); err != nil {
+		log.Errorf("loading inventory: %v", err)
+		return 1
+	}
+	listener, err := (&net.ListenConfig{}).Listen(context.Background(), "tcp", s.ip+":"+strconv.Itoa(s.port))
 	if err != nil {
 		log.Error(err)
 		return 1
@@ -80,17 +84,17 @@ func (s *Server) Run() int {
 	}
 }
 
-func (s *Server) loadInventory() {
+func (s *Server) loadInventory() error {
 	if s.file == "" {
-		return
+		return nil
 	}
 	if _, err := os.Stat(s.file); errors.Is(err, os.ErrNotExist) {
 		log.Warnf("%v does not exist; starting with empty inventory", s.file)
-		return
+		return nil
 	}
 	if err := s.inventory.Load(); err != nil {
-		log.Errorf("loading inventory: %v", err)
-		return
+		return err
 	}
 	log.Infof("%v inventory tags loaded", len(s.inventory.Snapshot()))
+	return nil
 }

@@ -5,6 +5,10 @@
 
 package llrp
 
+import "errors"
+
+var ErrEPCTooLong = errors.New("llrp: EPC exceeds 65535-bit limit")
+
 // TagReportData holds an actual parameter in byte and
 // how many tags are included in the parameter
 type TagReportData struct {
@@ -13,7 +17,10 @@ type TagReportData struct {
 }
 
 // NewTagReportDataParam encodes one LLRP TagReportData parameter from wire values.
-func NewTagReportDataParam(epc []byte, pcBits uint16) []byte {
+func NewTagReportDataParam(epc []byte, pcBits uint16) ([]byte, error) {
+	if len(epc) > 8191 {
+		return nil, ErrEPCTooLong
+	}
 	epcLengthBits := len(epc) * 8
 	length := 4 + 2 + len(epc)
 	epcd := EPCData(uint16(length), uint16(epcLengthBits), epc)
@@ -42,5 +49,5 @@ func NewTagReportDataParam(epc []byte, pcBits uint16) []byte {
 		//timestamp,
 		//tagSeenCount,
 		aptd,
-	})
+	}), nil
 }

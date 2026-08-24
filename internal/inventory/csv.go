@@ -18,8 +18,8 @@ func LoadCSV(path string, limits Limits) ([]Tag, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
-	reader := csv.NewReader(io.LimitReader(file, limits.MaxInputBytes+1))
+	defer func() { _ = file.Close() }()
+	reader := csv.NewReader(&countingReader{reader: io.LimitReader(file, limits.MaxInputBytes+1), limit: limits.MaxInputBytes})
 	seen := make(map[string]struct{})
 	tags := make([]Tag, 0)
 	for line := 1; ; line++ {
@@ -54,6 +54,21 @@ func LoadCSV(path string, limits Limits) ([]Tag, error) {
 		tags = append(tags, tag)
 	}
 	return tags, nil
+}
+
+type countingReader struct {
+	reader io.Reader
+	limit  int64
+	read   int64
+}
+
+func (r *countingReader) Read(data []byte) (int, error) {
+	n, err := r.reader.Read(data)
+	r.read += int64(n)
+	if r.read > r.limit {
+		return n, fmt.Errorf("%w: %d bytes", ErrInputTooLarge, r.read)
+	}
+	return n, err
 }
 
 func parseBinaryEPC(value string) ([]byte, error) {

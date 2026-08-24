@@ -7,7 +7,10 @@ import (
 )
 
 func TestDecodeReadEvents(t *testing.T) {
-	body := NewTagReportDataParam([]byte{0x30, 0x2d, 0xb3, 0x19, 0xa0, 0, 0, 0x40, 0, 0, 0, 3}, 0x3000)
+	body, err := NewTagReportDataParam([]byte{0x30, 0x2d, 0xb3, 0x19, 0xa0, 0, 0, 0x40, 0, 0, 0, 3}, 0x3000)
+	if err != nil {
+		t.Fatal(err)
+	}
 	events, err := DecodeReadEvents(body, DefaultLimits())
 	if err != nil {
 		t.Fatal(err)
