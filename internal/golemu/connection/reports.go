@@ -1,9 +1,13 @@
 package connection
 
 import (
+	"errors"
+
 	"github.com/iomz/tagstrak/v2/internal/inventory"
 	"github.com/iomz/tagstrak/v2/llrp"
 )
+
+var ErrTagReportExceedsPDU = errors.New("golemu: tag report exceeds PDU")
 
 func buildTagReportDataStack(tags []inventory.Tag, pdu int) (llrp.TagReportDataStack, error) {
 	var reports llrp.TagReportDataStack
@@ -13,7 +17,10 @@ func buildTagReportDataStack(tags []inventory.Tag, pdu int) (llrp.TagReportDataS
 		if err != nil {
 			return nil, err
 		}
-		if len(reports) == 0 || 10+len(reports[len(reports)-1].Data)+4+len(parameter) >= pdu {
+		if 10+4+len(parameter) > pdu {
+			return nil, ErrTagReportExceedsPDU
+		}
+		if len(reports) == 0 || 10+len(reports[len(reports)-1].Data)+4+len(parameter) > pdu {
 			reports = append(reports, &llrp.TagReportData{Data: parameter, TagCount: 1})
 			continue
 		}

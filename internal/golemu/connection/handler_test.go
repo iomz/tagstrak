@@ -2,6 +2,7 @@ package connection
 
 import (
 	"bytes"
+	"errors"
 	"sync/atomic"
 	"testing"
 
@@ -66,5 +67,20 @@ func TestBuildTagReportDataStackDerivesPCFromEPC(t *testing.T) {
 	}
 	if len(events) != 1 || !bytes.Equal(events[0].ID, []byte{0x30, 0x00}) {
 		t.Fatalf("events = %#v", events)
+	}
+}
+
+func TestBuildTagReportDataStackHonorsPDULimit(t *testing.T) {
+	tags := newInventory(t, "3000").Snapshot()
+	reports, err := buildTagReportDataStack(tags, 1500)
+	if err != nil {
+		t.Fatal(err)
+	}
+	exactPDU := 10 + 4 + len(reports[0].Data)
+	if _, err := buildTagReportDataStack(tags, exactPDU); err != nil {
+		t.Fatalf("exact-fit error = %v", err)
+	}
+	if _, err := buildTagReportDataStack(tags, exactPDU-1); !errors.Is(err, ErrTagReportExceedsPDU) {
+		t.Fatalf("oversized error = %v", err)
 	}
 }
