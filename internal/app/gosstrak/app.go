@@ -33,6 +33,7 @@ type Config struct {
 	TelemetryAddress string
 }
 
+// DefaultConfig returns the default application configuration.
 func DefaultConfig() Config {
 	return Config{Reader: reader.DefaultConfig(), QueueCapacity: 128, ConsumeTimeout: 5 * time.Second, ShutdownTimeout: 10 * time.Second, TelemetryAddress: "127.0.0.1:8080"}
 }
@@ -63,6 +64,10 @@ type App struct {
 	telemetryAddress atomic.Value
 }
 
+// New validates the application configuration and creates an application with a
+// reader session, consumer, and bounded observation queue. Returns an error if
+// the configuration is invalid, the consumer is nil, or the reader session
+// cannot be created.
 func New(config Config, dialer reader.Dialer, consumer Consumer, logger *slog.Logger) (*App, error) {
 	if err := config.Validate(); err != nil {
 		return nil, err
