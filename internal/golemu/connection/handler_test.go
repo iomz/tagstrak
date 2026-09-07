@@ -84,3 +84,20 @@ func TestBuildTagReportDataStackHonorsPDULimit(t *testing.T) {
 		t.Fatalf("oversized error = %v", err)
 	}
 }
+
+func TestHandlerEchoesConfigRequestID(t *testing.T) {
+	request, err := llrp.EncodeMessage(llrp.SetReaderConfigMessage(4242), llrp.DefaultLimits())
+	if err != nil {
+		t.Fatal(err)
+	}
+	var output bytes.Buffer
+	handler := NewHandler(1000, 1500, 1000, 0, newInventory(t), &atomic.Bool{})
+	handler.HandleRequest(&mockConn{reader: bytes.NewReader(request), writer: &output})
+	response, err := llrp.ReadMessage(&output, llrp.DefaultLimits())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if response.Header.Type != llrp.SetReaderConfigResponseHeader || response.Header.ID != 4242 {
+		t.Fatalf("response: %+v", response.Header)
+	}
+}

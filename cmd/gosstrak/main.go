@@ -1,308 +1,92 @@
-// Copyright (c) 2017 Iori Mizutani
-//
-// Use of this source code is governed by The MIT License
-// that can be found in the LICENSE file.
-
+// Command gosstrak runs the v2 reader ingestion runtime.
 package main
 
 import (
-	"log"
+	"context"
+	"errors"
+	"flag"
+	"fmt"
+	"io"
+	"log/slog"
 	"net"
 	"os"
-	"path"
-	"runtime"
-	"time"
+	"os/signal"
+	"syscall"
 
-	"github.com/alecthomas/kingpin/v2"
-	"github.com/iomz/tagstrak/v2/internal/gosstrak/filtering"
-	"github.com/iomz/tagstrak/v2/internal/gosstrak/monitoring"
-	"github.com/iomz/tagstrak/v2/llrp"
-	"github.com/moby/spdystream"
+	app "github.com/iomz/tagstrak/v2/internal/app/gosstrak"
+	"github.com/iomz/tagstrak/v2/internal/inventory"
 )
 
-// Notification is the struct to send/receive captured ID
-type Notification struct {
-	ID []byte
+// ingestionConsumer validates the current ingestion-only slice. Processing and
+// delivery are wired through this boundary by milestone issues #7-#9. Accepted
+// observations are counted by App; they are not represented as delivered events.
+type ingestionConsumer struct{}
+
+func (ingestionConsumer) Consume(ctx context.Context, observation inventory.Observation) error {
+	return ctx.Err()
 }
 
-// Constant Values
-const (
-	// BufferSize is a general size for a buffer
-	BufferSize = 64 * 1024 // 64 KiB
-	QueueSize  = 128
-)
-
-// Environmental variables
-var (
-	// Current Version
-	version = "0.3.0"
-
-	// app
-	app = kingpin.
-		New("gosstrak-fc", "An RFID middleware to replace Fosstrak F&C.")
-
-	// common flag
-	verbose = app.
-		Flag("debug", "Enable verbose mode.").
-		Short('v').
-		Default("false").
-		Bool()
-	ecspecFile = app.
-			Flag("ecspecfile", "A CSV file contains reportURI and urn:epc:pat:<type>:<field1>.<field2>... .").
-			Short('f').
-			Default("ecspec.csv").
-			String()
-
-	// LLRP related values
-	llrpInitialMessageID = app.
-				Flag("initialMessageID", "The initial messageID to start from.").
-				Short('m').
-				Default("1000").
-				Int()
-	llrpAddr = app.
-			Flag("ip", "LLRP emulator address.").
-			Short('l').
-			Default("127.0.0.1:5084").
-			String()
-
-	// ALE related values
-	managementAddr = app.
-			Flag("managementAddr", "Psuedo ALE management endpoint").
-			Default("127.0.0.1:2784").
-			String()
-
-	// stat related values
-	enableStat = app.
-			Flag("enableStat", "Enable statistical monitoring.").
-			Default("false").
-			Bool()
-	statInterval = app.
-			Flag("statInterval", "Measurement interval in seconds for the engine throughput.").
-			Default("5").
-			Int()
-	influxAddr = app.
-			Flag("influxAddr", "The endpoint of influxdb.").
-			Default("http://127.0.0.1:8086").
-			String()
-	influxUser = app.
-			Flag("influxUser", "The username for influxdb.").
-			Default("gosstrak").
-			String()
-	influxPass = app.
-			Flag("influxPass", "The password for influxdb.").
-			Default("gosstrak").
-			String()
-	influxDB = app.
-			Flag("influxDB", "The database in influxdb.").
-			Default("gosstrak").
-			String()
-
-	// start command
-	cmdStart = app.Command("start", "Start the gosstrak-fc.")
-
-	// Current messageID
-	currentMessageID = uint32(*llrpInitialMessageID)
-)
-
-func getPackagePath() string {
-	// Determine the package dir
-	_, filename, _, ok := runtime.Caller(0)
-	if !ok {
-		panic("No caller information")
+func parseConfig(args []string, output io.Writer) (app.Config, error) {
+	config := app.DefaultConfig()
+	flags := flag.NewFlagSet("gosstrak", flag.ContinueOnError)
+	flags.SetOutput(output)
+	flags.StringVar(&config.Reader.Address, "reader", config.Reader.Address, "LLRP reader host:port")
+	flags.StringVar(&config.Reader.Source, "source", config.Reader.Source, "Observation source identifier")
+	flags.StringVar(&config.TelemetryAddress, "telemetry", config.TelemetryAddress, "Read-only health and metrics host:port")
+	flags.IntVar(&config.QueueCapacity, "queue-capacity", config.QueueCapacity, "Maximum queued observations; overflow fails the run")
+	flags.DurationVar(&config.Reader.ConnectTimeout, "connect-timeout", config.Reader.ConnectTimeout, "Per-attempt dial timeout")
+	flags.DurationVar(&config.Reader.HandshakeTimeout, "handshake-timeout", config.Reader.HandshakeTimeout, "Total connection handshake timeout")
+	flags.DurationVar(&config.Reader.ReadTimeout, "read-timeout", config.Reader.ReadTimeout, "Maximum time to read one complete frame")
+	flags.DurationVar(&config.Reader.WriteTimeout, "write-timeout", config.Reader.WriteTimeout, "Maximum time to write one complete frame")
+	flags.DurationVar(&config.Reader.RetryMin, "retry-min", config.Reader.RetryMin, "Initial reconnect delay")
+	flags.DurationVar(&config.Reader.RetryMax, "retry-max", config.Reader.RetryMax, "Maximum reconnect delay")
+	flags.IntVar(&config.Reader.MaxRetries, "max-retries", config.Reader.MaxRetries, "Total reconnect budget for this process run")
+	flags.DurationVar(&config.ConsumeTimeout, "consume-timeout", config.ConsumeTimeout, "Per-observation processing timeout")
+	flags.DurationVar(&config.ShutdownTimeout, "shutdown-timeout", config.ShutdownTimeout, "Queue drain and HTTP shutdown timeout")
+	maxFrame := uint(config.Reader.Limits.MaxFrameSize)
+	maxParameter := uint(config.Reader.Limits.MaxParameterSize)
+	flags.UintVar(&maxFrame, "max-frame-bytes", maxFrame, "Maximum LLRP frame size")
+	flags.UintVar(&maxParameter, "max-parameter-bytes", maxParameter, "Maximum LLRP parameter size")
+	flags.IntVar(&config.Reader.Limits.MaxParameters, "max-parameters", config.Reader.Limits.MaxParameters, "Maximum parameters per codec container")
+	if len(args) > 0 && args[0] == "start" {
+		args = args[1:]
 	}
-	return path.Dir(filename)
+	if err := flags.Parse(args); err != nil {
+		return config, err
+	}
+	if flags.NArg() != 0 {
+		return config, fmt.Errorf("unexpected arguments: %v", flags.Args())
+	}
+	if maxFrame > uint(^uint32(0)) || maxParameter > uint(^uint16(0)) {
+		return config, fmt.Errorf("codec limit exceeds wire size")
+	}
+	config.Reader.Limits.MaxFrameSize = uint32(maxFrame)
+	config.Reader.Limits.MaxParameterSize = uint16(maxParameter)
+	return config, config.Validate()
 }
 
-func run() {
-	log.Println("initializing gosstrak-fc for master mode...")
-
-	// setup StatManager
-	var sm *monitoring.StatManager
-	if *enableStat {
-		log.Println("setting up a stat manager for InfluxDB")
-		sm = monitoring.NewStatManager("master", *influxAddr, *influxUser, *influxPass, *influxDB)
+func run(ctx context.Context, args []string, stderr io.Writer) error {
+	config, err := parseConfig(args, stderr)
+	if err != nil {
+		return err
 	}
-
-	// load existing subscriptions from file
-	log.Println("loading subscriptions from file")
-	sub := filtering.LoadSubscriptionsFromCSVFile(*ecspecFile)
-
-	// receive the engine instance status
-	log.Println("setting up a management channel")
-	mc := make(chan filtering.ManagementMessage, QueueSize)
-	go func() {
-		for {
-			msg, ok := <-mc
-			if !ok {
-				break
-			}
-			switch msg.Type {
-			case filtering.TrafficStatus:
-				if *enableStat {
-					sm.StatMessageChannel <- monitoring.StatMessage{
-						Type:  monitoring.Traffic,
-						Value: []interface{}{msg.EventCount, msg.MatchedCount},
-						Name:  msg.EngineName,
-					}
-				}
-			case filtering.EngineStatus:
-				if *enableStat {
-					sm.StatMessageChannel <- monitoring.StatMessage{
-						Type:  monitoring.EngineThroughput,
-						Value: []interface{}{msg.CurrentThroughput},
-						Name:  msg.EngineName,
-					}
-				}
-			case filtering.SelectedEngine:
-				if *enableStat {
-					sm.StatMessageChannel <- monitoring.StatMessage{
-						Type: monitoring.SelectedEngine,
-						Name: msg.EngineName,
-					}
-				}
-			}
-		}
-		log.Fatalln("management channel closed, dying...")
-	}()
-
-	// set up an EngineFactory with a management channel
-	log.Println("setting up an engine factory")
-	engineFactory := filtering.NewEngineFactory(sub, *statInterval, mc)
-	go engineFactory.Run()
-	// wait until the first engine becomes available
-	for !engineFactory.IsActive() {
-		time.Sleep(time.Second)
+	logger := slog.New(slog.NewJSONHandler(stderr, nil))
+	runtime, err := app.New(config, &net.Dialer{}, ingestionConsumer{}, logger)
+	if err != nil {
+		return err
 	}
-
-	// receive management access
-	log.Println("setting up an management interface")
-	go func() {
-		managementListener, err := net.Listen("tcp", *managementAddr)
-		if err != nil {
-			log.Fatal(err)
-		}
-		for {
-			c, err := managementListener.Accept()
-			if err != nil {
-				log.Fatal(err)
-				break
-			}
-			spdyConn, err := spdystream.NewConnection(c, true)
-			if err != nil {
-				log.Print(err)
-				continue
-			}
-			go spdyConn.Serve(spdystream.MirrorStreamHandler)
-
-			// receiver, err := t.WaitReceiveChannel()
-			// if err != nil {
-			// 	log.Print(err)
-			// 	continue
-			// }
-
-			// mm := &filtering.ManagementMessage{}
-			// err = receiver.Receive(mm)
-			// if err != nil {
-			// 	log.Print(err)
-			// 	continue
-			// }
-			// log.Print(mm)
-			// mc <- *mm
-		}
-		log.Fatalln("managementListener closed in gosstrak-fc")
-	}()
-
-	// receive incoming IDs and translate them in PureIdentity
-	log.Println("setting up an incoming ReadEvent channel")
-	var rq = make(chan []*llrp.ReadEvent)
-	go func() {
-		for {
-			res, ok := <-rq
-			if !ok {
-				break
-			}
-
-			reports := map[string][]string{}
-			for _, re := range res {
-				pureIdentity, reportURIs, err := engineFactory.Search(*re)
-				if err != nil { // no much or something went wrong
-					continue
-				}
-				for _, dest := range reportURIs {
-					if _, ok := reports[dest]; !ok {
-						reports[dest] = []string{}
-					}
-					reports[dest] = append(reports[dest], pureIdentity)
-				}
-			}
-			// do report
-			for _, dest := range reports {
-				_ = dest
-			}
-		}
-		log.Fatalln("ReadEvent listener exited in gosstrak-fc")
-	}()
-
-	// establish a connection to the llrp client
-	log.Println("waiting for the interrogator to becom online...")
-	conn, err := net.Dial("tcp", *llrpAddr)
-	for err != nil {
-		time.Sleep(1 * time.Second)
-		conn, err = net.Dial("tcp", *llrpAddr)
-	}
-	log.Printf("establised an LLRP connection to the interrogator %v", conn.RemoteAddr())
-
-	for {
-		message, err := llrp.ReadMessage(conn, llrp.DefaultLimits())
-		if err != nil {
-			log.Printf("LLRP connection closed: %v", err)
+	logger.Info("starting gosstrak", "mode", "ingestion", "reader", config.Reader.Address, "telemetry", config.TelemetryAddress)
+	return runtime.Run(ctx)
+}
+func main() {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	if err := run(ctx, os.Args[1:], os.Stderr); err != nil && !errors.Is(err, flag.ErrHelp) {
+		// A normal signal is successful only when shutdown did not also fail.
+		if ctx.Err() != nil && err == ctx.Err() {
 			return
 		}
-		h := message.Header.Type
-		mid := message.Header.ID
-		switch h {
-		case llrp.ReaderEventNotificationHeader:
-			log.Printf("[LLRP] %v >>> READER_EVENT_NOTIFICATION[%v]", conn.RemoteAddr(), mid)
-			if err := llrp.WriteMessage(conn, llrp.SetReaderConfigMessage(currentMessageID), llrp.DefaultLimits()); err != nil {
-				log.Printf("failed to write SET_READER_CONFIG: %v", err)
-			}
-		case llrp.KeepaliveHeader:
-			log.Printf("[LLRP] %v >>> KEEP_ALIVE[%v]", conn.RemoteAddr(), mid)
-			if err := llrp.WriteMessage(conn, llrp.KeepaliveAckMessage(currentMessageID), llrp.DefaultLimits()); err != nil {
-				log.Printf("failed to write KEEPALIVE_ACK: %v", err)
-			}
-		case llrp.SetReaderConfigResponseHeader:
-			log.Printf("[LLRP] %v >>> SET_READER_CONFIG_RESPONSE[%v]", conn.RemoteAddr(), mid)
-		case llrp.ROAccessReportHeader:
-			log.Printf("[LLRP] %v >>> RO_ACCESS_REPORT[%v]", conn.RemoteAddr(), mid)
-			events, err := llrp.DecodeReadEvents(message.Payload, llrp.DefaultLimits())
-			if err != nil {
-				log.Printf("invalid RO_ACCESS_REPORT: %v", err)
-				return
-			}
-			rq <- events
-		default:
-			log.Fatalf("Unknown LLRP Message Header: %v\n", h)
-		}
-	}
-}
-
-func main() {
-	app.Version(version)
-	parse := kingpin.MustParse(app.Parse(os.Args[1:]))
-
-	// Create cache directory if not exists
-	// TODO: set OS specific dataCacheDir
-	dataCacheDir := "/var/tmp/gosstrak-fc-cache"
-	if _, err := os.Stat(dataCacheDir); os.IsNotExist(err) {
-		err = os.MkdirAll(dataCacheDir, 0755)
-		if err != nil {
-			panic(err)
-		}
-	}
-
-	switch parse {
-	case cmdStart.FullCommand():
-		run()
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
 	}
 }
