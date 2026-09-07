@@ -47,7 +47,7 @@ func (h *Handler) HandleRequest(conn net.Conn) {
 		}
 		switch message.Header.Type {
 		case llrp.SetReaderConfigHeader:
-			if err := llrp.WriteMessage(conn, llrp.SetReaderConfigResponseMessage(h.nextMessageID()), llrp.DefaultLimits()); err != nil {
+			if err := llrp.WriteMessage(conn, llrp.SetReaderConfigResponseMessage(message.Header.ID), llrp.DefaultLimits()); err != nil {
 				log.Warnf("error writing SET_READER_CONFIG_RESPONSE: %v", err)
 				return
 			}
