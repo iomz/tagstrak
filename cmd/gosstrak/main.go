@@ -26,6 +26,10 @@ func (ingestionConsumer) Consume(ctx context.Context, observation inventory.Obse
 	return ctx.Err()
 }
 
+// parseConfig parses command-line arguments into an application configuration,
+// applying defaults and validating the resulting limits and settings. An optional
+// "start" subcommand is accepted and ignored. It returns a parsing or validation
+// error when the arguments or configuration are invalid.
 func parseConfig(args []string, output io.Writer) (app.Config, error) {
 	config := app.DefaultConfig()
 	flags := flag.NewFlagSet("gosstrak", flag.ContinueOnError)
@@ -65,6 +69,8 @@ func parseConfig(args []string, output io.Writer) (app.Config, error) {
 	return config, config.Validate()
 }
 
+// run parses the command-line arguments, initializes the ingestion runtime, and runs it with the supplied context.
+// It returns any configuration, initialization, or runtime error encountered.
 func run(ctx context.Context, args []string, stderr io.Writer) error {
 	config, err := parseConfig(args, stderr)
 	if err != nil {

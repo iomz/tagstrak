@@ -54,6 +54,7 @@ func (a *App) Handler() http.Handler {
 	})
 	return mux
 }
+// boolInt converts a boolean to its integer representation.
 func boolInt(v bool) int {
 	if v {
 		return 1

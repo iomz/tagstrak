@@ -35,6 +35,7 @@ type Config struct {
 	Limits           llrp.Limits
 }
 
+// DefaultConfig returns the default configuration for an LLRP reader session.
 func DefaultConfig() Config {
 	return Config{Address: "127.0.0.1:5084", Source: "reader-1", ConnectTimeout: 5 * time.Second,
 		HandshakeTimeout: 5 * time.Second, ReadTimeout: 30 * time.Second, WriteTimeout: 5 * time.Second,
@@ -63,6 +64,8 @@ func (c Config) Validate() error {
 	return nil
 }
 
+// backoff calculates the retry delay, starting at RetryMin and doubling for each
+// subsequent retry until it reaches RetryMax.
 func backoff(c Config, retry int) time.Duration {
 	delay := c.RetryMin
 	for i := 1; i < retry && delay < c.RetryMax; i++ {

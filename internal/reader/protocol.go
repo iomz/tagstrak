@@ -9,6 +9,8 @@ import (
 	"github.com/iomz/tagstrak/v2/llrp"
 )
 
+// validateNotification validates a reader event notification and its connection-attempt data.
+// The initial parameter requires exactly one successful connection attempt.
 func validateNotification(m llrp.Message, limits llrp.Limits, initial bool) error {
 	if m.Header.Type != llrp.ReaderEventNotificationHeader {
 		return fmt.Errorf("%w: expected reader notification", ErrProtocol)
@@ -42,6 +44,7 @@ func validateNotification(m llrp.Message, limits llrp.Limits, initial bool) erro
 	return nil
 }
 
+// validateConfigResponse verifies a successful SetReaderConfig response with the expected message ID and exactly one valid LLRP status parameter. It returns a protocol error for malformed responses, decoding failures, or a nonzero status code.
 func validateConfigResponse(m llrp.Message, id uint32, limits llrp.Limits) error {
 	if m.Header.Type != llrp.SetReaderConfigResponseHeader || m.Header.ID != id {
 		return fmt.Errorf("%w: config response type or message ID mismatch", ErrProtocol)
@@ -79,7 +82,9 @@ func validateConfigResponse(m llrp.Message, id uint32, limits llrp.Limits) error
 
 // Validate the entire batch before handing any observation to the application.
 // The current domain supports whole EPC words; reject other bit lengths rather
-// than silently padding them into a different identifier.
+// decodeObservations validates tag reports and converts read events into timestamped
+// inventory observations associated with source. It returns an error if decoding,
+// validation, or observation construction fails.
 func decodeObservations(body []byte, limits llrp.Limits, source string, now time.Time) ([]inventory.Observation, error) {
 	params, err := llrp.DecodeParameters(body, limits)
 	if err != nil {

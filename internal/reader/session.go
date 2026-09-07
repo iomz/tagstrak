@@ -60,7 +60,7 @@ type Session struct {
 	status  Snapshot
 }
 
-// New validates without I/O or goroutines. A Session can be run exactly once.
+// New validates the configuration and dialer, then initializes an idle Session without performing I/O or starting goroutines. If logger is nil, it uses a logger that discards output.
 func New(config Config, dialer Dialer, logger *slog.Logger) (*Session, error) {
 	if err := config.Validate(); err != nil {
 		return nil, err
@@ -142,6 +142,7 @@ func (s *Session) Run(ctx context.Context, out chan<- inventory.Observation) (re
 	}
 }
 
+// retryable reports whether an error is eligible for session retry. Protocol and backpressure errors are not retryable; network, connection closure, end-of-file, and deadline errors are retryable.
 func retryable(err error) bool {
 	if errors.Is(err, ErrProtocol) || errors.Is(err, ErrBackpressure) {
 		return false
