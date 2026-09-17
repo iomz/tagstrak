@@ -17,6 +17,9 @@ import (
 	"github.com/iomz/tagstrak/v2/internal/inventory"
 )
 
+// parse converts server or simulator arguments into a validated application
+// configuration and immutable scenario. It writes help and flag diagnostics to
+// output and returns flag.ErrHelp when no mode or an explicit help flag is given.
 func parse(args []string, output io.Writer) (app.Config, *emulator.Scenario, error) {
 	config := app.DefaultConfig()
 	if len(args) == 0 || args[0] == "--help" || args[0] == "-h" {
@@ -88,6 +91,8 @@ func parse(args []string, output io.Writer) (app.Config, *emulator.Scenario, err
 	return config, scenario, err
 }
 
+// run parses the command line, initializes the emulator, and runs it with ctx.
+// Flag output and structured application logs are written to stderr.
 func run(ctx context.Context, args []string, stderr io.Writer) error {
 	config, scenario, err := parse(args, stderr)
 	if err != nil {

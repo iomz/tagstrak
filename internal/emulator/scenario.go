@@ -147,6 +147,7 @@ func DecodeScenario(r io.Reader) (*Scenario, error) {
 type Random interface{ Intn(int) int }
 type RandomFactory func(int64) Random
 
+// SeededRandom returns an independent deterministic random source for seed.
 func SeededRandom(seed int64) Random { return rand.New(rand.NewSource(seed)) }
 
 // Catalog publishes whole scenarios atomically; a cycle holds one snapshot.
@@ -180,6 +181,9 @@ type Cursor struct {
 	index    int
 }
 
+// Next returns a mutable copy of the next cycle and reports whether a cycle was
+// available. It returns false without an error after a nonrepeating scenario is
+// exhausted and adopts a replacement scenario at the next call.
 func (c *Cursor) Next() ([]inventory.Tag, bool, error) {
 	scenario, revision := c.catalog.snapshot()
 	if c.revision != revision {

@@ -53,6 +53,9 @@ func New(config Config, scenario *Scenario, clock Clock, random RandomFactory, l
 	}
 	return &Server{config: config, catalog: newCatalog(scenario), clock: clock, random: random, logger: logger, status: Status{Address: config.Address}}, nil
 }
+
+// Status returns a race-safe operational snapshot with the current scenario
+// revision.
 func (s *Server) Status() Status {
 	s.mu.Lock()
 	v := s.status

@@ -23,9 +23,14 @@ type Config struct {
 	ShutdownTimeout time.Duration
 }
 
+// DefaultConfig returns the default emulator application configuration with
+// local control disabled.
 func DefaultConfig() Config {
 	return Config{Emulator: emulator.DefaultConfig(), ShutdownTimeout: 5 * time.Second}
 }
+
+// Validate reports an error wrapping emulator.ErrConfig when the emulator
+// settings, shutdown timeout, or optional control socket path are invalid.
 func (c Config) Validate() error {
 	if err := c.Emulator.Validate(); err != nil {
 		return err
@@ -47,6 +52,8 @@ type App struct {
 	started atomic.Bool
 }
 
+// New validates its inputs and constructs an idle application without opening
+// listeners or starting workers.
 func New(config Config, scenario *emulator.Scenario, clock emulator.Clock, random emulator.RandomFactory, logger *slog.Logger) (*App, error) {
 	if err := config.Validate(); err != nil {
 		return nil, err
@@ -57,6 +64,8 @@ func New(config Config, scenario *emulator.Scenario, clock emulator.Clock, rando
 	}
 	return &App{config: config, server: server}, nil
 }
+
+// Status returns a race-safe snapshot of the emulator's operational state.
 func (a *App) Status() emulator.Status { return a.server.Status() }
 
 // Run owns both transports. No existing socket is removed; a private parent
