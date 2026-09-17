@@ -9,7 +9,9 @@ COPY go.mod .
 COPY go.sum .
 COPY cmd/golemu cmd/golemu
 COPY internal/binutil internal/binutil
-COPY internal/golemu internal/golemu
+COPY internal/app/golemu internal/app/golemu
+COPY internal/emulator internal/emulator
+COPY internal/inventory internal/inventory
 COPY llrp llrp
 RUN go mod vendor
 RUN CGO_ENABLED=0 GOOS=linux go build -mod=vendor -o golemu ./cmd/golemu/...
