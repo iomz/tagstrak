@@ -1,6 +1,7 @@
 # Inventory files
 
-`golemu server --file tags.json` loads and atomically updates a versioned JSON inventory.
+`golemu server --inventory tags.json` loads a versioned JSON inventory as a repeating scenario.
+Live updates use the separate scenario control endpoint described in [golemu.md](golemu.md); the emulator does not overwrite the input file.
 
 ```json
 {"version":1,"tags":["3000","302db319a000004000000003"]}

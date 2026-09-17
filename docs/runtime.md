@@ -16,7 +16,7 @@ The command's consumer acknowledges ingestion only; it does not retain observati
 Issues #7–#9 supply those downstream capabilities through the consumer boundary.
 The old global command runtime, SPDY listener, adaptive engine workers, and InfluxDB worker wiring are removed from the command.
 Their legacy packages remain available to their own workstreams.
-The emulator runtime rewrite belongs to #6; this change only corrects its config-response message ID to echo the request.
+The emulator lifecycle and scenarios implemented by #6 are documented in [golemu.md](golemu.md).
 
 ## Run
 
