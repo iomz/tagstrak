@@ -10,7 +10,9 @@ import (
 	"github.com/iomz/tagstrak/v2/llrp"
 )
 
-// requestedKeepalive accepts the config subset emitted by internal/reader.
+// requestedKeepalive returns the interval requested by SET_READER_CONFIG, or
+// the configured default when KeepaliveSpec is omitted. It rejects resets,
+// unsupported parameters, and intervals outside the configured time budget.
 func requestedKeepalive(m llrp.Message, c Config) (time.Duration, error) {
 	if m.Header.Type != llrp.SetReaderConfigHeader || len(m.Payload) < 1 || m.Payload[0] != 0 {
 		return 0, fmt.Errorf("%w: expected SET_READER_CONFIG without reset", ErrProtocol)

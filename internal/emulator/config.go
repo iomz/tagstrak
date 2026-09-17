@@ -30,9 +30,13 @@ type Config struct {
 	FrameBytes        uint32
 }
 
+// DefaultConfig returns the default configuration for an emulator server.
 func DefaultConfig() Config {
 	return Config{Address: "127.0.0.1:5084", MaxClients: 8, ReportInterval: time.Second, KeepaliveInterval: 10 * time.Second, AckTimeout: 5 * time.Second, HandshakeTimeout: 5 * time.Second, ReadTimeout: 30 * time.Second, WriteTimeout: 5 * time.Second, FrameBytes: 1500}
 }
+
+// Validate reports an error wrapping ErrConfig when an address, resource
+// limit, duration, or frame budget is outside the supported range.
 func (c Config) Validate() error {
 	_, port, err := net.SplitHostPort(c.Address)
 	if err != nil {
