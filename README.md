@@ -13,6 +13,7 @@ Modern Go stack for LLRP-based RFID, combining reusable protocol tooling, gosstr
 - `internal/emulator`: deterministic scenarios and LLRP emulation
 - `internal/app/golemu`: golemu composition and local control
 - `internal/identity`, `internal/tdt`: canonical identities and tag data translation
+- `internal/filter`: subscription matching over translated tags
 - `internal/gosstrak`: gosstrak application packages
 
 ## Legacy import
@@ -34,3 +35,8 @@ See [docs/golemu.md](docs/golemu.md) for runnable examples and cycle semantics.
 
 Gosstrak translates tag data into canonical GS1 EPC and ISO/IEC 17360 identities from pinned GS1 TDT artefacts and cited ISO evidence, and compiles GS1 patterns for filtering.
 See [docs/tdt.md](docs/tdt.md) for supported schemes, artefact maintenance, golden vectors, and the benchmark baseline.
+
+## Subscription matching
+
+Translated tags are matched against an immutable, atomically replaced subscription set.
+See [docs/filter.md](docs/filter.md) for the matcher contract, conformance, and the single-mode baseline.
