@@ -14,27 +14,9 @@ import (
 	"syscall"
 
 	app "github.com/iomz/tagstrak/v2/internal/app/gosstrak"
-	"github.com/iomz/tagstrak/v2/internal/inventory"
+	"github.com/iomz/tagstrak/v2/internal/filter"
 	"github.com/iomz/tagstrak/v2/internal/tdt"
 )
-
-// logProcessor is the current processing-only slice: it translates each
-// observation and logs the canonical identity. Matching and delivery are wired
-// through the same Processor boundary by milestone issues #7 and #9.
-type logProcessor struct {
-	logger *slog.Logger
-}
-
-func (p logProcessor) Process(ctx context.Context, observation inventory.Observation, translation tdt.Translation) error {
-	if err := ctx.Err(); err != nil {
-		return err
-	}
-	p.logger.Debug("translated tag",
-		"source", observation.Source(),
-		"scheme", string(translation.Encoding.Scheme),
-		"identity", translation.Identity.Describe())
-	return nil
-}
 
 // parseConfig parses command-line arguments into an application configuration,
 // applying defaults and validating the resulting limits and settings. An optional
@@ -91,7 +73,10 @@ func run(ctx context.Context, args []string, stderr io.Writer) error {
 	// That assumption is explicit rather than inferred from the tag itself,
 	// and readers that report the PC word are believed instead.
 	translator := tdt.New(tdt.WithDefaultFormat(tdt.FormatGS1))
-	consumer := app.NewTranslatingConsumer(translator, logProcessor{logger: logger})
+	// Subscriptions start empty: their configuration belongs to issue #10.
+	// Matching runs regardless, so translated tags and their matches are
+	// logged at debug level through the same path delivery will use.
+	consumer := app.NewTranslatingConsumer(translator, app.NewMatchingProcessor(&filter.Set{}, logger))
 	runtime, err := app.New(config, &net.Dialer{}, consumer, logger)
 	if err != nil {
 		return err

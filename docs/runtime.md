@@ -11,12 +11,13 @@ The architecture decision in #2 keeps gosstrak and golemu as separate processes 
 - `llrp` owns all wire framing and parameter decoding; it does not dial, retry, log, or close connections.
 - `internal/inventory.Observation` is the immutable domain handoff already established by #4.
 
-This milestone slice runs in **ingestion mode**: it validates observations, translates them, and exposes accepted/processed/translated counts.
-The command's consumer is `internal/app/gosstrak.TranslatingConsumer`, which adapts each observation to the #8 translation boundary described in [tdt.md](tdt.md) and logs the canonical identity at debug level.
+This milestone slice runs in **ingestion mode**: it validates observations, translates them, matches them against subscriptions, and exposes accepted/processed/translated counts.
+The command's consumer is `internal/app/gosstrak.TranslatingConsumer`, which adapts each observation to the #8 translation boundary described in [tdt.md](tdt.md).
+Its processor, `MatchingProcessor`, matches each translation against the current `filter.Set` described in [filter.md](filter.md) and logs the identity and matched subscription IDs at debug level.
 Tags outside the supported standards are counted as untranslatable and dropped; any other translation error fails the consumer.
 Tags whose reader reports no protocol-control word are translated as GS1 EPC data by explicit configuration, never by guessing from the header.
-It does not retain observations or claim matching or destination delivery.
-Issues #7 and #9 supply those downstream capabilities through the `Processor` boundary.
+The command starts with no subscriptions, because subscription configuration belongs to #10.
+It does not retain observations or deliver matches; #9 supplies delivery through the `Processor` boundary.
 The old global command runtime, SPDY listener, adaptive engine workers, and InfluxDB worker wiring are removed from the command.
 Their legacy packages remain available to their own workstreams.
 The emulator lifecycle and scenarios implemented by #6 are documented in [golemu.md](golemu.md).
