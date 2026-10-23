@@ -1,4 +1,4 @@
-FROM golang:1.25-alpine AS build
+FROM golang:1.26.10-alpine AS build
 
 LABEL maintainer="Iori Mizutani <iori.mizutani@gmail.com>"
 
@@ -12,6 +12,7 @@ COPY internal/binutil internal/binutil
 COPY internal/app/golemu internal/app/golemu
 COPY internal/emulator internal/emulator
 COPY internal/inventory internal/inventory
+COPY internal/reader internal/reader
 COPY llrp llrp
 RUN go mod vendor
 RUN CGO_ENABLED=0 GOOS=linux go build -mod=vendor -o golemu ./cmd/golemu/...
@@ -19,8 +20,11 @@ RUN CGO_ENABLED=0 GOOS=linux go build -mod=vendor -o golemu ./cmd/golemu/...
 # export to a single layer image
 FROM alpine:latest
 
-# install some required binaries
-RUN apk add --no-cache ca-certificates \
+# install some required binaries; the ca-certificates floor excludes bundles
+# that still trust the compromised eMudhra intermediates (CVE-2026-111943)
+RUN apk upgrade --no-cache && \
+    apk add --no-cache 'ca-certificates>=20261020-r0' \
+    'ca-certificates-bundle>=20261020-r0' \
     ffmpeg \
     tzdata
 
