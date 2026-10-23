@@ -1,0 +1,45 @@
+{
+	"note": "Vectors transcribed from the GS1 EPC Tag Data Standard 2.2 worked examples. This tier is normative: where a reference-generated vector disagrees with one of these, this one wins and the disagreement is a bug report.",
+	"vectors": [
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 7,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:sgtin-96:3.0614141.812345.6789",
+			"pureIdentity": "urn:epc:id:sgtin:0614141.812345.6789",
+			"hex": "3074257bf7194e4000001a85",
+			"provenance": "spec",
+			"spec": "TDS 2.2 SGTIN-96 worked example"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 7,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:sscc-96:0.0614141.1234567890",
+			"pureIdentity": "urn:epc:id:sscc:0614141.1234567890",
+			"hex": "3114257bf4499602d2000000",
+			"provenance": "spec",
+			"spec": "TDS 2.2 SSCC-96 worked example"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 7,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:grai-96:0.0614141.12345.6789",
+			"pureIdentity": "urn:epc:id:grai:0614141.12345.6789",
+			"hex": "3314257bf40c0e4000001a85",
+			"provenance": "spec",
+			"spec": "TDS 2.2 GRAI-96 worked example"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 7,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:giai-96:0.0614141.5678",
+			"pureIdentity": "urn:epc:id:giai:0614141.5678",
+			"hex": "3414257bf40000000000162e",
+			"provenance": "spec",
+			"spec": "TDS 2.2 GIAI-96 worked example"
+		}
+	]
+}

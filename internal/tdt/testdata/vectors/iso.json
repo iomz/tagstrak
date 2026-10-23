@@ -1,0 +1,595 @@
+{
+	"note": "ISO character-set and register vectors. Tier: character-table. These are transcribed from published tables, not from published encoded examples for the constructs this build supports. A round-trip test through tagstrak's own codec is NOT evidence of interoperability (issue #8 Amendment 2, decision B12). Normative encoded examples DO exist for the ISO/IEC 17360 binary UII bitstream of AFI 0xAD (ISO/IEC 17360:2023 5.4.6.1 NOTE 2 and NOTE 3); that AFI is out of scope for this baseline, so those vectors are not carried here.",
+	"characterSet": {
+		"source": "ISO/IEC 15961-2 Applications Family Identifier (AFI) Assignments Register, 2025-11-25, Annex A, 'The ISO/IEC 15962 6-bit universal TEXT character set for AIDC use', page 9",
+		"url": "https://www.aimglobal.org/wp-content/uploads/2025/11/ISO-IEC-15961-2-Data-Constructs-Register-2025-11-25.pdf",
+		"rule": "code = ASCII & 0x3F over ASCII 0x20-0x5F, EXCEPT five positions that hold ISO/IEC 15434 structural control characters instead of the printable character the plain mask would give",
+		"transcriptionNote": "One cell, 6-bit value 0x2D, is typeset in the register with a non-breaking hyphen that text extraction could not map; its character is the ordinary hyphen-minus '-'. The five control positions listed in controlSubstitutions are NOT printable characters and must not be interpolated from the surrounding table.",
+		"rows": [
+			{
+				"code": "000000",
+				"value": 0,
+				"character": "@",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "000001",
+				"value": 1,
+				"character": "A",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "000010",
+				"value": 2,
+				"character": "B",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "000011",
+				"value": 3,
+				"character": "C",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "000100",
+				"value": 4,
+				"character": "D",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "000101",
+				"value": 5,
+				"character": "E",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "000110",
+				"value": 6,
+				"character": "F",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "000111",
+				"value": 7,
+				"character": "G",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "001000",
+				"value": 8,
+				"character": "H",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "001001",
+				"value": 9,
+				"character": "I",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "001010",
+				"value": 10,
+				"character": "J",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "001011",
+				"value": 11,
+				"character": "K",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "001100",
+				"value": 12,
+				"character": "L",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "001101",
+				"value": 13,
+				"character": "M",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "001110",
+				"value": 14,
+				"character": "N",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "001111",
+				"value": 15,
+				"character": "O",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "010000",
+				"value": 16,
+				"character": "P",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "010001",
+				"value": 17,
+				"character": "Q",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "010010",
+				"value": 18,
+				"character": "R",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "010011",
+				"value": 19,
+				"character": "S",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "010100",
+				"value": 20,
+				"character": "T",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "010101",
+				"value": 21,
+				"character": "U",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "010110",
+				"value": 22,
+				"character": "V",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "010111",
+				"value": 23,
+				"character": "W",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "011000",
+				"value": 24,
+				"character": "X",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "011001",
+				"value": 25,
+				"character": "Y",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "011010",
+				"value": 26,
+				"character": "Z",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "011011",
+				"value": 27,
+				"character": "[",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "011100",
+				"value": 28,
+				"character": "\\",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "011101",
+				"value": 29,
+				"character": "]",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "011110",
+				"value": 30,
+				"control": "GS",
+				"byte": "0x1D",
+				"dataCharacter": false,
+				"transcribed": true
+			},
+			{
+				"code": "011111",
+				"value": 31,
+				"control": "RS",
+				"byte": "0x1E",
+				"dataCharacter": false,
+				"transcribed": true
+			},
+			{
+				"code": "100000",
+				"value": 32,
+				"character": " ",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "100001",
+				"value": 33,
+				"control": "EOT",
+				"byte": "0x04",
+				"dataCharacter": false,
+				"transcribed": true
+			},
+			{
+				"code": "100010",
+				"value": 34,
+				"character": "\"",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "100011",
+				"value": 35,
+				"control": "FS",
+				"byte": "0x1C",
+				"dataCharacter": false,
+				"transcribed": true
+			},
+			{
+				"code": "100100",
+				"value": 36,
+				"control": "US",
+				"byte": "0x1F",
+				"dataCharacter": false,
+				"transcribed": true
+			},
+			{
+				"code": "100101",
+				"value": 37,
+				"character": "%",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "100110",
+				"value": 38,
+				"character": "&",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "100111",
+				"value": 39,
+				"character": "'",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "101000",
+				"value": 40,
+				"character": "(",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "101001",
+				"value": 41,
+				"character": ")",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "101010",
+				"value": 42,
+				"character": "*",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "101011",
+				"value": 43,
+				"character": "+",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "101100",
+				"value": 44,
+				"character": ",",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "101101",
+				"value": 45,
+				"character": "-",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "101110",
+				"value": 46,
+				"character": ".",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "101111",
+				"value": 47,
+				"character": "/",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "110000",
+				"value": 48,
+				"character": "0",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "110001",
+				"value": 49,
+				"character": "1",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "110010",
+				"value": 50,
+				"character": "2",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "110011",
+				"value": 51,
+				"character": "3",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "110100",
+				"value": 52,
+				"character": "4",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "110101",
+				"value": 53,
+				"character": "5",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "110110",
+				"value": 54,
+				"character": "6",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "110111",
+				"value": 55,
+				"character": "7",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "111000",
+				"value": 56,
+				"character": "8",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "111001",
+				"value": 57,
+				"character": "9",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "111010",
+				"value": 58,
+				"character": ":",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "111011",
+				"value": 59,
+				"character": ";",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "111100",
+				"value": 60,
+				"character": "<",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "111101",
+				"value": 61,
+				"character": "=",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "111110",
+				"value": 62,
+				"character": ">",
+				"dataCharacter": true,
+				"transcribed": true
+			},
+			{
+				"code": "111111",
+				"value": 63,
+				"character": "?",
+				"dataCharacter": true,
+				"transcribed": true
+			}
+		],
+		"controlSubstitutions": [
+			{
+				"code": "011110",
+				"displaces": "^",
+				"control": "GS",
+				"byte": "0x1D"
+			},
+			{
+				"code": "011111",
+				"displaces": "_",
+				"control": "RS",
+				"byte": "0x1E"
+			},
+			{
+				"code": "100001",
+				"displaces": "!",
+				"control": "EOT",
+				"byte": "0x04"
+			},
+			{
+				"code": "100011",
+				"displaces": "#",
+				"control": "FS",
+				"byte": "0x1C"
+			},
+			{
+				"code": "100100",
+				"displaces": "$",
+				"control": "US",
+				"byte": "0x1F"
+			}
+		],
+		"corroboration": "The five substitutions and the roles of GS and EOT are corroborated by two further current sources: the normative Annex A of the RAIN Alliance specification 'RAIN Free-Form Encoding Schemes' (2025-12-15), which prints the control glyphs explicitly, and ISO/IEC 17360:2023 5.4.3, which quotes GS (011110b) as the data identifier separator and EOT (100001b) as the message terminator. See issue #19 Canonical Study Record Part 1 section 4.1."
+	},
+	"registeredAFIs": [
+		{
+			"afi": "0xA2",
+			"role": "ISO/IEC 17360 transport unit",
+			"supported": true,
+			"dataIdentifiers": [
+				"J",
+				"1J",
+				"2J",
+				"3J",
+				"4J",
+				"5J",
+				"6J"
+			]
+		},
+		{
+			"afi": "0xA7",
+			"role": "ISO/IEC 17360 transport unit, containing hazardous materials",
+			"supported": true,
+			"historical": true,
+			"dataIdentifiers": [
+				"J",
+				"1J",
+				"2J",
+				"3J",
+				"4J",
+				"5J",
+				"6J"
+			]
+		},
+		{
+			"afi": "0xA9",
+			"role": "Explicitly reserved for ISO 17363",
+			"supported": true,
+			"dataIdentifiers": []
+		},
+		{
+			"afi": "0xAA",
+			"role": "Explicitly reserved for ISO 17363",
+			"supported": true,
+			"historical": true,
+			"dataIdentifiers": []
+		},
+		{
+			"afi": "0xA1",
+			"role": "ISO/IEC 17360 product tagging",
+			"supported": false,
+			"dataIdentifiers": [
+				"25S",
+				"25T",
+				"I"
+			]
+		},
+		{
+			"afi": "0xA3",
+			"role": "ISO/IEC 17360 returnable transport item",
+			"supported": false,
+			"dataIdentifiers": [
+				"1B",
+				"25B"
+			]
+		},
+		{
+			"afi": "0xA5",
+			"role": "ISO/IEC 17360 product packaging",
+			"supported": false,
+			"dataIdentifiers": [
+				"25S",
+				"25T",
+				"I"
+			]
+		}
+	],
+	"unregisteredAFIs": [
+		"0x10",
+		"0x8F",
+		"0xD0",
+		"0xFF"
+	],
+	"iso6346": {
+		"source": "Algorithm per ISO 6346:1995 Annex A, which is not publicly readable; the rule reproduced here is the standard published one and regenerates the canonical worked example CSQU3054383. Structure and equipment category letters per BIC, the registrar (https://www.bic-code.org/identification-number/). Classified Derived, never Normative (issue #8 Amendment 2, gate G7; issue #19 gate U11).",
+		"vectors": [
+			{
+				"code": "CSQU305438",
+				"checkDigit": "3"
+			},
+			{
+				"code": "MSCU665863",
+				"checkDigit": "3"
+			},
+			{
+				"code": "TEXU123456",
+				"checkDigit": "9"
+			}
+		],
+		"tier": "Derived"
+	},
+	"unregisteredAFIsNote": "ISO/IEC 15961-3:2019 Table 1 restricts assignable AFIs to 0x00-0x0F and 0x90-0xCE. 0xB0 was previously listed here in error: it is registered to the 6C Toll Operators Coalition. 0x00 is the defined value 'AFI not configured', not an unregistered one."
+}

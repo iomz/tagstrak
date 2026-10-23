@@ -1,0 +1,433 @@
+{
+	"source": {
+		"document": "ISO/IEC 15961-2 Applications Family Identifier (AFI) Assignments Register",
+		"authority": "ISO/IEC 15961-2 Registration Authority (AIM Global)",
+		"assignmentsEdition": "2025-11-25",
+		"assignmentsURL": "https://www.aimglobal.org/wp-content/uploads/2025/11/ISO-IEC-15961-2-Data-Constructs-Register-2025-11-25.pdf",
+		"assignmentsPages": "3-5, Annex A page 9",
+		"constructsEdition": "2023-09-25",
+		"constructsURL": "https://www.aimglobal.org/wp-content/uploads/2024/05/ISO-IEC-15961-2-Data-Constructs-Register-2023-09-25.pdf",
+		"constructsPages": "8-10",
+		"note": "AFI assignments are transcribed from the current register (assignmentsEdition). Data identifier sets and object identifiers are transcribed from the Data Constructs Register table of the SUPERSEDED constructsEdition, column 'Monomorphic-UII MH10 Data Identifier': the current edition removed that table entirely, so the sets are historical and are used as a recognition table, never as a validation rule (issue #8 Amendment 2, decision B6; issue #19 gate U6). The register is published as PDF only, so this file is a hand-transcribed copy checked against those pages; it is data, not syntax rules.",
+		"constructsStatus": "superseded; data identifier sets are historical and used for recognition only"
+	},
+	"constructs": [
+		{
+			"afi": "0x00",
+			"role": "AFI not configured",
+			"encoding": "",
+			"historical": false,
+			"supported": false,
+			"dataIdentifiers": []
+		},
+		{
+			"afi": "0x01",
+			"role": "Closed application environments, free-form BINARY in multiples of 16-bit words",
+			"encoding": "binary",
+			"historical": false,
+			"supported": false,
+			"dataIdentifiers": []
+		},
+		{
+			"afi": "0x02",
+			"role": "Closed application environments, free-form 6-bit TEXT",
+			"encoding": "6-bit",
+			"historical": false,
+			"supported": false,
+			"dataIdentifiers": []
+		},
+		{
+			"afi": "0x03",
+			"role": "Closed application environments, free-form UTF-8 (8-bit)",
+			"encoding": "utf-8",
+			"historical": false,
+			"supported": false,
+			"dataIdentifiers": []
+		},
+		{
+			"afi": "0x04",
+			"role": "Closed system data under the control of the item manufacturer",
+			"encoding": "",
+			"historical": false,
+			"supported": false,
+			"dataIdentifiers": []
+		},
+		{
+			"afi": "0x05",
+			"role": "Closed system data under the control of the transport company",
+			"encoding": "",
+			"historical": false,
+			"supported": false,
+			"dataIdentifiers": []
+		},
+		{
+			"afi": "0x06",
+			"role": "Closed system data under the control of the end user",
+			"encoding": "",
+			"historical": false,
+			"supported": false,
+			"dataIdentifiers": []
+		},
+		{
+			"afi": "0x07",
+			"role": "Closed systems control of re-circulating items",
+			"encoding": "",
+			"historical": false,
+			"supported": false,
+			"dataIdentifiers": []
+		},
+		{
+			"afi": "0x90",
+			"role": "Odette vehicle identification, Monomorphic-UII",
+			"encoding": "6-bit",
+			"historical": false,
+			"supported": false,
+			"dataIdentifiers": []
+		},
+		{
+			"afi": "0x91",
+			"role": "IATA asset control, initially ULD containers (IATA RP1640)",
+			"encoding": "",
+			"historical": false,
+			"supported": false,
+			"dataIdentifiers": []
+		},
+		{
+			"afi": "0x92",
+			"role": "DigSig, digital signature verifiable UII (ISO/IEC 20248)",
+			"encoding": "application-defined 8-bit",
+			"historical": false,
+			"supported": false,
+			"dataIdentifiers": []
+		},
+		{
+			"afi": "0xA0",
+			"role": "IPC postal items, Monomorphic-UII",
+			"encoding": "URN Code 40",
+			"historical": false,
+			"supported": false,
+			"dataIdentifiers": []
+		},
+		{
+			"afi": "0xA1",
+			"role": "ISO/IEC 17360 product tagging",
+			"encoding": "6-bit",
+			"historical": false,
+			"supported": false,
+			"dataIdentifiers": [
+				{
+					"di": "25S",
+					"oid": "1 0 15961 13 1"
+				},
+				{
+					"di": "25T",
+					"oid": "1 0 15961 13 3"
+				},
+				{
+					"di": "I",
+					"oid": "1 0 15961 13 96"
+				}
+			]
+		},
+		{
+			"afi": "0xA2",
+			"role": "ISO/IEC 17360 transport unit",
+			"encoding": "6-bit",
+			"historical": false,
+			"supported": true,
+			"dataIdentifiers": [
+				{
+					"di": "J",
+					"oid": "1 0 15961 13 4"
+				},
+				{
+					"di": "1J",
+					"oid": "1 0 15961 13 36"
+				},
+				{
+					"di": "2J",
+					"oid": "1 0 15961 13 156"
+				},
+				{
+					"di": "3J",
+					"oid": "1 0 15961 13 157"
+				},
+				{
+					"di": "4J",
+					"oid": "1 0 15961 13 159",
+					"oidConflict": "1 0 15961 13 158",
+					"oidNote": "CONFLICT, unresolved. The register assigns 4J relative OID 159. The Data Format 13 mapping table the register itself registers (MHI Assigned_Relative_OID_DI_table_10SEP2014.xls) assigns 4J 158 and assigns 159 to 7J. Neither is adjudicated here and no object identifier is emitted anywhere in this build (issue #8 Amendment 2, gate G5; issue #19 gate U5)."
+				},
+				{
+					"di": "5J",
+					"oid": "1 0 15961 13 37"
+				},
+				{
+					"di": "6J",
+					"oid": "1 0 15961 13 38"
+				}
+			]
+		},
+		{
+			"afi": "0xA3",
+			"role": "ISO/IEC 17360 returnable transport item",
+			"encoding": "6-bit",
+			"historical": false,
+			"supported": false,
+			"dataIdentifiers": [
+				{
+					"di": "1B",
+					"oid": "1 0 15961 13 112"
+				},
+				{
+					"di": "25B",
+					"oid": "1 0 15961 13 2"
+				}
+			]
+		},
+		{
+			"afi": "0xA4",
+			"role": "ISO/IEC 17360 product tagging, containing hazardous materials",
+			"encoding": "6-bit",
+			"historical": true,
+			"supported": false,
+			"dataIdentifiers": [
+				{
+					"di": "25S",
+					"oid": "1 0 15961 13 1"
+				},
+				{
+					"di": "25T",
+					"oid": "1 0 15961 13 3"
+				},
+				{
+					"di": "I",
+					"oid": "1 0 15961 13 96"
+				}
+			]
+		},
+		{
+			"afi": "0xA5",
+			"role": "ISO/IEC 17360 product packaging",
+			"encoding": "6-bit",
+			"historical": false,
+			"supported": false,
+			"dataIdentifiers": [
+				{
+					"di": "25S",
+					"oid": "1 0 15961 13 1"
+				},
+				{
+					"di": "25T",
+					"oid": "1 0 15961 13 3"
+				},
+				{
+					"di": "I",
+					"oid": "1 0 15961 13 96"
+				}
+			]
+		},
+		{
+			"afi": "0xA6",
+			"role": "ISO/IEC 17360 product packaging, containing hazardous materials",
+			"encoding": "6-bit",
+			"historical": true,
+			"supported": false,
+			"dataIdentifiers": [
+				{
+					"di": "25S",
+					"oid": "1 0 15961 13 1"
+				},
+				{
+					"di": "25T",
+					"oid": "1 0 15961 13 3"
+				},
+				{
+					"di": "I",
+					"oid": "1 0 15961 13 96"
+				}
+			]
+		},
+		{
+			"afi": "0xA7",
+			"role": "ISO/IEC 17360 transport unit, containing hazardous materials",
+			"encoding": "6-bit",
+			"historical": true,
+			"supported": true,
+			"dataIdentifiers": [
+				{
+					"di": "J",
+					"oid": "1 0 15961 13 4"
+				},
+				{
+					"di": "1J",
+					"oid": "1 0 15961 13 36"
+				},
+				{
+					"di": "2J",
+					"oid": "1 0 15961 13 156"
+				},
+				{
+					"di": "3J",
+					"oid": "1 0 15961 13 157"
+				},
+				{
+					"di": "4J",
+					"oid": "1 0 15961 13 159",
+					"oidConflict": "1 0 15961 13 158",
+					"oidNote": "CONFLICT, unresolved. The register assigns 4J relative OID 159. The Data Format 13 mapping table the register itself registers (MHI Assigned_Relative_OID_DI_table_10SEP2014.xls) assigns 4J 158 and assigns 159 to 7J. Neither is adjudicated here and no object identifier is emitted anywhere in this build (issue #8 Amendment 2, gate G5; issue #19 gate U5)."
+				},
+				{
+					"di": "5J",
+					"oid": "1 0 15961 13 37"
+				},
+				{
+					"di": "6J",
+					"oid": "1 0 15961 13 38"
+				}
+			]
+		},
+		{
+			"afi": "0xA8",
+			"role": "ISO/IEC 17360 returnable transport item, containing hazardous materials",
+			"encoding": "6-bit",
+			"historical": true,
+			"supported": false,
+			"dataIdentifiers": [
+				{
+					"di": "1B",
+					"oid": "1 0 15961 13 112"
+				},
+				{
+					"di": "25B",
+					"oid": "1 0 15961 13 2"
+				}
+			]
+		},
+		{
+			"afi": "0xA9",
+			"role": "Explicitly reserved for ISO 17363",
+			"encoding": "",
+			"historical": false,
+			"supported": true,
+			"dataIdentifiers": []
+		},
+		{
+			"afi": "0xAA",
+			"role": "Explicitly reserved for ISO 17363",
+			"encoding": "",
+			"historical": true,
+			"supported": true,
+			"dataIdentifiers": []
+		},
+		{
+			"afi": "0xAB",
+			"role": "ISO/IEC 29174 mobile AIDC; the standard has been withdrawn",
+			"encoding": "",
+			"historical": true,
+			"supported": false,
+			"dataIdentifiers": []
+		},
+		{
+			"afi": "0xAC",
+			"role": "ISO/IEC 17360 Monomorphic-UII, 8-bit encoding",
+			"encoding": "utf-8",
+			"historical": false,
+			"supported": false,
+			"dataIdentifiers": []
+		},
+		{
+			"afi": "0xAD",
+			"role": "ISO/IEC 17360 Monomorphic-UII, binary encoding",
+			"encoding": "binary",
+			"historical": false,
+			"supported": false,
+			"dataIdentifiers": []
+		},
+		{
+			"afi": "0xAE",
+			"role": "The RAIN Alliance free-form schema BINARY",
+			"encoding": "binary",
+			"historical": false,
+			"supported": false,
+			"dataIdentifiers": []
+		},
+		{
+			"afi": "0xAF",
+			"role": "VDMA animal identification (ISO 6881)",
+			"encoding": "",
+			"historical": false,
+			"supported": false,
+			"dataIdentifiers": []
+		},
+		{
+			"afi": "0xB0",
+			"role": "6C Toll Operators Coalition, Monomorphic-UII",
+			"encoding": "application-defined 8-bit",
+			"historical": false,
+			"supported": false,
+			"dataIdentifiers": []
+		},
+		{
+			"afi": "0xBB",
+			"role": "ISBT, blood, tissue, organ and cellular therapy products",
+			"encoding": "",
+			"historical": false,
+			"supported": false,
+			"dataIdentifiers": []
+		},
+		{
+			"afi": "0xBC",
+			"role": "The RAIN Alliance free-form schema TEXT, 8-bit ASCII",
+			"encoding": "utf-8",
+			"historical": false,
+			"supported": false,
+			"dataIdentifiers": []
+		},
+		{
+			"afi": "0xBD",
+			"role": "RAIN URI identifier",
+			"encoding": "URN Code 40",
+			"historical": false,
+			"supported": false,
+			"dataIdentifiers": []
+		},
+		{
+			"afi": "0xC0",
+			"role": "Rail vehicle identification (CEN EN 17230)",
+			"encoding": "6-bit",
+			"historical": false,
+			"supported": false,
+			"dataIdentifiers": [
+				{
+					"di": "5R",
+					"oid": ""
+				}
+			]
+		},
+		{
+			"afi": "0xC1",
+			"role": "IATA baggage handling (IATA RP1740C)",
+			"encoding": "",
+			"historical": false,
+			"supported": false,
+			"dataIdentifiers": []
+		},
+		{
+			"afi": "0xC2",
+			"role": "EDItEUR library items (ISO 28560)",
+			"encoding": "URN Code 40",
+			"historical": false,
+			"supported": false,
+			"dataIdentifiers": []
+		},
+		{
+			"afi": "0xCF",
+			"role": "Reserved as an extension code for multiple byte AFI values",
+			"encoding": "",
+			"historical": false,
+			"supported": false,
+			"dataIdentifiers": []
+		}
+	]
+}

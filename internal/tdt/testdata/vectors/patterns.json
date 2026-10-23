@@ -1,0 +1,78 @@
+{
+	"note": "Match semantics conformance corpus. internal/filter matchers must agree with these results, and with Translation.Match, for every row.",
+	"cases": [
+		{
+			"pattern": "urn:epc:idpat:sgtin:0614141.812345.6789",
+			"level": "identity",
+			"matches": ["urn:epc:tag:sgtin-96:3.0614141.812345.6789", "urn:epc:tag:sgtin-96:0.0614141.812345.6789"],
+			"nonMatches": ["urn:epc:tag:sgtin-96:3.0614141.812345.6790", "urn:epc:tag:sgtin-96:3.0614142.812345.6789"]
+		},
+		{
+			"pattern": "urn:epc:idpat:sgtin:0614141.812345.*",
+			"level": "identity",
+			"matches": ["urn:epc:tag:sgtin-96:3.0614141.812345.6789", "urn:epc:tag:sgtin-96:7.0614141.812345.0"],
+			"nonMatches": ["urn:epc:tag:sgtin-96:3.0614141.812346.6789", "urn:epc:tag:sscc-96:3.0614141.1234567890"]
+		},
+		{
+			"pattern": "urn:epc:idpat:sgtin:*.*.*",
+			"level": "identity",
+			"matches": ["urn:epc:tag:sgtin-96:3.0614141.812345.6789", "urn:epc:tag:sgtin-96:0.000000000000.0.0"],
+			"nonMatches": ["urn:epc:tag:giai-96:0.0614141.5678"]
+		},
+		{
+			"pattern": "urn:epc:idpat:giai:0614141.*",
+			"level": "identity",
+			"matches": ["urn:epc:tag:giai-96:0.0614141.5678", "urn:epc:tag:giai-96:7.0614141.0"],
+			"nonMatches": ["urn:epc:tag:giai-96:0.0614142.5678"]
+		},
+		{
+			"pattern": "urn:epc:idpat:grai:000000000000..*",
+			"level": "identity",
+			"matches": ["urn:epc:tag:grai-96:0.000000000000..17"],
+			"nonMatches": ["urn:epc:tag:grai-96:0.00000000000.0.17"]
+		},
+		{
+			"pattern": "urn:epc:pat:sgtin-96:3.0614141.812345.6789",
+			"level": "encoding",
+			"matches": ["urn:epc:tag:sgtin-96:3.0614141.812345.6789"],
+			"nonMatches": ["urn:epc:tag:sgtin-96:0.0614141.812345.6789", "urn:epc:tag:sgtin-96:3.0614141.812345.6790"]
+		},
+		{
+			"pattern": "urn:epc:pat:sgtin-96:*.*.*.*",
+			"level": "encoding",
+			"matches": ["urn:epc:tag:sgtin-96:3.0614141.812345.6789", "urn:epc:tag:sgtin-96:0.000000000000.0.0"],
+			"nonMatches": ["urn:epc:tag:sscc-96:0.0614141.1234567890"]
+		},
+		{
+			"pattern": "urn:epc:pat:sgtin-96:3.0614141.812345.*",
+			"level": "encoding",
+			"matches": ["urn:epc:tag:sgtin-96:3.0614141.812345.6789", "urn:epc:tag:sgtin-96:3.0614141.812345.1"],
+			"nonMatches": ["urn:epc:tag:sgtin-96:2.0614141.812345.6789"]
+		},
+		{
+			"pattern": "urn:epc:pat:sgtin-96:[1-3].0614141.812345.*",
+			"level": "encoding",
+			"matches": ["urn:epc:tag:sgtin-96:1.0614141.812345.6789", "urn:epc:tag:sgtin-96:3.0614141.812345.6789"],
+			"nonMatches": ["urn:epc:tag:sgtin-96:0.0614141.812345.6789", "urn:epc:tag:sgtin-96:4.0614141.812345.6789"]
+		},
+		{
+			"pattern": "urn:epc:pat:sgtin-96:*.0614141.812345.6789",
+			"level": "encoding",
+			"matches": [],
+			"nonMatches": [],
+			"compileError": "ErrPatternStar"
+		},
+		{
+			"pattern": "urn:epc:pat:grai-96:0.000000000000..*",
+			"level": "encoding",
+			"matches": ["urn:epc:tag:grai-96:0.000000000000..17"],
+			"nonMatches": ["urn:epc:tag:grai-96:1.000000000000..17", "urn:epc:tag:grai-96:0.00000000000.0.17"]
+		},
+		{
+			"pattern": "urn:epc:pat:sscc-96:0.0614141.*",
+			"level": "encoding",
+			"matches": ["urn:epc:tag:sscc-96:0.0614141.1234567890"],
+			"nonMatches": ["urn:epc:tag:sscc-96:1.0614141.1234567890", "urn:epc:tag:sscc-96:0.0614142.1234567890"]
+		}
+	]
+}

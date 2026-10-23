@@ -1,0 +1,36 @@
+{
+	"note": "One row per rule the translator enforces. Each row names the error class it must produce, so a silently accepted invalid encoding fails the suite.",
+	"binary": [
+		{"name": "unknown header", "hex": "0074257bf7194e4000001a85", "error": "ErrUnknownHeader"},
+		{"name": "truncated sgtin-96", "hex": "3074257bf719", "error": "ErrTruncated"},
+		{"name": "sgtin-96 reserved partition 7", "hex": "307e257bf7194e4000001a85", "error": "ErrUnknownPartition"},
+		{"name": "sscc-96 trailing reserved bits set", "hex": "3114257bf4499602d2000001", "error": "ErrReservedBits"}
+	],
+	"pureURI": [
+		{"name": "not a pure identity uri", "input": "urn:epc:tag:sgtin-96:3.0614141.812345.6789", "error": "ErrMalformedURI"},
+		{"name": "unsupported key", "input": "urn:epc:id:sgln:0614141.12345.400", "error": "ErrUnsupportedScheme"},
+		{"name": "company prefix too short", "input": "urn:epc:id:sgtin:06141.812345.6789", "error": "ErrFieldValue", "rule": "length"},
+		{"name": "wrong field count", "input": "urn:epc:id:sgtin:0614141.812345", "error": "ErrMalformedURI"},
+		{"name": "item reference wrong length", "input": "urn:epc:id:sgtin:0614141.81234.6789", "error": "ErrFieldValue", "rule": "length"},
+		{"name": "serial with leading zero", "input": "urn:epc:id:sgtin:0614141.812345.06789", "error": "ErrFieldValue", "rule": "leading-zero"},
+		{"name": "serial above binary range", "input": "urn:epc:id:sgtin:0614141.812345.274877906944", "error": "ErrFieldValue", "rule": "range"},
+		{"name": "non numeric serial", "input": "urn:epc:id:sgtin:0614141.812345.67A9", "error": "ErrFieldValue", "rule": "charset"},
+		{"name": "grai asset type must be empty at gcp 12", "input": "urn:epc:id:grai:000000000000.1.1", "error": "ErrFieldValue", "rule": "length"}
+	],
+	"tagURI": [
+		{"name": "unsupported scheme", "input": "urn:epc:tag:sgtin-198:3.0614141.812345.ABC", "error": "ErrUnsupportedScheme"},
+		{"name": "filter out of range", "input": "urn:epc:tag:sgtin-96:8.0614141.812345.6789", "error": "ErrFieldValue", "rule": "range"},
+		{"name": "filter with padding", "input": "urn:epc:tag:sgtin-96:03.0614141.812345.6789", "error": "ErrFieldValue", "rule": "length"},
+		{"name": "giai asset reference beyond 42 bits", "input": "urn:epc:tag:giai-96:0.000000000000.9999999999999", "error": "ErrFieldValue", "rule": "range"}
+	],
+	"pattern": [
+		{"name": "not a pattern uri", "input": "urn:epc:id:sgtin:0614141.812345.6789", "error": "ErrMalformedPattern"},
+		{"name": "unsupported pattern key", "input": "urn:epc:idpat:sgln:0614141.12345.*", "error": "ErrUnsupportedScheme"},
+		{"name": "star not in suffix position", "input": "urn:epc:idpat:sgtin:0614141.*.6789", "error": "ErrPatternStar"},
+		{"name": "range in an identity pattern", "input": "urn:epc:idpat:sgtin:0614141.812345.[1-9]", "error": "ErrFieldValue", "rule": "range-not-allowed"},
+		{"name": "wrong field count", "input": "urn:epc:idpat:sgtin:0614141.812345", "error": "ErrMalformedPattern"},
+		{"name": "reversed range", "input": "urn:epc:pat:sgtin-96:3.0614141.812345.[9-1]", "error": "ErrFieldValue", "rule": "range-order"},
+		{"name": "range above field maximum", "input": "urn:epc:pat:sgtin-96:3.0614141.812345.[0-274877906944]", "error": "ErrFieldValue", "rule": "range"},
+		{"name": "exact field with bad charset", "input": "urn:epc:pat:sgtin-96:3.0614141.81234X.*", "error": "ErrFieldValue", "rule": "charset"}
+	]
+}
