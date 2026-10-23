@@ -1,0 +1,37 @@
+{
+	"repo": "gs1/TDT",
+	"commit": "74d505f65d17ec37755f36c0454cd3c31db15710",
+	"tdsVersion": "2.2",
+	"retrieved": "2026-09-20T01:41:41Z",
+	"license": "Apache-2.0",
+	"files": [
+		{
+			"path": "GIAI-96.json",
+			"sha256": "da38525bfe26bde94bffe26dfc9b3f9be7e302def21422f71b9837648c48f293"
+		},
+		{
+			"path": "GRAI-96.json",
+			"sha256": "af679570b906abc929301ee0e9514024fb2676c570ecd1c82d1af1d7d053cb8d"
+		},
+		{
+			"path": "LICENSES/gs1-tdt.txt",
+			"sha256": "c71d239df91726fc519c6eb72d318ec65820627232b2f796219e87dcf35d0ab4"
+		},
+		{
+			"path": "SGTIN-96.json",
+			"sha256": "a691e2d9a26510b6589f7a5f8301198567a07b3b49f45e89c097a544edba6425"
+		},
+		{
+			"path": "SSCC-96.json",
+			"sha256": "c0cb40c98a8b30742bba01067457c4a7a6f275a25bc6fb4084076acea6ff7a29"
+		},
+		{
+			"path": "manifest.json",
+			"sha256": "85a00652f5f7adaf0c250aeb8cb8e711e34efe2d8d3ee2e06e73f800314a05a4"
+		},
+		{
+			"path": "tools/tdtvectors/vendor/TDTtranslator.js",
+			"sha256": "4348634f4e5c41ff7081163051722fbd3d8270e39b6bdf176fe812161e53b0bd"
+		}
+	]
+}
