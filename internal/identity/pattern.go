@@ -70,6 +70,12 @@ var (
 // supplied only when testing it is semantically equivalent to matching the
 // pattern's fields, so a consumer may always use it when present and never has
 // to know how a scheme lays its fields out.
+//
+// The equivalence holds over tags that translate. Test it against a
+// translation's bits, not raw reader bytes: numeric maxima and partition
+// validity cannot be expressed as a mask, so bytes the translator rejects may
+// still pass. The mask does pin every fixed literal of the scheme, such as
+// header, partition and reserved bits.
 type BitPattern struct {
 	value  []byte
 	mask   []byte

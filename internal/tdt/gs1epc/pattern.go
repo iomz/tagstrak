@@ -225,9 +225,6 @@ func patternBits(s *Scheme, opt tdtdef.Option, known bool, fields []identity.Fie
 		headerBytes := (s.def.HeaderBits + 7) / 8
 		return identity.NewBitPattern(value[:headerBytes], mask[:headerBytes], s.def.HeaderBits)
 	}
-	for _, l := range opt.BinaryLiterals {
-		pin(l.BitOffset, l.BitLength, l.Value)
-	}
 	covered := s.def.TagLength
 	for i, f := range fields {
 		bf := opt.BinaryFields[i]
@@ -252,6 +249,12 @@ func patternBits(s *Scheme, opt tdtdef.Option, known bool, fields []identity.Fie
 	for bit := covered; bit < s.def.TagLength; bit++ {
 		mask[bit/8] &^= 1 << (7 - uint(bit%8))
 		value[bit/8] &^= 1 << (7 - uint(bit%8))
+	}
+	// Literals hold on every tag of this option, wherever they sit, so pin
+	// them again: SSCC-96's reserved bits follow the serial reference and the
+	// clearing loop above would otherwise drop them.
+	for _, l := range opt.BinaryLiterals {
+		pin(l.BitOffset, l.BitLength, l.Value)
 	}
 	return identity.NewBitPattern(value, mask, s.def.TagLength)
 }
