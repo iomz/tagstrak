@@ -1,0 +1,2392 @@
+{
+	"source": "gs1/TDT demo/TDTtranslator.js, pinned in tools/tdtvectors/vendor",
+	"note": "Reference oracle, not the normative authority. Where these disagree with vectors transcribed from the TDS text, the spec vectors win.",
+	"rejected": [],
+	"vectors": [
+		{
+			"scheme": "giai-96",
+			"gcpLength": 12,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:giai-96:0.000000000000.0",
+			"pureIdentity": "urn:epc:id:giai:000000000000.0",
+			"hex": "340000000000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 12,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:giai-96:0.999999999999.4398046511103",
+			"pureIdentity": "urn:epc:id:giai:999999999999.4398046511103",
+			"hex": "3403a352943fffffffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 11,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:giai-96:0.00000000000.0",
+			"pureIdentity": "urn:epc:id:giai:00000000000.0",
+			"hex": "340400000000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 11,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:giai-96:0.99999999999.35184372088831",
+			"pureIdentity": "urn:epc:id:giai:99999999999.35184372088831",
+			"hex": "3406e90edcffffffffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 10,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:giai-96:0.0000000000.0",
+			"pureIdentity": "urn:epc:id:giai:0000000000.0",
+			"hex": "340800000000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 10,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:giai-96:0.9999999999.281474976710655",
+			"pureIdentity": "urn:epc:id:giai:9999999999.281474976710655",
+			"hex": "340a540be3ffffffffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 9,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:giai-96:0.000000000.0",
+			"pureIdentity": "urn:epc:id:giai:000000000.0",
+			"hex": "340c00000000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 9,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:giai-96:0.999999999.4503599627370495",
+			"pureIdentity": "urn:epc:id:giai:999999999.4503599627370495",
+			"hex": "340fb9ac9fffffffffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 8,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:giai-96:0.00000000.0",
+			"pureIdentity": "urn:epc:id:giai:00000000.0",
+			"hex": "341000000000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 8,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:giai-96:0.99999999.9007199254740991",
+			"pureIdentity": "urn:epc:id:giai:99999999.9007199254740991",
+			"hex": "3412faf07f9fffffffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 7,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:giai-96:0.0000000.0",
+			"pureIdentity": "urn:epc:id:giai:0000000.0",
+			"hex": "341400000000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 7,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:giai-96:0.9999999.9007199254740991",
+			"pureIdentity": "urn:epc:id:giai:9999999.9007199254740991",
+			"hex": "34166259fc1fffffffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 6,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:giai-96:0.000000.0",
+			"pureIdentity": "urn:epc:id:giai:000000.0",
+			"hex": "341800000000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 6,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:giai-96:0.999999.9007199254740991",
+			"pureIdentity": "urn:epc:id:giai:999999.9007199254740991",
+			"hex": "341bd08fc01fffffffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 12,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:giai-96:1.000000000000.1",
+			"pureIdentity": "urn:epc:id:giai:000000000000.1",
+			"hex": "342000000000000000000001",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 12,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:giai-96:1.000000000001.0",
+			"pureIdentity": "urn:epc:id:giai:000000000001.0",
+			"hex": "342000000000040000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 11,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:giai-96:1.00000000000.1",
+			"pureIdentity": "urn:epc:id:giai:00000000000.1",
+			"hex": "342400000000000000000001",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 11,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:giai-96:1.00000000001.0",
+			"pureIdentity": "urn:epc:id:giai:00000000001.0",
+			"hex": "342400000000200000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 10,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:giai-96:1.0000000000.1",
+			"pureIdentity": "urn:epc:id:giai:0000000000.1",
+			"hex": "342800000000000000000001",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 10,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:giai-96:1.0000000001.0",
+			"pureIdentity": "urn:epc:id:giai:0000000001.0",
+			"hex": "342800000001000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 9,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:giai-96:1.000000000.1",
+			"pureIdentity": "urn:epc:id:giai:000000000.1",
+			"hex": "342c00000000000000000001",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 9,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:giai-96:1.000000001.0",
+			"pureIdentity": "urn:epc:id:giai:000000001.0",
+			"hex": "342c00000010000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 8,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:giai-96:1.00000000.1",
+			"pureIdentity": "urn:epc:id:giai:00000000.1",
+			"hex": "343000000000000000000001",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 8,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:giai-96:1.00000001.0",
+			"pureIdentity": "urn:epc:id:giai:00000001.0",
+			"hex": "343000000080000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 7,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:giai-96:1.0000000.1",
+			"pureIdentity": "urn:epc:id:giai:0000000.1",
+			"hex": "343400000000000000000001",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 7,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:giai-96:1.0000001.0",
+			"pureIdentity": "urn:epc:id:giai:0000001.0",
+			"hex": "343400000400000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 6,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:giai-96:1.000000.1",
+			"pureIdentity": "urn:epc:id:giai:000000.1",
+			"hex": "343800000000000000000001",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 6,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:giai-96:1.000001.0",
+			"pureIdentity": "urn:epc:id:giai:000001.0",
+			"hex": "343800004000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 12,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:giai-96:3.000000000000.4398046511103",
+			"pureIdentity": "urn:epc:id:giai:000000000000.4398046511103",
+			"hex": "34600000000003ffffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 12,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:giai-96:3.999999999999.0",
+			"pureIdentity": "urn:epc:id:giai:999999999999.0",
+			"hex": "3463a352943ffc0000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 11,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:giai-96:3.00000000000.35184372088831",
+			"pureIdentity": "urn:epc:id:giai:00000000000.35184372088831",
+			"hex": "3464000000001fffffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 11,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:giai-96:3.99999999999.0",
+			"pureIdentity": "urn:epc:id:giai:99999999999.0",
+			"hex": "3466e90edcffe00000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 10,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:giai-96:3.0000000000.281474976710655",
+			"pureIdentity": "urn:epc:id:giai:0000000000.281474976710655",
+			"hex": "346800000000ffffffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 10,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:giai-96:3.9999999999.0",
+			"pureIdentity": "urn:epc:id:giai:9999999999.0",
+			"hex": "346a540be3ff000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 9,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:giai-96:3.000000000.4503599627370495",
+			"pureIdentity": "urn:epc:id:giai:000000000.4503599627370495",
+			"hex": "346c0000000fffffffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 9,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:giai-96:3.999999999.0",
+			"pureIdentity": "urn:epc:id:giai:999999999.0",
+			"hex": "346fb9ac9ff0000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 8,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:giai-96:3.00000000.9007199254740991",
+			"pureIdentity": "urn:epc:id:giai:00000000.9007199254740991",
+			"hex": "34700000001fffffffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 8,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:giai-96:3.99999999.0",
+			"pureIdentity": "urn:epc:id:giai:99999999.0",
+			"hex": "3472faf07f80000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 7,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:giai-96:3.0000000.9007199254740991",
+			"pureIdentity": "urn:epc:id:giai:0000000.9007199254740991",
+			"hex": "34740000001fffffffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 7,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:giai-96:3.9999999.0",
+			"pureIdentity": "urn:epc:id:giai:9999999.0",
+			"hex": "34766259fc00000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 6,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:giai-96:3.000000.9007199254740991",
+			"pureIdentity": "urn:epc:id:giai:000000.9007199254740991",
+			"hex": "34780000001fffffffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 6,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:giai-96:3.999999.0",
+			"pureIdentity": "urn:epc:id:giai:999999.0",
+			"hex": "347bd08fc000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 12,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:giai-96:7.000000000000.2199023255551",
+			"pureIdentity": "urn:epc:id:giai:000000000000.2199023255551",
+			"hex": "34e00000000001ffffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 12,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:giai-96:7.499999999999.0",
+			"pureIdentity": "urn:epc:id:giai:499999999999.0",
+			"hex": "34e1d1a94a1ffc0000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 11,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:giai-96:7.00000000000.17592186044415",
+			"pureIdentity": "urn:epc:id:giai:00000000000.17592186044415",
+			"hex": "34e4000000000fffffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 11,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:giai-96:7.49999999999.0",
+			"pureIdentity": "urn:epc:id:giai:49999999999.0",
+			"hex": "34e574876e7fe00000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 10,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:giai-96:7.0000000000.140737488355327",
+			"pureIdentity": "urn:epc:id:giai:0000000000.140737488355327",
+			"hex": "34e8000000007fffffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 10,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:giai-96:7.4999999999.0",
+			"pureIdentity": "urn:epc:id:giai:4999999999.0",
+			"hex": "34e92a05f1ff000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 9,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:giai-96:7.000000000.2251799813685247",
+			"pureIdentity": "urn:epc:id:giai:000000000.2251799813685247",
+			"hex": "34ec00000007ffffffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 9,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:giai-96:7.499999999.0",
+			"pureIdentity": "urn:epc:id:giai:499999999.0",
+			"hex": "34eddcd64ff0000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 8,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:giai-96:7.00000000.4503599627370495",
+			"pureIdentity": "urn:epc:id:giai:00000000.4503599627370495",
+			"hex": "34f00000000fffffffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 8,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:giai-96:7.49999999.0",
+			"pureIdentity": "urn:epc:id:giai:49999999.0",
+			"hex": "34f17d783f80000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 7,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:giai-96:7.0000000.4503599627370495",
+			"pureIdentity": "urn:epc:id:giai:0000000.4503599627370495",
+			"hex": "34f40000000fffffffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 7,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:giai-96:7.4999999.0",
+			"pureIdentity": "urn:epc:id:giai:4999999.0",
+			"hex": "34f5312cfc00000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 6,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:giai-96:7.000000.4503599627370495",
+			"pureIdentity": "urn:epc:id:giai:000000.4503599627370495",
+			"hex": "34f80000000fffffffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "giai-96",
+			"gcpLength": 6,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:giai-96:7.499999.0",
+			"pureIdentity": "urn:epc:id:giai:499999.0",
+			"hex": "34f9e847c000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 12,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:grai-96:0.000000000000..0",
+			"pureIdentity": "urn:epc:id:grai:000000000000..0",
+			"hex": "330000000000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 12,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:grai-96:0.000000000000..274877906943",
+			"pureIdentity": "urn:epc:id:grai:000000000000..274877906943",
+			"hex": "330000000000003fffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 11,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:grai-96:0.00000000000.0.0",
+			"pureIdentity": "urn:epc:id:grai:00000000000.0.0",
+			"hex": "330400000000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 11,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:grai-96:0.99999999999.9.274877906943",
+			"pureIdentity": "urn:epc:id:grai:99999999999.9.274877906943",
+			"hex": "3306e90edcffe27fffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 10,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:grai-96:0.0000000000.00.0",
+			"pureIdentity": "urn:epc:id:grai:0000000000.00.0",
+			"hex": "330800000000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 10,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:grai-96:0.9999999999.99.274877906943",
+			"pureIdentity": "urn:epc:id:grai:9999999999.99.274877906943",
+			"hex": "330a540be3ff18ffffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 9,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:grai-96:0.000000000.000.0",
+			"pureIdentity": "urn:epc:id:grai:000000000.000.0",
+			"hex": "330c00000000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 9,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:grai-96:0.999999999.999.274877906943",
+			"pureIdentity": "urn:epc:id:grai:999999999.999.274877906943",
+			"hex": "330fb9ac9ff0f9ffffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 8,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:grai-96:0.00000000.0000.0",
+			"pureIdentity": "urn:epc:id:grai:00000000.0000.0",
+			"hex": "331000000000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 8,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:grai-96:0.99999999.9999.274877906943",
+			"pureIdentity": "urn:epc:id:grai:99999999.9999.274877906943",
+			"hex": "3312faf07f89c3ffffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 7,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:grai-96:0.0000000.00000.0",
+			"pureIdentity": "urn:epc:id:grai:0000000.00000.0",
+			"hex": "331400000000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 7,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:grai-96:0.9999999.99999.274877906943",
+			"pureIdentity": "urn:epc:id:grai:9999999.99999.274877906943",
+			"hex": "33166259fc61a7ffffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 6,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:grai-96:0.000000.000000.0",
+			"pureIdentity": "urn:epc:id:grai:000000.000000.0",
+			"hex": "331800000000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 6,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:grai-96:0.999999.999999.274877906943",
+			"pureIdentity": "urn:epc:id:grai:999999.999999.274877906943",
+			"hex": "331bd08fc3d08fffffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 12,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:grai-96:1.000000000000..0",
+			"pureIdentity": "urn:epc:id:grai:000000000000..0",
+			"hex": "332000000000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 12,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:grai-96:1.000000000000..137438953471",
+			"pureIdentity": "urn:epc:id:grai:000000000000..137438953471",
+			"hex": "332000000000001fffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 12,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:grai-96:1.000000000001..0",
+			"pureIdentity": "urn:epc:id:grai:000000000001..0",
+			"hex": "332000000000040000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 11,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:grai-96:1.00000000000.0.1",
+			"pureIdentity": "urn:epc:id:grai:00000000000.0.1",
+			"hex": "332400000000000000000001",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 11,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:grai-96:1.00000000000.1.0",
+			"pureIdentity": "urn:epc:id:grai:00000000000.1.0",
+			"hex": "332400000000004000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 11,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:grai-96:1.00000000001.0.0",
+			"pureIdentity": "urn:epc:id:grai:00000000001.0.0",
+			"hex": "332400000000200000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 10,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:grai-96:1.0000000000.00.1",
+			"pureIdentity": "urn:epc:id:grai:0000000000.00.1",
+			"hex": "332800000000000000000001",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 10,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:grai-96:1.0000000000.01.0",
+			"pureIdentity": "urn:epc:id:grai:0000000000.01.0",
+			"hex": "332800000000004000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 10,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:grai-96:1.0000000001.00.0",
+			"pureIdentity": "urn:epc:id:grai:0000000001.00.0",
+			"hex": "332800000001000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 9,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:grai-96:1.000000000.000.1",
+			"pureIdentity": "urn:epc:id:grai:000000000.000.1",
+			"hex": "332c00000000000000000001",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 9,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:grai-96:1.000000000.001.0",
+			"pureIdentity": "urn:epc:id:grai:000000000.001.0",
+			"hex": "332c00000000004000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 9,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:grai-96:1.000000001.000.0",
+			"pureIdentity": "urn:epc:id:grai:000000001.000.0",
+			"hex": "332c00000010000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 8,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:grai-96:1.00000000.0000.1",
+			"pureIdentity": "urn:epc:id:grai:00000000.0000.1",
+			"hex": "333000000000000000000001",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 8,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:grai-96:1.00000000.0001.0",
+			"pureIdentity": "urn:epc:id:grai:00000000.0001.0",
+			"hex": "333000000000004000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 8,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:grai-96:1.00000001.0000.0",
+			"pureIdentity": "urn:epc:id:grai:00000001.0000.0",
+			"hex": "333000000080000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 7,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:grai-96:1.0000000.00000.1",
+			"pureIdentity": "urn:epc:id:grai:0000000.00000.1",
+			"hex": "333400000000000000000001",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 7,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:grai-96:1.0000000.00001.0",
+			"pureIdentity": "urn:epc:id:grai:0000000.00001.0",
+			"hex": "333400000000004000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 7,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:grai-96:1.0000001.00000.0",
+			"pureIdentity": "urn:epc:id:grai:0000001.00000.0",
+			"hex": "333400000400000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 6,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:grai-96:1.000000.000000.1",
+			"pureIdentity": "urn:epc:id:grai:000000.000000.1",
+			"hex": "333800000000000000000001",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 6,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:grai-96:1.000000.000001.0",
+			"pureIdentity": "urn:epc:id:grai:000000.000001.0",
+			"hex": "333800000000004000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 6,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:grai-96:1.000001.000000.0",
+			"pureIdentity": "urn:epc:id:grai:000001.000000.0",
+			"hex": "333800004000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 12,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:grai-96:3.000000000000..0",
+			"pureIdentity": "urn:epc:id:grai:000000000000..0",
+			"hex": "336000000000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 12,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:grai-96:3.999999999999..0",
+			"pureIdentity": "urn:epc:id:grai:999999999999..0",
+			"hex": "3363a352943ffc0000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 12,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:grai-96:3.999999999999..274877906943",
+			"pureIdentity": "urn:epc:id:grai:999999999999..274877906943",
+			"hex": "3363a352943ffc3fffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 11,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:grai-96:3.00000000000.0.274877906943",
+			"pureIdentity": "urn:epc:id:grai:00000000000.0.274877906943",
+			"hex": "336400000000003fffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 11,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:grai-96:3.00000000000.9.0",
+			"pureIdentity": "urn:epc:id:grai:00000000000.9.0",
+			"hex": "336400000000024000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 11,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:grai-96:3.99999999999.0.0",
+			"pureIdentity": "urn:epc:id:grai:99999999999.0.0",
+			"hex": "3366e90edcffe00000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 10,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:grai-96:3.0000000000.00.274877906943",
+			"pureIdentity": "urn:epc:id:grai:0000000000.00.274877906943",
+			"hex": "336800000000003fffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 10,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:grai-96:3.0000000000.99.0",
+			"pureIdentity": "urn:epc:id:grai:0000000000.99.0",
+			"hex": "33680000000018c000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 10,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:grai-96:3.9999999999.00.0",
+			"pureIdentity": "urn:epc:id:grai:9999999999.00.0",
+			"hex": "336a540be3ff000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 9,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:grai-96:3.000000000.000.274877906943",
+			"pureIdentity": "urn:epc:id:grai:000000000.000.274877906943",
+			"hex": "336c00000000003fffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 9,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:grai-96:3.000000000.999.0",
+			"pureIdentity": "urn:epc:id:grai:000000000.999.0",
+			"hex": "336c00000000f9c000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 9,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:grai-96:3.999999999.000.0",
+			"pureIdentity": "urn:epc:id:grai:999999999.000.0",
+			"hex": "336fb9ac9ff0000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 8,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:grai-96:3.00000000.0000.274877906943",
+			"pureIdentity": "urn:epc:id:grai:00000000.0000.274877906943",
+			"hex": "337000000000003fffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 8,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:grai-96:3.00000000.9999.0",
+			"pureIdentity": "urn:epc:id:grai:00000000.9999.0",
+			"hex": "337000000009c3c000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 8,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:grai-96:3.99999999.0000.0",
+			"pureIdentity": "urn:epc:id:grai:99999999.0000.0",
+			"hex": "3372faf07f80000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 7,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:grai-96:3.0000000.00000.274877906943",
+			"pureIdentity": "urn:epc:id:grai:0000000.00000.274877906943",
+			"hex": "337400000000003fffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 7,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:grai-96:3.0000000.99999.0",
+			"pureIdentity": "urn:epc:id:grai:0000000.99999.0",
+			"hex": "337400000061a7c000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 7,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:grai-96:3.9999999.00000.0",
+			"pureIdentity": "urn:epc:id:grai:9999999.00000.0",
+			"hex": "33766259fc00000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 6,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:grai-96:3.000000.000000.274877906943",
+			"pureIdentity": "urn:epc:id:grai:000000.000000.274877906943",
+			"hex": "337800000000003fffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 6,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:grai-96:3.000000.999999.0",
+			"pureIdentity": "urn:epc:id:grai:000000.999999.0",
+			"hex": "3378000003d08fc000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 6,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:grai-96:3.999999.000000.0",
+			"pureIdentity": "urn:epc:id:grai:999999.000000.0",
+			"hex": "337bd08fc000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 12,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:grai-96:7.000000000000..1",
+			"pureIdentity": "urn:epc:id:grai:000000000000..1",
+			"hex": "33e000000000000000000001",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 12,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:grai-96:7.499999999999..0",
+			"pureIdentity": "urn:epc:id:grai:499999999999..0",
+			"hex": "33e1d1a94a1ffc0000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 11,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:grai-96:7.00000000000.0.137438953471",
+			"pureIdentity": "urn:epc:id:grai:00000000000.0.137438953471",
+			"hex": "33e400000000001fffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 11,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:grai-96:7.00000000000.4.0",
+			"pureIdentity": "urn:epc:id:grai:00000000000.4.0",
+			"hex": "33e400000000010000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 11,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:grai-96:7.49999999999.0.0",
+			"pureIdentity": "urn:epc:id:grai:49999999999.0.0",
+			"hex": "33e574876e7fe00000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 10,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:grai-96:7.0000000000.00.137438953471",
+			"pureIdentity": "urn:epc:id:grai:0000000000.00.137438953471",
+			"hex": "33e800000000001fffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 10,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:grai-96:7.0000000000.49.0",
+			"pureIdentity": "urn:epc:id:grai:0000000000.49.0",
+			"hex": "33e8000000000c4000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 10,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:grai-96:7.4999999999.00.0",
+			"pureIdentity": "urn:epc:id:grai:4999999999.00.0",
+			"hex": "33e92a05f1ff000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 9,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:grai-96:7.000000000.000.137438953471",
+			"pureIdentity": "urn:epc:id:grai:000000000.000.137438953471",
+			"hex": "33ec00000000001fffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 9,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:grai-96:7.000000000.499.0",
+			"pureIdentity": "urn:epc:id:grai:000000000.499.0",
+			"hex": "33ec000000007cc000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 9,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:grai-96:7.499999999.000.0",
+			"pureIdentity": "urn:epc:id:grai:499999999.000.0",
+			"hex": "33eddcd64ff0000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 8,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:grai-96:7.00000000.0000.137438953471",
+			"pureIdentity": "urn:epc:id:grai:00000000.0000.137438953471",
+			"hex": "33f000000000001fffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 8,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:grai-96:7.00000000.4999.0",
+			"pureIdentity": "urn:epc:id:grai:00000000.4999.0",
+			"hex": "33f000000004e1c000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 8,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:grai-96:7.49999999.0000.0",
+			"pureIdentity": "urn:epc:id:grai:49999999.0000.0",
+			"hex": "33f17d783f80000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 7,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:grai-96:7.0000000.00000.137438953471",
+			"pureIdentity": "urn:epc:id:grai:0000000.00000.137438953471",
+			"hex": "33f400000000001fffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 7,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:grai-96:7.0000000.49999.0",
+			"pureIdentity": "urn:epc:id:grai:0000000.49999.0",
+			"hex": "33f400000030d3c000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 7,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:grai-96:7.4999999.00000.0",
+			"pureIdentity": "urn:epc:id:grai:4999999.00000.0",
+			"hex": "33f5312cfc00000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 6,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:grai-96:7.000000.000000.137438953471",
+			"pureIdentity": "urn:epc:id:grai:000000.000000.137438953471",
+			"hex": "33f800000000001fffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 6,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:grai-96:7.000000.499999.0",
+			"pureIdentity": "urn:epc:id:grai:000000.499999.0",
+			"hex": "33f8000001e847c000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "grai-96",
+			"gcpLength": 6,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:grai-96:7.499999.000000.0",
+			"pureIdentity": "urn:epc:id:grai:499999.000000.0",
+			"hex": "33f9e847c000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 12,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:sgtin-96:0.000000000000.0.0",
+			"pureIdentity": "urn:epc:id:sgtin:000000000000.0.0",
+			"hex": "300000000000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 12,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:sgtin-96:0.999999999999.9.274877906943",
+			"pureIdentity": "urn:epc:id:sgtin:999999999999.9.274877906943",
+			"hex": "3003a352943ffe7fffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 11,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:sgtin-96:0.00000000000.00.0",
+			"pureIdentity": "urn:epc:id:sgtin:00000000000.00.0",
+			"hex": "300400000000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 11,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:sgtin-96:0.99999999999.99.274877906943",
+			"pureIdentity": "urn:epc:id:sgtin:99999999999.99.274877906943",
+			"hex": "3006e90edcfff8ffffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 10,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:sgtin-96:0.0000000000.000.0",
+			"pureIdentity": "urn:epc:id:sgtin:0000000000.000.0",
+			"hex": "300800000000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 10,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:sgtin-96:0.9999999999.999.274877906943",
+			"pureIdentity": "urn:epc:id:sgtin:9999999999.999.274877906943",
+			"hex": "300a540be3fff9ffffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 9,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:sgtin-96:0.000000000.0000.0",
+			"pureIdentity": "urn:epc:id:sgtin:000000000.0000.0",
+			"hex": "300c00000000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 9,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:sgtin-96:0.999999999.9999.274877906943",
+			"pureIdentity": "urn:epc:id:sgtin:999999999.9999.274877906943",
+			"hex": "300fb9ac9ff9c3ffffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 8,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:sgtin-96:0.00000000.00000.0",
+			"pureIdentity": "urn:epc:id:sgtin:00000000.00000.0",
+			"hex": "301000000000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 8,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:sgtin-96:0.99999999.99999.274877906943",
+			"pureIdentity": "urn:epc:id:sgtin:99999999.99999.274877906943",
+			"hex": "3012faf07fe1a7ffffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 7,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:sgtin-96:0.0000000.000000.0",
+			"pureIdentity": "urn:epc:id:sgtin:0000000.000000.0",
+			"hex": "301400000000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 7,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:sgtin-96:0.9999999.999999.274877906943",
+			"pureIdentity": "urn:epc:id:sgtin:9999999.999999.274877906943",
+			"hex": "30166259ffd08fffffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 6,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:sgtin-96:0.000000.0000000.0",
+			"pureIdentity": "urn:epc:id:sgtin:000000.0000000.0",
+			"hex": "301800000000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 6,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:sgtin-96:0.999999.9999999.274877906943",
+			"pureIdentity": "urn:epc:id:sgtin:999999.9999999.274877906943",
+			"hex": "301bd08fe6259fffffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 12,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:sgtin-96:1.000000000000.0.1",
+			"pureIdentity": "urn:epc:id:sgtin:000000000000.0.1",
+			"hex": "302000000000000000000001",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 12,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:sgtin-96:1.000000000000.1.0",
+			"pureIdentity": "urn:epc:id:sgtin:000000000000.1.0",
+			"hex": "302000000000004000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 12,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:sgtin-96:1.000000000001.0.0",
+			"pureIdentity": "urn:epc:id:sgtin:000000000001.0.0",
+			"hex": "302000000000040000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 11,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:sgtin-96:1.00000000000.00.1",
+			"pureIdentity": "urn:epc:id:sgtin:00000000000.00.1",
+			"hex": "302400000000000000000001",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 11,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:sgtin-96:1.00000000000.01.0",
+			"pureIdentity": "urn:epc:id:sgtin:00000000000.01.0",
+			"hex": "302400000000004000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 11,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:sgtin-96:1.00000000001.00.0",
+			"pureIdentity": "urn:epc:id:sgtin:00000000001.00.0",
+			"hex": "302400000000200000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 10,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:sgtin-96:1.0000000000.000.1",
+			"pureIdentity": "urn:epc:id:sgtin:0000000000.000.1",
+			"hex": "302800000000000000000001",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 10,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:sgtin-96:1.0000000000.001.0",
+			"pureIdentity": "urn:epc:id:sgtin:0000000000.001.0",
+			"hex": "302800000000004000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 10,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:sgtin-96:1.0000000001.000.0",
+			"pureIdentity": "urn:epc:id:sgtin:0000000001.000.0",
+			"hex": "302800000001000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 9,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:sgtin-96:1.000000000.0000.1",
+			"pureIdentity": "urn:epc:id:sgtin:000000000.0000.1",
+			"hex": "302c00000000000000000001",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 9,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:sgtin-96:1.000000000.0001.0",
+			"pureIdentity": "urn:epc:id:sgtin:000000000.0001.0",
+			"hex": "302c00000000004000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 9,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:sgtin-96:1.000000001.0000.0",
+			"pureIdentity": "urn:epc:id:sgtin:000000001.0000.0",
+			"hex": "302c00000010000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 8,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:sgtin-96:1.00000000.00000.1",
+			"pureIdentity": "urn:epc:id:sgtin:00000000.00000.1",
+			"hex": "303000000000000000000001",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 8,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:sgtin-96:1.00000000.00001.0",
+			"pureIdentity": "urn:epc:id:sgtin:00000000.00001.0",
+			"hex": "303000000000004000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 8,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:sgtin-96:1.00000001.00000.0",
+			"pureIdentity": "urn:epc:id:sgtin:00000001.00000.0",
+			"hex": "303000000080000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 7,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:sgtin-96:1.0000000.000000.1",
+			"pureIdentity": "urn:epc:id:sgtin:0000000.000000.1",
+			"hex": "303400000000000000000001",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 7,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:sgtin-96:1.0000000.000001.0",
+			"pureIdentity": "urn:epc:id:sgtin:0000000.000001.0",
+			"hex": "303400000000004000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 7,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:sgtin-96:1.0000001.000000.0",
+			"pureIdentity": "urn:epc:id:sgtin:0000001.000000.0",
+			"hex": "303400000400000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 6,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:sgtin-96:1.000000.0000000.1",
+			"pureIdentity": "urn:epc:id:sgtin:000000.0000000.1",
+			"hex": "303800000000000000000001",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 6,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:sgtin-96:1.000000.0000001.0",
+			"pureIdentity": "urn:epc:id:sgtin:000000.0000001.0",
+			"hex": "303800000000004000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 6,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:sgtin-96:1.000001.0000000.0",
+			"pureIdentity": "urn:epc:id:sgtin:000001.0000000.0",
+			"hex": "303800004000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 12,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:sgtin-96:3.000000000000.0.274877906943",
+			"pureIdentity": "urn:epc:id:sgtin:000000000000.0.274877906943",
+			"hex": "306000000000003fffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 12,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:sgtin-96:3.000000000000.9.0",
+			"pureIdentity": "urn:epc:id:sgtin:000000000000.9.0",
+			"hex": "306000000000024000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 12,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:sgtin-96:3.999999999999.0.0",
+			"pureIdentity": "urn:epc:id:sgtin:999999999999.0.0",
+			"hex": "3063a352943ffc0000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 11,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:sgtin-96:3.00000000000.00.274877906943",
+			"pureIdentity": "urn:epc:id:sgtin:00000000000.00.274877906943",
+			"hex": "306400000000003fffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 11,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:sgtin-96:3.00000000000.99.0",
+			"pureIdentity": "urn:epc:id:sgtin:00000000000.99.0",
+			"hex": "30640000000018c000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 11,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:sgtin-96:3.99999999999.00.0",
+			"pureIdentity": "urn:epc:id:sgtin:99999999999.00.0",
+			"hex": "3066e90edcffe00000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 10,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:sgtin-96:3.0000000000.000.274877906943",
+			"pureIdentity": "urn:epc:id:sgtin:0000000000.000.274877906943",
+			"hex": "306800000000003fffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 10,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:sgtin-96:3.0000000000.999.0",
+			"pureIdentity": "urn:epc:id:sgtin:0000000000.999.0",
+			"hex": "306800000000f9c000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 10,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:sgtin-96:3.9999999999.000.0",
+			"pureIdentity": "urn:epc:id:sgtin:9999999999.000.0",
+			"hex": "306a540be3ff000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 9,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:sgtin-96:3.000000000.0000.274877906943",
+			"pureIdentity": "urn:epc:id:sgtin:000000000.0000.274877906943",
+			"hex": "306c00000000003fffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 9,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:sgtin-96:3.000000000.9999.0",
+			"pureIdentity": "urn:epc:id:sgtin:000000000.9999.0",
+			"hex": "306c00000009c3c000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 9,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:sgtin-96:3.999999999.0000.0",
+			"pureIdentity": "urn:epc:id:sgtin:999999999.0000.0",
+			"hex": "306fb9ac9ff0000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 8,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:sgtin-96:3.00000000.00000.274877906943",
+			"pureIdentity": "urn:epc:id:sgtin:00000000.00000.274877906943",
+			"hex": "307000000000003fffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 8,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:sgtin-96:3.00000000.99999.0",
+			"pureIdentity": "urn:epc:id:sgtin:00000000.99999.0",
+			"hex": "307000000061a7c000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 8,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:sgtin-96:3.99999999.00000.0",
+			"pureIdentity": "urn:epc:id:sgtin:99999999.00000.0",
+			"hex": "3072faf07f80000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 7,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:sgtin-96:3.0000000.000000.274877906943",
+			"pureIdentity": "urn:epc:id:sgtin:0000000.000000.274877906943",
+			"hex": "307400000000003fffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 7,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:sgtin-96:3.0000000.999999.0",
+			"pureIdentity": "urn:epc:id:sgtin:0000000.999999.0",
+			"hex": "3074000003d08fc000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 7,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:sgtin-96:3.9999999.000000.0",
+			"pureIdentity": "urn:epc:id:sgtin:9999999.000000.0",
+			"hex": "30766259fc00000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 6,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:sgtin-96:3.000000.0000000.274877906943",
+			"pureIdentity": "urn:epc:id:sgtin:000000.0000000.274877906943",
+			"hex": "307800000000003fffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 6,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:sgtin-96:3.000000.9999999.0",
+			"pureIdentity": "urn:epc:id:sgtin:000000.9999999.0",
+			"hex": "3078000026259fc000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 6,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:sgtin-96:3.999999.0000000.0",
+			"pureIdentity": "urn:epc:id:sgtin:999999.0000000.0",
+			"hex": "307bd08fc000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 12,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:sgtin-96:7.000000000000.0.137438953471",
+			"pureIdentity": "urn:epc:id:sgtin:000000000000.0.137438953471",
+			"hex": "30e000000000001fffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 12,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:sgtin-96:7.000000000000.4.0",
+			"pureIdentity": "urn:epc:id:sgtin:000000000000.4.0",
+			"hex": "30e000000000010000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 12,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:sgtin-96:7.499999999999.0.0",
+			"pureIdentity": "urn:epc:id:sgtin:499999999999.0.0",
+			"hex": "30e1d1a94a1ffc0000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 11,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:sgtin-96:7.00000000000.00.137438953471",
+			"pureIdentity": "urn:epc:id:sgtin:00000000000.00.137438953471",
+			"hex": "30e400000000001fffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 11,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:sgtin-96:7.00000000000.49.0",
+			"pureIdentity": "urn:epc:id:sgtin:00000000000.49.0",
+			"hex": "30e4000000000c4000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 11,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:sgtin-96:7.49999999999.00.0",
+			"pureIdentity": "urn:epc:id:sgtin:49999999999.00.0",
+			"hex": "30e574876e7fe00000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 10,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:sgtin-96:7.0000000000.000.137438953471",
+			"pureIdentity": "urn:epc:id:sgtin:0000000000.000.137438953471",
+			"hex": "30e800000000001fffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 10,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:sgtin-96:7.0000000000.499.0",
+			"pureIdentity": "urn:epc:id:sgtin:0000000000.499.0",
+			"hex": "30e8000000007cc000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 10,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:sgtin-96:7.4999999999.000.0",
+			"pureIdentity": "urn:epc:id:sgtin:4999999999.000.0",
+			"hex": "30e92a05f1ff000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 9,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:sgtin-96:7.000000000.0000.137438953471",
+			"pureIdentity": "urn:epc:id:sgtin:000000000.0000.137438953471",
+			"hex": "30ec00000000001fffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 9,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:sgtin-96:7.000000000.4999.0",
+			"pureIdentity": "urn:epc:id:sgtin:000000000.4999.0",
+			"hex": "30ec00000004e1c000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 9,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:sgtin-96:7.499999999.0000.0",
+			"pureIdentity": "urn:epc:id:sgtin:499999999.0000.0",
+			"hex": "30eddcd64ff0000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 8,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:sgtin-96:7.00000000.00000.137438953471",
+			"pureIdentity": "urn:epc:id:sgtin:00000000.00000.137438953471",
+			"hex": "30f000000000001fffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 8,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:sgtin-96:7.00000000.49999.0",
+			"pureIdentity": "urn:epc:id:sgtin:00000000.49999.0",
+			"hex": "30f000000030d3c000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 8,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:sgtin-96:7.49999999.00000.0",
+			"pureIdentity": "urn:epc:id:sgtin:49999999.00000.0",
+			"hex": "30f17d783f80000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 7,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:sgtin-96:7.0000000.000000.137438953471",
+			"pureIdentity": "urn:epc:id:sgtin:0000000.000000.137438953471",
+			"hex": "30f400000000001fffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 7,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:sgtin-96:7.0000000.499999.0",
+			"pureIdentity": "urn:epc:id:sgtin:0000000.499999.0",
+			"hex": "30f4000001e847c000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 7,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:sgtin-96:7.4999999.000000.0",
+			"pureIdentity": "urn:epc:id:sgtin:4999999.000000.0",
+			"hex": "30f5312cfc00000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 6,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:sgtin-96:7.000000.0000000.137438953471",
+			"pureIdentity": "urn:epc:id:sgtin:000000.0000000.137438953471",
+			"hex": "30f800000000001fffffffff",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 6,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:sgtin-96:7.000000.4999999.0",
+			"pureIdentity": "urn:epc:id:sgtin:000000.4999999.0",
+			"hex": "30f800001312cfc000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sgtin-96",
+			"gcpLength": 6,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:sgtin-96:7.499999.0000000.0",
+			"pureIdentity": "urn:epc:id:sgtin:499999.0000000.0",
+			"hex": "30f9e847c000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 12,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:sscc-96:0.000000000000.00000",
+			"pureIdentity": "urn:epc:id:sscc:000000000000.00000",
+			"hex": "310000000000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 12,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:sscc-96:0.999999999999.99999",
+			"pureIdentity": "urn:epc:id:sscc:999999999999.99999",
+			"hex": "3103a352943ffd869f000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 11,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:sscc-96:0.00000000000.000000",
+			"pureIdentity": "urn:epc:id:sscc:00000000000.000000",
+			"hex": "310400000000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 11,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:sscc-96:0.99999999999.999999",
+			"pureIdentity": "urn:epc:id:sscc:99999999999.999999",
+			"hex": "3106e90edcffef423f000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 10,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:sscc-96:0.0000000000.0000000",
+			"pureIdentity": "urn:epc:id:sscc:0000000000.0000000",
+			"hex": "310800000000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 10,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:sscc-96:0.9999999999.9999999",
+			"pureIdentity": "urn:epc:id:sscc:9999999999.9999999",
+			"hex": "310a540be3ff98967f000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 9,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:sscc-96:0.000000000.00000000",
+			"pureIdentity": "urn:epc:id:sscc:000000000.00000000",
+			"hex": "310c00000000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 9,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:sscc-96:0.999999999.99999999",
+			"pureIdentity": "urn:epc:id:sscc:999999999.99999999",
+			"hex": "310fb9ac9ff5f5e0ff000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 8,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:sscc-96:0.00000000.000000000",
+			"pureIdentity": "urn:epc:id:sscc:00000000.000000000",
+			"hex": "311000000000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 8,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:sscc-96:0.99999999.999999999",
+			"pureIdentity": "urn:epc:id:sscc:99999999.999999999",
+			"hex": "3112faf07fbb9ac9ff000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 7,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:sscc-96:0.0000000.0000000000",
+			"pureIdentity": "urn:epc:id:sscc:0000000.0000000000",
+			"hex": "311400000000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 7,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:sscc-96:0.9999999.9999999999",
+			"pureIdentity": "urn:epc:id:sscc:9999999.9999999999",
+			"hex": "31166259fe540be3ff000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 6,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:sscc-96:0.000000.00000000000",
+			"pureIdentity": "urn:epc:id:sscc:000000.00000000000",
+			"hex": "311800000000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 6,
+			"filter": 0,
+			"tagURI": "urn:epc:tag:sscc-96:0.999999.99999999999",
+			"pureIdentity": "urn:epc:id:sscc:999999.99999999999",
+			"hex": "311bd08fd74876e7ff000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 12,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:sscc-96:1.000000000000.00001",
+			"pureIdentity": "urn:epc:id:sscc:000000000000.00001",
+			"hex": "312000000000000001000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 12,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:sscc-96:1.000000000001.00000",
+			"pureIdentity": "urn:epc:id:sscc:000000000001.00000",
+			"hex": "312000000000040000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 11,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:sscc-96:1.00000000000.000001",
+			"pureIdentity": "urn:epc:id:sscc:00000000000.000001",
+			"hex": "312400000000000001000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 11,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:sscc-96:1.00000000001.000000",
+			"pureIdentity": "urn:epc:id:sscc:00000000001.000000",
+			"hex": "312400000000200000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 10,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:sscc-96:1.0000000000.0000001",
+			"pureIdentity": "urn:epc:id:sscc:0000000000.0000001",
+			"hex": "312800000000000001000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 10,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:sscc-96:1.0000000001.0000000",
+			"pureIdentity": "urn:epc:id:sscc:0000000001.0000000",
+			"hex": "312800000001000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 9,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:sscc-96:1.000000000.00000001",
+			"pureIdentity": "urn:epc:id:sscc:000000000.00000001",
+			"hex": "312c00000000000001000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 9,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:sscc-96:1.000000001.00000000",
+			"pureIdentity": "urn:epc:id:sscc:000000001.00000000",
+			"hex": "312c00000010000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 8,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:sscc-96:1.00000000.000000001",
+			"pureIdentity": "urn:epc:id:sscc:00000000.000000001",
+			"hex": "313000000000000001000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 8,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:sscc-96:1.00000001.000000000",
+			"pureIdentity": "urn:epc:id:sscc:00000001.000000000",
+			"hex": "313000000080000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 7,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:sscc-96:1.0000000.0000000001",
+			"pureIdentity": "urn:epc:id:sscc:0000000.0000000001",
+			"hex": "313400000000000001000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 7,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:sscc-96:1.0000001.0000000000",
+			"pureIdentity": "urn:epc:id:sscc:0000001.0000000000",
+			"hex": "313400000400000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 6,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:sscc-96:1.000000.00000000001",
+			"pureIdentity": "urn:epc:id:sscc:000000.00000000001",
+			"hex": "313800000000000001000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 6,
+			"filter": 1,
+			"tagURI": "urn:epc:tag:sscc-96:1.000001.00000000000",
+			"pureIdentity": "urn:epc:id:sscc:000001.00000000000",
+			"hex": "313800004000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 12,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:sscc-96:3.000000000000.99999",
+			"pureIdentity": "urn:epc:id:sscc:000000000000.99999",
+			"hex": "31600000000001869f000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 12,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:sscc-96:3.999999999999.00000",
+			"pureIdentity": "urn:epc:id:sscc:999999999999.00000",
+			"hex": "3163a352943ffc0000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 11,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:sscc-96:3.00000000000.999999",
+			"pureIdentity": "urn:epc:id:sscc:00000000000.999999",
+			"hex": "3164000000000f423f000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 11,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:sscc-96:3.99999999999.000000",
+			"pureIdentity": "urn:epc:id:sscc:99999999999.000000",
+			"hex": "3166e90edcffe00000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 10,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:sscc-96:3.0000000000.9999999",
+			"pureIdentity": "urn:epc:id:sscc:0000000000.9999999",
+			"hex": "31680000000098967f000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 10,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:sscc-96:3.9999999999.0000000",
+			"pureIdentity": "urn:epc:id:sscc:9999999999.0000000",
+			"hex": "316a540be3ff000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 9,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:sscc-96:3.000000000.99999999",
+			"pureIdentity": "urn:epc:id:sscc:000000000.99999999",
+			"hex": "316c00000005f5e0ff000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 9,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:sscc-96:3.999999999.00000000",
+			"pureIdentity": "urn:epc:id:sscc:999999999.00000000",
+			"hex": "316fb9ac9ff0000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 8,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:sscc-96:3.00000000.999999999",
+			"pureIdentity": "urn:epc:id:sscc:00000000.999999999",
+			"hex": "31700000003b9ac9ff000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 8,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:sscc-96:3.99999999.000000000",
+			"pureIdentity": "urn:epc:id:sscc:99999999.000000000",
+			"hex": "3172faf07f80000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 7,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:sscc-96:3.0000000.9999999999",
+			"pureIdentity": "urn:epc:id:sscc:0000000.9999999999",
+			"hex": "3174000002540be3ff000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 7,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:sscc-96:3.9999999.0000000000",
+			"pureIdentity": "urn:epc:id:sscc:9999999.0000000000",
+			"hex": "31766259fc00000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 6,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:sscc-96:3.000000.99999999999",
+			"pureIdentity": "urn:epc:id:sscc:000000.99999999999",
+			"hex": "31780000174876e7ff000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 6,
+			"filter": 3,
+			"tagURI": "urn:epc:tag:sscc-96:3.999999.00000000000",
+			"pureIdentity": "urn:epc:id:sscc:999999.00000000000",
+			"hex": "317bd08fc000000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 12,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:sscc-96:7.000000000000.49999",
+			"pureIdentity": "urn:epc:id:sscc:000000000000.49999",
+			"hex": "31e00000000000c34f000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 12,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:sscc-96:7.499999999999.00000",
+			"pureIdentity": "urn:epc:id:sscc:499999999999.00000",
+			"hex": "31e1d1a94a1ffc0000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 11,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:sscc-96:7.00000000000.499999",
+			"pureIdentity": "urn:epc:id:sscc:00000000000.499999",
+			"hex": "31e40000000007a11f000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 11,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:sscc-96:7.49999999999.000000",
+			"pureIdentity": "urn:epc:id:sscc:49999999999.000000",
+			"hex": "31e574876e7fe00000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 10,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:sscc-96:7.0000000000.4999999",
+			"pureIdentity": "urn:epc:id:sscc:0000000000.4999999",
+			"hex": "31e8000000004c4b3f000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 10,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:sscc-96:7.4999999999.0000000",
+			"pureIdentity": "urn:epc:id:sscc:4999999999.0000000",
+			"hex": "31e92a05f1ff000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 9,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:sscc-96:7.000000000.49999999",
+			"pureIdentity": "urn:epc:id:sscc:000000000.49999999",
+			"hex": "31ec00000002faf07f000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 9,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:sscc-96:7.499999999.00000000",
+			"pureIdentity": "urn:epc:id:sscc:499999999.00000000",
+			"hex": "31eddcd64ff0000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 8,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:sscc-96:7.00000000.499999999",
+			"pureIdentity": "urn:epc:id:sscc:00000000.499999999",
+			"hex": "31f00000001dcd64ff000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 8,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:sscc-96:7.49999999.000000000",
+			"pureIdentity": "urn:epc:id:sscc:49999999.000000000",
+			"hex": "31f17d783f80000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 7,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:sscc-96:7.0000000.4999999999",
+			"pureIdentity": "urn:epc:id:sscc:0000000.4999999999",
+			"hex": "31f40000012a05f1ff000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 7,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:sscc-96:7.4999999.0000000000",
+			"pureIdentity": "urn:epc:id:sscc:4999999.0000000000",
+			"hex": "31f5312cfc00000000000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 6,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:sscc-96:7.000000.49999999999",
+			"pureIdentity": "urn:epc:id:sscc:000000.49999999999",
+			"hex": "31f800000ba43b73ff000000",
+			"provenance": "reference"
+		},
+		{
+			"scheme": "sscc-96",
+			"gcpLength": 6,
+			"filter": 7,
+			"tagURI": "urn:epc:tag:sscc-96:7.499999.00000000000",
+			"pureIdentity": "urn:epc:id:sscc:499999.00000000000",
+			"hex": "31f9e847c000000000000000",
+			"provenance": "reference"
+		}
+	]
+}
