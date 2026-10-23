@@ -211,7 +211,10 @@ func convert(a artefact) (scheme, []patternVector, error) {
 		if err != nil {
 			return s, nil, fmt.Errorf("optionKey %q: %w", bo.OptionKey, err)
 		}
-		maxima := decimalMaxima(bo.Field)
+		maxima, err := decimalMaxima(bo.Field)
+		if err != nil {
+			return s, nil, fmt.Errorf("optionKey %q: %w", bo.OptionKey, err)
+		}
 		bits := map[string]int{}
 		for _, f := range bo.Field {
 			bits[f.Name] = f.BitLength
@@ -323,8 +326,9 @@ func uriFields(opt struct {
 		if f.Length != nil {
 			length, fixed = *f.Length, true
 		}
-		if f.DecimalMaximum == "" {
-			return nil, fmt.Errorf("field %q has no decimalMaximum", f.Name)
+		decimalMax, err := parseUint(f.Name, f.DecimalMaximum)
+		if err != nil {
+			return nil, err
 		}
 		out = append(out, uriField{
 			Name:         f.Name,
@@ -333,7 +337,7 @@ func uriFields(opt struct {
 			PadChar:      pad,
 			PadDir:       f.PadDir,
 			CharacterSet: f.CharacterSet,
-			DecimalMax:   parseUint(f.DecimalMaximum),
+			DecimalMax:   decimalMax,
 		})
 	}
 	return out, nil
@@ -349,20 +353,29 @@ func decimalMaxima(fields []struct {
 	CharacterSet   string `json:"characterSet"`
 	DecimalMinimum string `json:"decimalMinimum"`
 	DecimalMaximum string `json:"decimalMaximum"`
-}) map[string]uint64 {
+}) (map[string]uint64, error) {
 	out := make(map[string]uint64, len(fields))
 	for _, f := range fields {
-		out[f.Name] = parseUint(f.DecimalMaximum)
+		v, err := parseUint(f.Name, f.DecimalMaximum)
+		if err != nil {
+			return nil, err
+		}
+		out[f.Name] = v
 	}
-	return out
+	return out, nil
 }
 
-func parseUint(s string) uint64 {
+// parseUint parses a field's decimalMaximum. A missing or unparseable maximum
+// is artefact skew, so it fails generation rather than becoming a zero range.
+func parseUint(field, s string) (uint64, error) {
+	if s == "" {
+		return 0, fmt.Errorf("field %q has no decimalMaximum", field)
+	}
 	v, err := strconv.ParseUint(s, 10, 64)
 	if err != nil {
-		return 0
+		return 0, fmt.Errorf("field %q decimalMaximum %q: %w", field, s, err)
 	}
-	return v
+	return v, nil
 }
 
 type token struct {
