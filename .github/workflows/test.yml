@@ -20,5 +20,17 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go-version }}
+      # Verify the vendored GS1 TDT artefacts still match the pinned digests.
+      # This step reads local files only; tdtsync reaches the network only with
+      # -update, which a maintainer runs deliberately.
+      - name: Verify pinned TDT artefacts
+        run: go run ./tools/tdtsync
+      # Generated scheme metadata must be a pure function of those artefacts.
+      - name: Verify generated TDT metadata
+        run: |
+          go generate ./internal/tdt/...
+          git diff --exit-code
       - name: Test
         run: go test ./...
+      - name: Test with race detector
+        run: go test -race ./internal/tdt/... ./internal/identity/... ./internal/app/...
