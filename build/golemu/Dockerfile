@@ -18,7 +18,7 @@ RUN go mod vendor
 RUN CGO_ENABLED=0 GOOS=linux go build -mod=vendor -o golemu ./cmd/golemu/...
 
 # export to a single layer image
-FROM alpine:latest
+FROM alpine:3.24
 
 # install some required binaries; the ca-certificates floor excludes bundles
 # that still trust the compromised eMudhra intermediates (CVE-2026-111943)
