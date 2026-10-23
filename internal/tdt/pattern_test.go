@@ -136,6 +136,37 @@ func TestEncodingPatternsSeeEncoding(t *testing.T) {
 	}
 }
 
+// TestBitPatternKeepsTrailingLiterals checks that a trailing star does not
+// unpin literals that follow it: SSCC-96's reserved bits sit after the serial
+// reference and must stay zero.
+func TestBitPatternKeepsTrailingLiterals(t *testing.T) {
+	p, err := tdt.CompilePattern("urn:epc:pat:sscc-96:0.0614141.*")
+	if err != nil {
+		t.Fatal(err)
+	}
+	bits := p.Bits()
+	if bits == nil {
+		t.Fatal("expected a bit test for an exact company prefix")
+	}
+	value, err := tdt.ParsePureIdentityURI("urn:epc:id:sscc:0614141.1234567890")
+	if err != nil {
+		t.Fatal(err)
+	}
+	tr, err := tdt.EncodeGS1(value, "sscc-96", 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	raw, bitLen := tr.Encoding.Bits()
+	if !bits.Match(raw, bitLen) {
+		t.Fatal("bit test rejected a valid tag")
+	}
+	reserved := append([]byte(nil), raw...)
+	reserved[len(reserved)-1] |= 1 // bit 95, inside the reserved literal
+	if bits.Match(reserved, bitLen) {
+		t.Fatal("bit test accepted a tag with nonzero reserved bits")
+	}
+}
+
 // TestPatternsAreImmutable checks that a compiled pattern hands out no
 // references a consumer could mutate.
 func TestPatternsAreImmutable(t *testing.T) {

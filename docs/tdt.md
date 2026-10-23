@@ -73,6 +73,7 @@ Differential testing against v1 is deliberately absent; see #8 §7.
 #7 receives compiled patterns, never strings.
 Identity-level patterns ignore filter value, partition, and tag length by construction.
 `Pattern.Bits` is set only when bit-prefix matching is equivalent to field matching.
+That equivalence holds over tags that translate, so matchers test it against `Translation.Bits()` rather than raw reader bytes; numeric maxima and partition validity are not expressible as a mask.
 ISO publishes no pattern grammar, so ISO patterns are built with `identity.NewPattern`.
 
 ## Benchmark baseline
