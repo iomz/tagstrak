@@ -65,6 +65,8 @@ type Observation struct {
 	tag    Tag
 	seenAt time.Time
 	source string
+	pc     uint16
+	hasPC  bool
 }
 
 // NewObservation validates observation metadata and preserves tag identity by value.
@@ -86,6 +88,20 @@ func (o Observation) SeenAt() time.Time { return o.seenAt }
 
 // Source returns caller-provided observation source.
 func (o Observation) Source() string { return o.source }
+
+// WithProtocolControl returns a copy carrying the Gen2 protocol-control word.
+//
+// The PC word is not tag identity, but translation needs it: its
+// numbering-system toggle and AFI are what distinguish GS1 EPC data from ISO
+// data, and guessing from the leading byte instead misreads ISO tags.
+func (o Observation) WithProtocolControl(pc uint16) Observation {
+	o.pc, o.hasPC = pc, true
+	return o
+}
+
+// ProtocolControl returns the Gen2 protocol-control word, if the reader
+// reported one.
+func (o Observation) ProtocolControl() (uint16, bool) { return o.pc, o.hasPC }
 
 // Store provides concurrent, deterministic inventory snapshots.
 type Store struct {

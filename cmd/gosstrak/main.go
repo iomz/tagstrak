@@ -15,15 +15,25 @@ import (
 
 	app "github.com/iomz/tagstrak/v2/internal/app/gosstrak"
 	"github.com/iomz/tagstrak/v2/internal/inventory"
+	"github.com/iomz/tagstrak/v2/internal/tdt"
 )
 
-// ingestionConsumer validates the current ingestion-only slice. Processing and
-// delivery are wired through this boundary by milestone issues #7-#9. Accepted
-// observations are counted by App; they are not represented as delivered events.
-type ingestionConsumer struct{}
+// logProcessor is the current processing-only slice: it translates each
+// observation and logs the canonical identity. Matching and delivery are wired
+// through the same Processor boundary by milestone issues #7 and #9.
+type logProcessor struct {
+	logger *slog.Logger
+}
 
-func (ingestionConsumer) Consume(ctx context.Context, observation inventory.Observation) error {
-	return ctx.Err()
+func (p logProcessor) Process(ctx context.Context, observation inventory.Observation, translation tdt.Translation) error {
+	if err := ctx.Err(); err != nil {
+		return err
+	}
+	p.logger.Debug("translated tag",
+		"source", observation.Source(),
+		"scheme", string(translation.Encoding.Scheme),
+		"identity", translation.Identity.Describe())
+	return nil
 }
 
 // parseConfig parses command-line arguments into an application configuration,
@@ -77,11 +87,18 @@ func run(ctx context.Context, args []string, stderr io.Writer) error {
 		return err
 	}
 	logger := slog.New(slog.NewJSONHandler(stderr, nil))
-	runtime, err := app.New(config, &net.Dialer{}, ingestionConsumer{}, logger)
+	// Tags without a protocol-control word are assumed to be GS1 EPC data.
+	// That assumption is explicit rather than inferred from the tag itself,
+	// and readers that report the PC word are believed instead.
+	translator := tdt.New(tdt.WithDefaultFormat(tdt.FormatGS1))
+	consumer := app.NewTranslatingConsumer(translator, logProcessor{logger: logger})
+	runtime, err := app.New(config, &net.Dialer{}, consumer, logger)
 	if err != nil {
 		return err
 	}
-	logger.Info("starting gosstrak", "mode", "ingestion", "reader", config.Reader.Address, "telemetry", config.TelemetryAddress)
+	source := tdt.SourceInfo()
+	logger.Info("starting gosstrak", "mode", "ingestion", "reader", config.Reader.Address, "telemetry", config.TelemetryAddress,
+		"tds_version", source.TDSVersion, "tdt_artefacts", source.Commit, "schemes", tdt.SupportedSchemes())
 	return runtime.Run(ctx)
 }
 func main() {

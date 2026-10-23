@@ -11,9 +11,12 @@ The architecture decision in #2 keeps gosstrak and golemu as separate processes 
 - `llrp` owns all wire framing and parameter decoding; it does not dial, retry, log, or close connections.
 - `internal/inventory.Observation` is the immutable domain handoff already established by #4.
 
-This milestone slice runs in **ingestion mode**: it validates observations and exposes accepted/processed counts.
-The command's consumer acknowledges ingestion only; it does not retain observations or claim translation, matching, or destination delivery.
-Issues #7–#9 supply those downstream capabilities through the consumer boundary.
+This milestone slice runs in **ingestion mode**: it validates observations, translates them, and exposes accepted/processed/translated counts.
+The command's consumer is `internal/app/gosstrak.TranslatingConsumer`, which adapts each observation to the #8 translation boundary described in [tdt.md](tdt.md) and logs the canonical identity at debug level.
+Tags outside the supported standards are counted as untranslatable and dropped; any other translation error fails the consumer.
+Tags whose reader reports no protocol-control word are translated as GS1 EPC data by explicit configuration, never by guessing from the header.
+It does not retain observations or claim matching or destination delivery.
+Issues #7 and #9 supply those downstream capabilities through the `Processor` boundary.
 The old global command runtime, SPDY listener, adaptive engine workers, and InfluxDB worker wiring are removed from the command.
 Their legacy packages remain available to their own workstreams.
 The emulator lifecycle and scenarios implemented by #6 are documented in [golemu.md](golemu.md).
@@ -111,7 +114,7 @@ A supervisor may restart a failed process, but that external restart policy is s
 
 - `GET /healthz`: JSON process liveness, with HTTP 503 before running or after shutdown.
 - `GET /readyz`: JSON serving capability, with HTTP 503 during connection, handshake, reconnect, failure, or drain.
-- `GET /metrics`: Prometheus text counters and gauges for attempts, reconnects, frames, reports, keepalives, failures, queue overflow, accepted/processed/abandoned observations, queue depth/capacity, readiness, and current retry delay.
+- `GET /metrics`: Prometheus text counters and gauges for attempts, reconnects, frames, reports, keepalives, failures, queue overflow, accepted/processed/abandoned/translated/untranslatable observations, queue depth/capacity, readiness, and current retry delay.
 
 Status includes reader state, last connection error, and the actual bound telemetry address.
 Health remains live during reconnect and drain; readiness represents ingestion capability only in this milestone slice.
