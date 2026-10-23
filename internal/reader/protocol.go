@@ -131,6 +131,11 @@ func decodeObservations(body []byte, limits llrp.Limits, source string, now time
 		if err != nil {
 			return nil, err
 		}
+		// Carry the protocol-control word when the reader reported one, so
+		// translation can tell GS1 EPC data from ISO data.
+		if len(event.PC) == 2 {
+			observation = observation.WithProtocolControl(binary.BigEndian.Uint16(event.PC))
+		}
 		observations = append(observations, observation)
 	}
 	return observations, nil
