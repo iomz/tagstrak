@@ -19,6 +19,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
@@ -31,6 +32,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"regexp"
 	"runtime"
@@ -69,13 +71,18 @@ func main() {
 		fmt.Fprintln(os.Stderr, "benchrun: -out is required")
 		os.Exit(2)
 	}
-	if err := run(*out, s); err != nil {
+	// Cancelling on a signal stops the child processes and lets run's
+	// deferred cleanup remove the v1 worktree.
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	err := run(ctx, *out, s)
+	stop()
+	if err != nil {
 		fmt.Fprintln(os.Stderr, "benchrun:", err)
 		os.Exit(1)
 	}
 }
 
-func run(out string, s settings) error {
+func run(ctx context.Context, out string, s settings) error {
 	if _, err := os.Stat(out); err == nil {
 		return fmt.Errorf("%s exists; results are never overwritten", out)
 	}
@@ -88,7 +95,7 @@ func run(out string, s settings) error {
 		return err
 	}
 	step("generating and verifying datasets")
-	if err := command("", nil, os.Stdout, "go", "run", "./tools/benchdata", "-out", data); err != nil {
+	if err := command(ctx, "", nil, os.Stdout, "go", "run", "./tools/benchdata", "-out", data); err != nil {
 		return err
 	}
 	meta, err := metadata(s)
@@ -107,10 +114,12 @@ func run(out string, s settings) error {
 	}
 	_ = os.Remove(worktree)
 	step("creating the " + v1Tag + " worktree")
-	if err := command("", nil, io.Discard, "git", "worktree", "add", "--detach", worktree, v1Tag); err != nil {
+	if err := command(ctx, "", nil, io.Discard, "git", "worktree", "add", "--detach", worktree, v1Tag); err != nil {
 		return err
 	}
-	defer func() { _ = command("", nil, io.Discard, "git", "worktree", "remove", "--force", worktree) }()
+	defer func() {
+		_ = command(context.Background(), "", nil, io.Discard, "git", "worktree", "remove", "--force", worktree)
+	}()
 
 	env := []string{"TAGSTRAK_BENCH_DATA=" + data}
 	// Only the shared harness benchmarks: v1's packages ship many of their own,
@@ -119,7 +128,7 @@ func run(out string, s settings) error {
 
 	step("benchmarking v2")
 	if err := toFile(filepath.Join(out, "v2.txt"), func(w io.Writer) error {
-		return command("", env, w, "go", append(bench, "./benchmarks/v2bench")...)
+		return command(ctx, "", env, w, "go", append(bench, "./benchmarks/v2bench")...)
 	}); err != nil {
 		return err
 	}
@@ -133,7 +142,7 @@ func run(out string, s settings) error {
 		return err
 	}
 	if err := toFile(filepath.Join(out, "v1.txt"), func(w io.Writer) error {
-		return command(worktree, env, w, "go", append(append(bench, "-overlay", overlay), "./llrp", "./internal/gosstrak/tdt", "./internal/gosstrak/filtering")...)
+		return command(ctx, worktree, env, w, "go", append(append(bench, "-overlay", overlay), "./llrp", "./internal/gosstrak/tdt", "./internal/gosstrak/filtering")...)
 	}); err != nil {
 		return err
 	}
@@ -143,19 +152,19 @@ func run(out string, s settings) error {
 
 	step("building binaries for the end-to-end runs")
 	bin := filepath.Join(out, "bin")
-	if err := command("", nil, io.Discard, "go", "build", "-o", filepath.Join(bin, "gosstrak-v2"), "./cmd/gosstrak"); err != nil {
+	if err := command(ctx, "", nil, io.Discard, "go", "build", "-o", filepath.Join(bin, "gosstrak-v2"), "./cmd/gosstrak"); err != nil {
 		return err
 	}
-	if err := command(worktree, nil, io.Discard, "go", "build", "-o", filepath.Join(bin, "gosstrak-v1"), "./cmd/gosstrak"); err != nil {
+	if err := command(ctx, worktree, nil, io.Discard, "go", "build", "-o", filepath.Join(bin, "gosstrak-v1"), "./cmd/gosstrak"); err != nil {
 		return err
 	}
 	step("running end-to-end ingestion")
-	if err := endToEnd(out, data, bin, s); err != nil {
+	if err := endToEnd(ctx, out, data, bin, s); err != nil {
 		return err
 	}
 
 	step("comparing with benchstat")
-	if err := compare(out); err != nil {
+	if err := compare(ctx, out); err != nil {
 		return err
 	}
 	body, _ := json.MarshalIndent(meta, "", "  ")
@@ -170,8 +179,12 @@ func run(out string, s settings) error {
 
 func step(s string) { fmt.Fprintln(os.Stderr, "benchrun:", s) }
 
-func command(dir string, env []string, stdout io.Writer, name string, args ...string) error {
-	cmd := exec.Command(name, args...)
+func command(ctx context.Context, dir string, env []string, stdout io.Writer, name string, args ...string) error {
+	cmd := exec.CommandContext(ctx, name, args...)
+	// go test and go run start their own children; a process group lets
+	// cancellation kill those too instead of orphaning them.
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+	cmd.Cancel = func() error { return syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL) }
 	cmd.Dir = dir
 	cmd.Env = append(os.Environ(), env...)
 	cmd.Stdout = stdout
@@ -269,7 +282,7 @@ func writeOverlay(out, worktree string) (string, error) {
 
 // compare writes benchstat tables. Shared names compare v1 with v2 directly;
 // the matcher table puts every v1 engine next to v2's linear matcher.
-func compare(out string) error {
+func compare(ctx context.Context, out string) error {
 	tables := []struct {
 		name string
 		args []string
@@ -280,7 +293,7 @@ func compare(out string) error {
 	}
 	for _, t := range tables {
 		if err := toFile(filepath.Join(out, t.name), func(w io.Writer) error {
-			return command("", nil, w, "go", append([]string{"run", benchstat}, t.args...)...)
+			return command(ctx, "", nil, w, "go", append([]string{"run", benchstat}, t.args...)...)
 		}); err != nil {
 			return err
 		}
@@ -292,7 +305,7 @@ func compare(out string) error {
 // reader, streams the same reports as fast as they are accepted, and the
 // process's CPU time and peak memory are read from rusage. v1 discards its
 // matches, so only v2 can report delivery latency, measured at an HTTP sink.
-func endToEnd(out, data, bin string, s settings) error {
+func endToEnd(ctx context.Context, out, data, bin string, s settings) error {
 	body, err := os.ReadFile(filepath.Join(data, "report-1000.bin"))
 	if err != nil {
 		return err
@@ -334,7 +347,7 @@ func endToEnd(out, data, bin string, s settings) error {
 			if r.sink != nil {
 				r.sink.reset()
 			}
-			res, err := ingest(body, s.E2EReports, r.args, r.v2)
+			res, err := ingest(ctx, body, s.E2EReports, r.args, r.v2)
 			if err != nil {
 				return fmt.Errorf("%s: %w", r.impl, err)
 			}
@@ -383,7 +396,7 @@ type result struct {
 // of processing; v2 processes asynchronously, so its end is when telemetry
 // reports every observation processed. The process is then stopped and its
 // rusage read.
-func ingest(body []byte, n int, args func(reader, telemetry string) []string, v2 bool) (result, error) {
+func ingest(ctx context.Context, body []byte, n int, args func(reader, telemetry string) []string, v2 bool) (result, error) {
 	listener, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
 		return result{}, err
@@ -394,7 +407,7 @@ func ingest(body []byte, n int, args func(reader, telemetry string) []string, v2
 		return result{}, err
 	}
 	argv := args(listener.Addr().String(), telemetry)
-	cmd := exec.Command(argv[0], argv[1:]...)
+	cmd := exec.CommandContext(ctx, argv[0], argv[1:]...)
 	cmd.Stdout, cmd.Stderr = io.Discard, io.Discard
 	if err := cmd.Start(); err != nil {
 		return result{}, err
@@ -437,7 +450,7 @@ func ingest(body []byte, n int, args func(reader, telemetry string) []string, v2
 		}
 	}
 	if v2 {
-		if err := awaitProcessed(telemetry, n*1000); err != nil {
+		if err := awaitProcessed(ctx, telemetry, n*1000); err != nil {
 			return result{}, err
 		}
 	}
@@ -478,10 +491,13 @@ func freeAddress() (string, error) {
 
 // awaitProcessed polls v2's telemetry until it has processed want
 // observations, and fails if any were abandoned or the queue overflowed.
-func awaitProcessed(telemetry string, want int) error {
+func awaitProcessed(ctx context.Context, telemetry string, want int) error {
 	client := &http.Client{Timeout: time.Second}
 	deadline := time.Now().Add(5 * time.Minute)
 	for time.Now().Before(deadline) {
+		if err := ctx.Err(); err != nil {
+			return err
+		}
 		resp, err := client.Get("http://" + telemetry + "/metrics")
 		if err == nil {
 			body, _ := io.ReadAll(resp.Body)
