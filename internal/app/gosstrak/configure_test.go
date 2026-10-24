@@ -2,6 +2,7 @@ package gosstrak
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -141,8 +142,8 @@ func TestPipelineWithoutDestinationsOnlyMatches(t *testing.T) {
 func noLookup(string) (string, bool) { return "", false }
 
 // TestSubscriptionTableUsesItsMatcher checks that a table compiles every
-// snapshot with the matcher it was built with, and that Pipeline accepts both
-// configured matchers.
+// snapshot with the matcher it was built with, and that Pipeline builds the
+// configured one.
 func TestSubscriptionTableUsesItsMatcher(t *testing.T) {
 	calls := 0
 	counting := func(subs []filter.Subscription) (filter.Matcher, error) {
@@ -156,14 +157,23 @@ func TestSubscriptionTableUsesItsMatcher(t *testing.T) {
 	if calls != 2 { // the empty initial snapshot, then the load
 		t.Fatalf("compiler called %d times, want 2", calls)
 	}
-	for _, matcher := range []string{configfile.MatcherIndex, configfile.MatcherLinear} {
+	for matcher, want := range map[string]string{
+		configfile.MatcherIndex:  "*filter.index",
+		configfile.MatcherLinear: "*filter.linear",
+	} {
 		f := configfile.File{
 			Version:       configfile.Version,
 			Filter:        configfile.Filter{Matcher: ptr(matcher)},
 			Subscriptions: []configfile.Subscription{{ID: "a", Patterns: []string{"urn:epc:idpat:sgtin:*.*.*"}}},
 		}
-		if _, err := Pipeline(f, DefaultConfig(), noLookup, nil); err != nil {
+		assembly, err := Pipeline(f, DefaultConfig(), noLookup, nil)
+		if err != nil {
 			t.Fatalf("%s: %v", matcher, err)
+		}
+		// The built matcher, not the compiler function, so a Pipeline that
+		// ignored the setting or swapped compilers fails here.
+		if got := fmt.Sprintf("%T", assembly.Subscriptions.current.Load().matcher); got != want {
+			t.Errorf("filter.matcher %q built %s, want %s", matcher, got, want)
 		}
 	}
 }
