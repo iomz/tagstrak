@@ -18,3 +18,5 @@ Initialization made only structural changes required by the monorepo:
 - combined existing dependency manifests while retaining legacy versions
 
 Functional refactoring starts after this import baseline.
+The `v1.0.0` tag marks it, and the v1 benchmark baseline (#11) is measured from that tag.
+The imported legacy packages that v2 superseded (`internal/gosstrak`, `cmd/ale-ec`, and the `deploy` compose file) and the dependencies only they used were removed in #11.
