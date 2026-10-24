@@ -39,10 +39,11 @@ YAML 1.1 parsers resolve unquoted scalars implicitly, which can turn a GS1 compa
 | `[report]` | `queue_capacity`, `batch_events`, `batch_bytes`, `flush_interval`, `request_timeout`, `max_attempts`, `backoff_base`, `backoff_max`, `retry_budget` |
 | `[control]` | `socket` or `address`, and `token` (a secret source, required for `address`) |
 | `[subscription_store]` | `source` (`"file"` or `"api"`) and, for `"api"`, an absolute `state_file` |
+| `[filter]` | `matcher` (`"index"`, the default, or `"linear"`) |
 | `[[destinations]]` | `name`, `url`, `headers.<Header-Name>` secret sources |
 | `[[subscriptions]]` | `id`, `patterns`, optional `destinations` |
 
-Values are validated by the component that owns them, with the same rules and bounds as flags: the reader and runtime settings by the app configuration, the report settings by `report.Config` ([report.md](report.md)), and subscriptions by `filter.Compile` ([filter.md](filter.md)).
+Values are validated by the component that owns them, with the same rules and bounds as flags: the reader and runtime settings by the app configuration, the report settings by `report.Config` ([report.md](report.md)), and subscriptions by the selected matcher ([filter.md](filter.md)).
 Patterns are compiled by `tdt.CompilePattern` at startup, and each subscription may hold at most 64.
 Errors name the field, such as `subscriptions[1].patterns[0]`.
 
@@ -52,7 +53,7 @@ A destination URL must not carry user information; credentials go in header secr
 
 ## Subscription source and reload
 
-With `[subscription_store] source = "file"`, the default, the file's `[[subscriptions]]` are the truth and `SIGHUP` re-reads them; destinations, secrets, and other settings change only on restart.
+With `[subscription_store] source = "file"`, the default, the file's `[[subscriptions]]` are the truth and `SIGHUP` re-reads them; destinations, secrets, the matcher, and other settings change only on restart.
 With `source = "api"`, the file must list no subscriptions; gosstrak loads and writes `state_file` and the management API replaces them.
 The design record names this setting `subscriptions.source`; it lives in `[subscription_store]` because `subscriptions` is already the array of subscription tables.
 See [control.md](control.md) for both modes.

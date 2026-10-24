@@ -11,6 +11,7 @@ import (
 	"time"
 
 	configfile "github.com/iomz/tagstrak/v2/internal/config"
+	"github.com/iomz/tagstrak/v2/internal/filter"
 	"github.com/iomz/tagstrak/v2/internal/report"
 )
 
@@ -138,6 +139,34 @@ func TestPipelineWithoutDestinationsOnlyMatches(t *testing.T) {
 }
 
 func noLookup(string) (string, bool) { return "", false }
+
+// TestSubscriptionTableUsesItsMatcher checks that a table compiles every
+// snapshot with the matcher it was built with, and that Pipeline accepts both
+// configured matchers.
+func TestSubscriptionTableUsesItsMatcher(t *testing.T) {
+	calls := 0
+	counting := func(subs []filter.Subscription) (filter.Matcher, error) {
+		calls++
+		return filter.CompileLinear(subs)
+	}
+	table := NewSubscriptionTableWith(nil, counting)
+	if err := table.Load([]configfile.Subscription{{ID: "a", Patterns: []string{"urn:epc:idpat:sgtin:*.*.*"}}}, 1); err != nil {
+		t.Fatal(err)
+	}
+	if calls != 2 { // the empty initial snapshot, then the load
+		t.Fatalf("compiler called %d times, want 2", calls)
+	}
+	for _, matcher := range []string{configfile.MatcherIndex, configfile.MatcherLinear} {
+		f := configfile.File{
+			Version:       configfile.Version,
+			Filter:        configfile.Filter{Matcher: ptr(matcher)},
+			Subscriptions: []configfile.Subscription{{ID: "a", Patterns: []string{"urn:epc:idpat:sgtin:*.*.*"}}},
+		}
+		if _, err := Pipeline(f, DefaultConfig(), noLookup, nil); err != nil {
+			t.Fatalf("%s: %v", matcher, err)
+		}
+	}
+}
 
 // TestPipelineRejectsMisconfiguration checks that every misconfiguration
 // stops startup with an error naming the field, never a secret or a URL.

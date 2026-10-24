@@ -4,6 +4,7 @@
   "telemetry": {"address": "127.0.0.1:9090"},
   "runtime": {"queue_capacity": 256, "shutdown_timeout": "15s"},
   "report": {"queue_capacity": 5000, "flush_interval": "500ms"},
+  "filter": {"matcher": "linear"},
   "destinations": [
     {"name": "erp", "url": "https://erp.example/hooks/rfid",
      "headers": {"Authorization": {"env": "ERP_TOKEN", "prefix": "Bearer "}}}

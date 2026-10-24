@@ -35,6 +35,7 @@ func (e *FieldError) Unwrap() error { return e.Err }
 // leaves the published state unchanged.
 type SubscriptionTable struct {
 	destinations map[string]bool
+	newMatcher   filter.Compiler
 	mu           sync.Mutex // serialises replacements
 	current      atomic.Pointer[subscriptionSnapshot]
 }
@@ -49,11 +50,17 @@ type subscriptionSnapshot struct {
 // NewSubscriptionTable returns an empty table at revision 0. Routes may name
 // only the given destinations, which are fixed for the process lifetime.
 func NewSubscriptionTable(destinations []string) *SubscriptionTable {
-	t := &SubscriptionTable{destinations: make(map[string]bool, len(destinations))}
+	return NewSubscriptionTableWith(destinations, filter.Compile)
+}
+
+// NewSubscriptionTableWith is NewSubscriptionTable with an explicit matcher,
+// used for every compilation for the table's lifetime.
+func NewSubscriptionTableWith(destinations []string, compile filter.Compiler) *SubscriptionTable {
+	t := &SubscriptionTable{destinations: make(map[string]bool, len(destinations)), newMatcher: compile}
 	for _, name := range destinations {
 		t.destinations[name] = true
 	}
-	empty, _ := filter.Compile(nil)
+	empty, _ := compile(nil)
 	t.current.Store(&subscriptionSnapshot{matcher: empty, routes: Routes{}})
 	return t
 }
@@ -150,7 +157,7 @@ func (t *SubscriptionTable) compile(spec []configfile.Subscription, revision uin
 			routes[filter.ID(s.ID)] = slices.Clone(s.Destinations)
 		}
 	}
-	matcher, err := filter.Compile(subscriptions)
+	matcher, err := t.newMatcher(subscriptions)
 	if err != nil {
 		return nil, &FieldError{Field: "subscriptions", Err: err}
 	}

@@ -48,6 +48,7 @@ type File struct {
 	Report        Report         `toml:"report" json:"report"`
 	Control       Control        `toml:"control" json:"control"`
 	Store         Store          `toml:"subscription_store" json:"subscription_store"`
+	Filter        Filter         `toml:"filter" json:"filter"`
 	Destinations  []Destination  `toml:"destinations" json:"destinations"`
 	Subscriptions []Subscription `toml:"subscriptions" json:"subscriptions"`
 }
@@ -81,6 +82,27 @@ func (f File) SubscriptionSource() string {
 		return SourceFile
 	}
 	return *f.Store.Source
+}
+
+// Matchers a file may select.
+const (
+	MatcherIndex  = "index"
+	MatcherLinear = "linear"
+)
+
+// Filter selects the subscription matcher. Both honour the same contract;
+// "index", the default, looks candidates up by pattern prefix, and "linear"
+// tests every subscription and is the reference.
+type Filter struct {
+	Matcher *string `toml:"matcher" json:"matcher"`
+}
+
+// FilterMatcher returns the configured matcher, "index" by default.
+func (f File) FilterMatcher() string {
+	if f.Filter.Matcher == nil {
+		return MatcherIndex
+	}
+	return *f.Filter.Matcher
 }
 
 // Reader configures the LLRP reader session.
@@ -249,6 +271,9 @@ func (f File) validate() error {
 		}
 	default:
 		return fmt.Errorf("subscription_store.source %q must be %q or %q", source, SourceFile, SourceAPI)
+	}
+	if m := f.FilterMatcher(); m != MatcherIndex && m != MatcherLinear {
+		return fmt.Errorf("filter.matcher %q must be %q or %q", m, MatcherIndex, MatcherLinear)
 	}
 	return nil
 }

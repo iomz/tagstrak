@@ -17,6 +17,9 @@ shutdown_timeout = "15s"
 queue_capacity = 5000
 flush_interval = "500ms"
 
+[filter]
+matcher = "linear"
+
 [[destinations]]
 name = "erp"
 url = "https://erp.example/hooks/rfid"
