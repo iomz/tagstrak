@@ -48,7 +48,9 @@ type subscriptionDocument struct {
 }
 
 type replaceRequest struct {
-	Subscriptions []configfile.Subscription `json:"subscriptions"`
+	// Subscriptions must be present: an explicit [] clears the set, while a
+	// missing or null field is rejected so a malformed request cannot wipe it.
+	Subscriptions *[]configfile.Subscription `json:"subscriptions"`
 }
 
 // controlHandler serves the management API:
@@ -91,7 +93,11 @@ func (a *App) controlHandler() http.Handler {
 				slog.Uint64("revision_before", before), slog.String("error_code", "invalid_body"))
 			return
 		}
-		after, err := settings.Subscriptions.Replace(body.Subscriptions, expected, settings.Store.Save)
+		if body.Subscriptions == nil {
+			reject(http.StatusBadRequest, "invalid_subscriptions", "subscriptions is required; send [] to remove every subscription", "subscriptions")
+			return
+		}
+		after, err := settings.Subscriptions.Replace(*body.Subscriptions, expected, settings.Store.Save)
 		var fieldErr *FieldError
 		switch {
 		case errors.Is(err, ErrRevisionMismatch):
@@ -100,6 +106,10 @@ func (a *App) controlHandler() http.Handler {
 		case errors.As(err, &fieldErr):
 			reject(http.StatusBadRequest, "invalid_subscriptions", fieldErr.Err.Error(), fieldErr.Field)
 			return
+		case errors.Is(err, configfile.ErrConfig):
+			// The state file, which is indented, would exceed its limit.
+			reject(http.StatusRequestEntityTooLarge, "state_too_large", "the subscriptions exceed the state file limit; nothing changed", "")
+			return
 		case err != nil:
 			// The state file could not be written; nothing was published.
 			a.logger.Error("subscription state not saved", "error", err)
@@ -107,7 +117,7 @@ func (a *App) controlHandler() http.Handler {
 			return
 		}
 		control.Audit(a.logger, r, "subscriptions.replace", "ok",
-			slog.Uint64("revision_before", before), slog.Uint64("revision_after", after), slog.Int("count", len(body.Subscriptions)))
+			slog.Uint64("revision_before", before), slog.Uint64("revision_after", after), slog.Int("count", len(*body.Subscriptions)))
 		w.Header().Set("ETag", etag(after))
 		control.WriteJSON(w, http.StatusOK, struct {
 			Revision uint64 `json:"revision"`
