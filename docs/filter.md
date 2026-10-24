@@ -1,14 +1,14 @@
 # Subscription matching
 
 Issue #7 rebuilds filtering in the v2 milestone tracked by #1.
-This page covers slices 1 and 2 from the [#7 design records](https://github.com/iomz/tagstrak/issues/7): the matcher contract, atomic replacement, the linear reference matcher, and the prefix index that is the default.
-Adaptive mode, its overhead and selection benchmarks remain open on #7.
+This page covers slices 1 to 3 from the [#7 design records](https://github.com/iomz/tagstrak/issues/7): the matcher contract, atomic replacement, the linear reference matcher, the prefix index that is the default, and the experimental adaptive mode.
+Benchmarks of adaptive overhead, switch stability, and selection regret remain open on #7.
 
 ## Packages and scope
 
 | Package | Imports | Owns |
 | --- | --- | --- |
-| `internal/filter` | `identity` | `Subject`, `Subscription`, `Matcher`, `Compiler`, `Compile`, `CompileIndex`, `CompileLinear`, `Set` |
+| `internal/filter` | `identity` | `Subject`, `Subscription`, `Matcher`, `Compiler`, `Compile`, `CompileIndex`, `CompileLinear`, `CompileAdaptive`, `Set` |
 | `internal/app/gosstrak` | `filter`, `tdt`, `report` | `SubjectOf` adapter, `MatchingProcessor`, routing to delivery |
 
 `internal/filter` never parses pattern text and never imports the translator; `TestFilterDependsOnlyOnIdentity` enforces that.
@@ -37,7 +37,7 @@ Subscriptions come from the configuration file ([configuration.md](configuration
 
 ## Matchers
 
-`[filter] matcher` in the configuration file selects one for the process lifetime ([configuration.md](configuration.md)); both honour the contract above.
+`[filter] matcher` in the configuration file selects one for the process lifetime ([configuration.md](configuration.md)); every matcher honours the contract above.
 
 | Matcher | Compiler | Role |
 | --- | --- | --- |
@@ -108,6 +108,34 @@ The raw output of these runs is `tagstrak-filter-workload-2026-10-24.txt` on the
 It was measured before merge, on `main` at `458c76e` plus the change that added the index.
 The older single-pattern baseline remains as `BenchmarkLinearMatch`.
 
+### Adaptive mode
+
+`[filter] mode = "adaptive"` is experimental and not the default.
+`CompileAdaptive` compiles every candidate, `index` and `linear` unless `[filter.adaptive] candidates` says otherwise, one at a time from the same subscriptions.
+Every `Match` returns the selected candidate's result; candidates agree on every subscription set, so the selection changes cost, never results.
+
+It starts no goroutines.
+Every `sample_every`-th call (default 100) also runs one other candidate, round-robin, and times both, alternating which runs first.
+Shadow results go to the matcher's own buffer and never reach the caller.
+Unsampled calls read the selection atomically; only sampled calls take a lock.
+
+| Setting | Default | Bound | Effect |
+| --- | --- | --- | --- |
+| `candidates` | `["index", "linear"]` | 2 to 4, no duplicates | compiled in order; the first is selected initially |
+| `sample_every` | 100 | at least 10 | sampling rate |
+| `warmup` | 20 | 1 to 1,000 | samples every candidate needs before any switch |
+| `window` | 50 | 1 to 1,000 | recent samples per candidate a decision averages |
+| `hysteresis` | 0.10 | [0, 1) | how much cheaper a challenger must be, as a fraction |
+| `cooldown` | 500 | at least 0 | sampled calls after a switch before the next |
+| `shadow` | `"sampled"` | | `"full"` runs every candidate on every call and needs `experimental = true` |
+
+Memory is bounded by the candidate count times one compiled matcher under the 10,000-subscription budget, plus a fixed window per candidate.
+A subscription replacement compiles a new adaptive matcher, so warmup and statistics start over.
+With today's two candidates and the workloads above, the controller is expected to settle on the index; the remaining #7 slice measures what adaptivity costs and how stable its choices are.
+
+Telemetry reports the decisions for the current snapshot: `gosstrak_filter_adaptive_{sampled,switches}_total`, `gosstrak_filter_adaptive_shadow_seconds_total`, and per `candidate` label `gosstrak_filter_adaptive_selected`, `gosstrak_filter_adaptive_samples_total`, and `gosstrak_filter_adaptive_mean_cost_seconds`.
+`/healthz` and `/readyz` include the same under `filter`.
+
 ### Candidates not built
 
 | Candidate | Reason |
@@ -133,8 +161,9 @@ go test -race ./internal/filter/... ./internal/app/...
 go vet ./...
 ```
 
-Every contract test runs against both matchers: the `patterns.json` conformance corpus against `Translation.Match`, alternative patterns, ordering, deduplication, caller buffers, compile errors, input copying, and allocation-free matching, including the index's reordering path.
+Every contract test runs against the linear, index, and adaptive matchers: the `patterns.json` conformance corpus against `Translation.Match`, alternative patterns, ordering, deduplication, caller buffers, compile errors, input copying, and allocation-free matching, including the index's reordering path.
 `TestIndexAgreesWithLinear` compares the matchers on 2,000 fixed-seed random subscription sets drawn from every pattern shape, and `FuzzIndexAgreesWithLinear` does the same from fuzzed input.
+Adaptive decisions are tested deterministically with a fake clock and scripted candidates: warmup, hysteresis at and past the threshold, cooldown, round-robin and full shadows, shadow results kept out of the caller's buffer, and every configuration bound; a race test runs sampled and unsampled calls concurrently.
 Tests also cover the zero `Set`, failed replacement, concurrent replacement under the race detector, and the import boundary.
 
 ```sh
