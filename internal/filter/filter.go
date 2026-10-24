@@ -16,10 +16,11 @@
 //
 // # Matchers
 //
-// The linear matcher is the single-mode default and the control group for
-// later candidates (issue #7). Every matcher must agree with
-// tdtcore.Translation.Match on the conformance corpus in
-// internal/tdt/testdata/vectors/patterns.json.
+// The prefix index is the default. The linear matcher is the reference and
+// the control group for other candidates (issue #7). Every matcher must agree
+// with tdtcore.Translation.Match on the conformance corpus in
+// internal/tdt/testdata/vectors/patterns.json, and the index must agree with
+// linear on every subscription set.
 package filter
 
 import (
@@ -85,14 +86,36 @@ type Matcher interface {
 	Len() int
 }
 
-// Compile validates subscriptions and builds the default matcher.
+// Compiler builds a Matcher. Every compiler validates the same way and every
+// Matcher it returns honours the same contract, so they are interchangeable.
+type Compiler func(subscriptions []Subscription) (Matcher, error)
+
+// Compile validates subscriptions and builds the default matcher, the prefix
+// index. It became the default on the #7 slice-2 workload evidence: faster
+// than linear on every benchmarked workload, without allocating.
 //
 // The subscriptions are copied, so later changes to the argument do not reach
 // the matcher.
 func Compile(subscriptions []Subscription) (Matcher, error) {
+	return CompileIndex(subscriptions)
+}
+
+// CompileLinear builds the linear matcher, which tests every subscription in
+// order. It is the reference and control group for faster matchers.
+func CompileLinear(subscriptions []Subscription) (Matcher, error) {
 	m, err := compileLinear(subscriptions)
 	if err != nil {
 		// Return a nil interface, not a nil *linear inside one.
+		return nil, err
+	}
+	return m, nil
+}
+
+// CompileIndex builds the prefix index, which looks up candidates by pattern
+// prefix and confirms each with the same rule as the linear matcher.
+func CompileIndex(subscriptions []Subscription) (Matcher, error) {
+	m, err := compileIndex(subscriptions)
+	if err != nil {
 		return nil, err
 	}
 	return m, nil

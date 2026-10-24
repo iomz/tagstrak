@@ -28,7 +28,7 @@ func BenchmarkLinearMatch(b *testing.B) {
 				Patterns: []identity.Pattern{compilePattern(b, text)},
 			}
 		}
-		m, err := filter.Compile(subs)
+		m, err := filter.CompileLinear(subs)
 		if err != nil {
 			b.Fatal(err)
 		}
