@@ -62,13 +62,24 @@ type App struct {
 	abandoned        atomic.Uint64
 	consumerFailed   atomic.Bool
 	telemetryAddress atomic.Value
+	delivery         Delivery
+}
+
+// Option configures an App.
+type Option func(*App)
+
+// WithDelivery gives the App ownership of a report delivery path. Run starts
+// it before ingestion and closes it after the consumer drains, within the
+// same ShutdownTimeout, so undelivered reports are part of Run's result.
+func WithDelivery(delivery Delivery) Option {
+	return func(a *App) { a.delivery = delivery }
 }
 
 // New validates the application configuration and creates an application with a
 // reader session, consumer, and bounded observation queue. Returns an error if
 // the configuration is invalid, the consumer is nil, or the reader session
 // cannot be created.
-func New(config Config, dialer reader.Dialer, consumer Consumer, logger *slog.Logger) (*App, error) {
+func New(config Config, dialer reader.Dialer, consumer Consumer, logger *slog.Logger, options ...Option) (*App, error) {
 	if err := config.Validate(); err != nil {
 		return nil, err
 	}
@@ -79,7 +90,11 @@ func New(config Config, dialer reader.Dialer, consumer Consumer, logger *slog.Lo
 	if err != nil {
 		return nil, err
 	}
-	return &App{config: config, session: session, consumer: consumer, queue: make(chan inventory.Observation, config.QueueCapacity)}, nil
+	a := &App{config: config, session: session, consumer: consumer, queue: make(chan inventory.Observation, config.QueueCapacity)}
+	for _, option := range options {
+		option(a)
+	}
+	return a, nil
 }
 
 // Run binds telemetry before dialing. It owns and joins the reader, consumer,
@@ -102,6 +117,9 @@ func (a *App) Run(ctx context.Context) error {
 	go func() { serverDone <- server.Serve(&limitedListener{Listener: listener}) }()
 	a.running.Store(true)
 	defer a.running.Store(false)
+	if a.delivery != nil {
+		a.delivery.Start()
+	}
 	readCtx, stopReader := context.WithCancel(ctx)
 	defer stopReader()
 	consumeCtx, stopConsumer := context.WithCancel(context.WithoutCancel(ctx))
@@ -164,6 +182,13 @@ func (a *App) Run(ctx context.Context) error {
 	} // Release accepted observations after an aborted drain.
 	shutdownCtx, cancel := context.WithDeadline(context.Background(), shutdownEnd)
 	defer cancel()
+	// The consumer has stopped enqueueing, so delivery can drain what it
+	// holds in the rest of the shared budget. Telemetry stays up meanwhile.
+	if a.delivery != nil {
+		if err := a.delivery.Close(shutdownCtx); err != nil {
+			result = errors.Join(result, err)
+		}
+	}
 	if err := server.Shutdown(shutdownCtx); err != nil {
 		result = errors.Join(result, err)
 		_ = server.Close()

@@ -76,7 +76,11 @@ func run(ctx context.Context, args []string, stderr io.Writer) error {
 	// Subscriptions start empty: their configuration belongs to issue #10.
 	// Matching runs regardless, so translated tags and their matches are
 	// logged at debug level through the same path delivery will use.
-	consumer := app.NewTranslatingConsumer(translator, app.NewMatchingProcessor(&filter.Set{}, logger))
+	processor, err := app.NewMatchingProcessor(&filter.Set{}, logger)
+	if err != nil {
+		return err
+	}
+	consumer := app.NewTranslatingConsumer(translator, processor)
 	runtime, err := app.New(config, &net.Dialer{}, consumer, logger)
 	if err != nil {
 		return err

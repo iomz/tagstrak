@@ -33,7 +33,11 @@ func TestMatchingProcessorMatchesTranslations(t *testing.T) {
 	}
 	var logs bytes.Buffer
 	logger := slog.New(slog.NewTextHandler(&logs, &slog.HandlerOptions{Level: slog.LevelDebug}))
-	consumer := NewTranslatingConsumer(tdt.New(), NewMatchingProcessor(&subscriptions, logger))
+	processor, err := NewMatchingProcessor(&subscriptions, logger)
+	if err != nil {
+		t.Fatal(err)
+	}
+	consumer := NewTranslatingConsumer(tdt.New(), processor)
 
 	// SGTIN-96 3.0614141.812345.6789.
 	if err := consumer.Consume(context.Background(), observation(t, "3074257bf7194e4000001a85", 0x3000, true)); err != nil {
@@ -51,7 +55,10 @@ func TestMatchingProcessorHonoursCancellation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	p := NewMatchingProcessor(nil, nil)
+	p, err := NewMatchingProcessor(nil, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
 	if err := p.Process(ctx, observation(t, "3074257bf7194e4000001a85", 0x3000, true), tr); !errors.Is(err, context.Canceled) {
 		t.Fatalf("err = %v", err)
 	}
