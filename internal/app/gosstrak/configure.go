@@ -1,6 +1,7 @@
 package gosstrak
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -9,8 +10,7 @@ import (
 	"time"
 
 	configfile "github.com/iomz/tagstrak/v2/internal/config"
-	"github.com/iomz/tagstrak/v2/internal/filter"
-	"github.com/iomz/tagstrak/v2/internal/identity"
+	"github.com/iomz/tagstrak/v2/internal/control"
 	"github.com/iomz/tagstrak/v2/internal/report"
 	"github.com/iomz/tagstrak/v2/internal/report/httpreport"
 	"github.com/iomz/tagstrak/v2/internal/tdt"
@@ -37,6 +37,8 @@ func ApplyFile(c Config, f configfile.File) Config {
 	}
 	setInt(&c.Reader.Limits.MaxParameters, f.Reader.MaxParameters)
 	setString(&c.TelemetryAddress, f.Telemetry.Address)
+	setString(&c.Control.Socket, f.Control.Socket)
+	setString(&c.Control.Address, f.Control.Address)
 	setInt(&c.QueueCapacity, f.Runtime.QueueCapacity)
 	setDuration(&c.ConsumeTimeout, f.Runtime.ConsumeTimeout)
 	setDuration(&c.ShutdownTimeout, f.Runtime.ShutdownTimeout)
@@ -58,23 +60,50 @@ func ReportConfig(f configfile.File) report.Config {
 	return c
 }
 
+// Assembly is the runtime a configuration file describes.
+type Assembly struct {
+	// Consumer translates and matches observations.
+	Consumer *TranslatingConsumer
+	// Options give the App ownership of delivery and control.
+	Options []Option
+	// Subscriptions is the live subscription table.
+	Subscriptions *SubscriptionTable
+	// Source is the subscription source, "file" or "api".
+	Source string
+}
+
 // Pipeline builds the processing pipeline a configuration file describes: a
-// translating consumer whose processor matches the file's subscriptions and,
-// when the file names destinations, routes matches to them. The returned
-// options give the App ownership of delivery.
+// subscription table loaded from the file or, in "api" mode, from the state
+// file; delivery to the file's destinations; and, when control is enabled,
+// the management API.
 //
 // Secrets are resolved here, once, through lookup (os.LookupEnv in
-// production). Any missing secret, invalid URL, uncompilable pattern or
-// unknown route fails the whole pipeline, so a misconfigured deployment does
-// not start. Errors name the offending field, never a secret or a URL.
-func Pipeline(f configfile.File, lookup func(string) (string, bool), logger *slog.Logger) (*TranslatingConsumer, []Option, error) {
-	subscriptions, routes, err := compileSubscriptions(f.Subscriptions)
-	if err != nil {
-		return nil, nil, err
+// production). Any missing secret, invalid URL or header, uncompilable
+// pattern, unknown route or unreadable state file fails the whole pipeline,
+// so a misconfigured deployment does not start. Errors name the offending
+// field, never a secret or a URL.
+func Pipeline(f configfile.File, c Config, lookup func(string) (string, bool), logger *slog.Logger) (Assembly, error) {
+	names := make([]string, len(f.Destinations))
+	for i, d := range f.Destinations {
+		names[i] = d.Name
 	}
-	var set filter.Set
-	if err := set.Replace(subscriptions); err != nil {
-		return nil, nil, fmt.Errorf("subscriptions: %w", err)
+	table := NewSubscriptionTable(names)
+	source := f.SubscriptionSource()
+	var store *StateStore
+	switch source {
+	case configfile.SourceAPI:
+		store = &StateStore{Path: *f.Store.StateFile}
+		state, err := configfile.LoadState(store.Path)
+		if err != nil {
+			return Assembly{}, err
+		}
+		if err := table.Load(state.Subscriptions, state.Revision); err != nil {
+			return Assembly{}, fmt.Errorf("state file: %w", err)
+		}
+	default:
+		if err := table.Load(f.Subscriptions, 1); err != nil {
+			return Assembly{}, err
+		}
 	}
 
 	var options []Option
@@ -82,51 +111,79 @@ func Pipeline(f configfile.File, lookup func(string) (string, bool), logger *slo
 	if len(f.Destinations) > 0 {
 		destinations, err := buildDestinations(f.Destinations, lookup)
 		if err != nil {
-			return nil, nil, err
+			return Assembly{}, err
 		}
 		dispatcher, err := report.New(ReportConfig(f), destinations, logger)
 		if err != nil {
-			return nil, nil, fmt.Errorf("report: %w", err)
+			return Assembly{}, fmt.Errorf("report: %w", err)
 		}
-		processorOptions = append(processorOptions, DeliverTo(dispatcher, routes))
+		processorOptions = append(processorOptions, DeliverTo(dispatcher))
 		options = append(options, WithDelivery(dispatcher))
-	} else if len(routes) > 0 {
-		for id := range routes {
-			return nil, nil, fmt.Errorf("subscription %q routes to destinations, but none are configured", id)
-		}
 	}
-	processor, err := NewMatchingProcessor(&set, logger, processorOptions...)
+	if c.Control.Enabled() {
+		var token []byte
+		if f.Control.Token != nil {
+			secret, err := f.Control.Token.Resolve(lookup)
+			if err != nil {
+				return Assembly{}, fmt.Errorf("control.token: %w", err)
+			}
+			token = secret.Reveal()
+		}
+		options = append(options, WithControl(ControlSettings{Token: token, Subscriptions: table, Source: source, Store: store}))
+	} else if f.Control.Token != nil {
+		return Assembly{}, fmt.Errorf("control.token is set, but no control socket or address is configured")
+	}
+	processor, err := NewMatchingProcessor(table, logger, processorOptions...)
 	if err != nil {
-		return nil, nil, err
+		return Assembly{}, err
 	}
 	// Tags without a protocol-control word are assumed to be GS1 EPC data.
 	// That assumption is explicit rather than inferred from the tag itself,
 	// and readers that report the PC word are believed instead.
 	translator := tdt.New(tdt.WithDefaultFormat(tdt.FormatGS1))
-	return NewTranslatingConsumer(translator, processor), options, nil
+	return Assembly{Consumer: NewTranslatingConsumer(translator, processor), Options: options, Subscriptions: table, Source: source}, nil
 }
 
-func compileSubscriptions(in []configfile.Subscription) ([]filter.Subscription, Routes, error) {
-	subscriptions := make([]filter.Subscription, len(in))
-	routes := Routes{}
-	for i, s := range in {
-		if len(s.Patterns) > filter.MaxPatternsPerSubscription {
-			return nil, nil, fmt.Errorf("subscriptions[%d].patterns: %d exceeds %d", i, len(s.Patterns), filter.MaxPatternsPerSubscription)
+// StateStore persists API-managed subscriptions.
+type StateStore struct {
+	Path string
+}
+
+// Save writes the state file atomically.
+func (s *StateStore) Save(revision uint64, spec []configfile.Subscription) error {
+	return configfile.WriteState(s.Path, configfile.State{Revision: revision, Subscriptions: spec})
+}
+
+// ReloadFile re-reads the configuration file and replaces the subscriptions
+// it lists, for SIGHUP in "file" mode. Only subscriptions are reloaded;
+// destinations, secrets and other settings take effect on restart. Every
+// attempt is audited with actor "signal". On error the current subscriptions
+// stay in place.
+func ReloadFile(ctx context.Context, path string, table *SubscriptionTable, logger *slog.Logger) error {
+	before := table.Revision()
+	audit := func(outcome, code string, after uint64, count int) {
+		attrs := []slog.Attr{slog.Uint64("revision_before", before), slog.Uint64("revision_after", after), slog.Int("count", count)}
+		if code != "" {
+			attrs = append(attrs, slog.String("error_code", code))
 		}
-		patterns := make([]identity.Pattern, len(s.Patterns))
-		for j, text := range s.Patterns {
-			p, err := tdt.CompilePattern(text)
-			if err != nil {
-				return nil, nil, fmt.Errorf("subscriptions[%d].patterns[%d]: %w", i, j, err)
-			}
-			patterns[j] = p
-		}
-		subscriptions[i] = filter.Subscription{ID: filter.ID(s.ID), Patterns: patterns}
-		if len(s.Destinations) > 0 {
-			routes[filter.ID(s.ID)] = s.Destinations
-		}
+		control.AuditRecord(ctx, logger, "signal", "", "subscriptions.reload", outcome, attrs...)
 	}
-	return subscriptions, routes, nil
+	f, err := configfile.Load(path)
+	if err != nil {
+		audit("rejected", "invalid_config", before, 0)
+		return err
+	}
+	if f.SubscriptionSource() != configfile.SourceFile {
+		audit("rejected", "source_changed", before, 0)
+		return fmt.Errorf("subscription_store.source changed to %q; restart to change the source", f.SubscriptionSource())
+	}
+	after, err := table.Replace(f.Subscriptions, nil, nil)
+	if err != nil {
+		audit("rejected", "invalid_subscriptions", before, 0)
+		return err
+	}
+	audit("ok", "", after, len(f.Subscriptions))
+	return nil
 }
 
 func buildDestinations(in []configfile.Destination, lookup func(string) (string, bool)) ([]report.Destination, error) {

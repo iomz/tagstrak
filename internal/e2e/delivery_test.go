@@ -17,9 +17,8 @@ import (
 
 	golemu "github.com/iomz/tagstrak/v2/internal/app/golemu"
 	gosstrak "github.com/iomz/tagstrak/v2/internal/app/gosstrak"
+	configfile "github.com/iomz/tagstrak/v2/internal/config"
 	"github.com/iomz/tagstrak/v2/internal/emulator"
-	"github.com/iomz/tagstrak/v2/internal/filter"
-	"github.com/iomz/tagstrak/v2/internal/identity"
 	"github.com/iomz/tagstrak/v2/internal/report"
 	"github.com/iomz/tagstrak/v2/internal/report/httpreport"
 	"github.com/iomz/tagstrak/v2/internal/tdt"
@@ -105,16 +104,11 @@ func TestGolemuToHTTPDestination(t *testing.T) {
 	}
 
 	// Matching.
-	pattern, err := tdt.CompilePattern("urn:epc:idpat:sgtin:0614141.812345.*")
-	if err != nil {
+	subscriptions := gosstrak.NewSubscriptionTable([]string{"hook"})
+	if err := subscriptions.Load([]configfile.Subscription{{ID: "product", Patterns: []string{"urn:epc:idpat:sgtin:0614141.812345.*"}, Destinations: []string{"hook"}}}, 1); err != nil {
 		t.Fatal(err)
 	}
-	var subscriptions filter.Set
-	if err := subscriptions.Replace([]filter.Subscription{{ID: "product", Patterns: []identity.Pattern{pattern}}}); err != nil {
-		t.Fatal(err)
-	}
-	processor, err := gosstrak.NewMatchingProcessor(&subscriptions, nil,
-		gosstrak.DeliverTo(dispatcher, gosstrak.Routes{"product": {"hook"}}))
+	processor, err := gosstrak.NewMatchingProcessor(subscriptions, nil, gosstrak.DeliverTo(dispatcher))
 	if err != nil {
 		t.Fatal(err)
 	}

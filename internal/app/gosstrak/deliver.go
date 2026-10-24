@@ -31,27 +31,24 @@ type Delivery interface {
 // ProcessorOption configures a MatchingProcessor.
 type ProcessorOption func(*MatchingProcessor) error
 
-// DeliverTo routes matches to delivery. Every destination named by routes must
-// exist in delivery.
-func DeliverTo(delivery Delivery, routes Routes) ProcessorOption {
+// DeliverTo hands routed matches to delivery. Every destination the
+// processor's subscription table may route to must exist in delivery, so a
+// route can never name a destination that silently drops its events.
+func DeliverTo(delivery Delivery) ProcessorOption {
 	return func(p *MatchingProcessor) error {
 		if delivery == nil {
-			return fmt.Errorf("gosstrak: delivery is required for routes")
+			return fmt.Errorf("gosstrak: delivery is required")
 		}
 		known := make(map[string]bool)
 		for _, name := range delivery.Destinations() {
 			known[name] = true
 		}
-		copied := make(Routes, len(routes))
-		for id, destinations := range routes {
-			for _, name := range destinations {
-				if !known[name] {
-					return fmt.Errorf("gosstrak: subscription %q routes to unknown destination %q", id, name)
-				}
+		for _, name := range p.subscriptions.Destinations() {
+			if !known[name] {
+				return fmt.Errorf("gosstrak: subscriptions may route to %q, which delivery does not have", name)
 			}
-			copied[id] = append([]string(nil), destinations...)
 		}
-		p.delivery, p.routes = delivery, copied
+		p.delivery = delivery
 		p.instance = report.NewInstanceID()
 		return nil
 	}
@@ -60,9 +57,9 @@ func DeliverTo(delivery Delivery, routes Routes) ProcessorOption {
 // route groups matched subscription IDs by destination. Destinations appear in
 // the order their first matching subscription does, and each destination's
 // subscriptions keep match order, so delivery is deterministic.
-func (p *MatchingProcessor) route(matched []filter.ID) (order []string, byDestination map[string][]string) {
+func route(routes Routes, matched []filter.ID) (order []string, byDestination map[string][]string) {
 	for _, id := range matched {
-		for _, name := range p.routes[id] {
+		for _, name := range routes[id] {
 			if byDestination == nil {
 				byDestination = make(map[string][]string)
 			}

@@ -103,10 +103,11 @@ func TestPipelineDeliversWithSecretHeader(t *testing.T) {
 			{ID: "unrouted", Patterns: []string{"urn:epc:idpat:sgtin:*.*.*"}},
 		},
 	}
-	consumer, options, err := Pipeline(f, func(name string) (string, bool) { return "t0ken", name == "ERP_TOKEN" }, nil)
+	assembly, err := Pipeline(f, DefaultConfig(), func(name string) (string, bool) { return "t0ken", name == "ERP_TOKEN" }, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
+	consumer, options := assembly.Consumer, assembly.Options
 	if len(options) != 1 {
 		t.Fatalf("got %d app options, want delivery", len(options))
 	}
@@ -127,12 +128,12 @@ func TestPipelineDeliversWithSecretHeader(t *testing.T) {
 }
 
 func TestPipelineWithoutDestinationsOnlyMatches(t *testing.T) {
-	_, options, err := Pipeline(configfile.File{
+	assembly, err := Pipeline(configfile.File{
 		Version:       configfile.Version,
 		Subscriptions: []configfile.Subscription{{ID: "a", Patterns: []string{"urn:epc:idpat:sgtin:*.*.*"}}},
-	}, noLookup, nil)
-	if err != nil || len(options) != 0 {
-		t.Fatalf("options %d, err %v", len(options), err)
+	}, DefaultConfig(), noLookup, nil)
+	if err != nil || len(assembly.Options) != 0 {
+		t.Fatalf("options %d, err %v", len(assembly.Options), err)
 	}
 }
 
@@ -157,7 +158,7 @@ func TestPipelineRejectsMisconfiguration(t *testing.T) {
 		{"bad pattern", configfile.File{Subscriptions: []configfile.Subscription{sub([]string{"urn:epc:idpat:sgtin:*.*.*"}), {ID: "b", Patterns: []string{"urn:nope"}}}}, "subscriptions[1].patterns[0]"},
 		{"too many patterns", configfile.File{Subscriptions: []configfile.Subscription{sub(tooMany)}}, "subscriptions[0].patterns: 65 exceeds 64"},
 		{"duplicate ID", configfile.File{Subscriptions: []configfile.Subscription{sub([]string{"urn:epc:idpat:sgtin:*.*.*"}), sub([]string{"urn:epc:idpat:sgtin:*.*.*"})}}, "duplicate subscription ID"},
-		{"routes without destinations", configfile.File{Subscriptions: []configfile.Subscription{sub([]string{"urn:epc:idpat:sgtin:*.*.*"}, "erp")}}, "none are configured"},
+		{"routes without destinations", configfile.File{Subscriptions: []configfile.Subscription{sub([]string{"urn:epc:idpat:sgtin:*.*.*"}, "erp")}}, `subscriptions[0].destinations[0]: unknown destination "erp"`},
 		{"unknown route", configfile.File{Destinations: []configfile.Destination{dest}, Subscriptions: []configfile.Subscription{sub([]string{"urn:epc:idpat:sgtin:*.*.*"}, "crm")}}, `unknown destination "crm"`},
 		{"credentials in URL", configfile.File{Destinations: []configfile.Destination{{Name: "erp", URL: "https://user:s3cret@erp.example/"}}}, "destinations[0].url: user information is not allowed"},
 		{"unusable URL", configfile.File{Destinations: []configfile.Destination{{Name: "erp", URL: "ftp://erp.example/"}}}, "destinations[0].url"},
@@ -168,7 +169,7 @@ func TestPipelineRejectsMisconfiguration(t *testing.T) {
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			tc.file.Version = configfile.Version
-			_, _, err := Pipeline(tc.file, noLookup, nil)
+			_, err := Pipeline(tc.file, DefaultConfig(), noLookup, nil)
 			if err == nil || !strings.Contains(err.Error(), tc.want) {
 				t.Fatalf("err = %v, want %q", err, tc.want)
 			}
@@ -187,7 +188,7 @@ func TestPipelineRejectsHeaderInjection(t *testing.T) {
 			Name: "erp", URL: "https://erp.example/",
 			Headers: map[string]configfile.SecretSource{"Authorization": {Env: "ERP_TOKEN"}},
 		}}}
-		_, _, err := Pipeline(f, func(string) (string, bool) { return value, true }, nil)
+		_, err := Pipeline(f, DefaultConfig(), func(string) (string, bool) { return value, true }, nil)
 		if err == nil || !strings.Contains(err.Error(), "control characters") {
 			t.Errorf("%q: err = %v", value, err)
 		} else if strings.Contains(err.Error(), "t0") {
@@ -199,7 +200,7 @@ func TestPipelineRejectsHeaderInjection(t *testing.T) {
 		Name: "erp", URL: "https://erp.example/",
 		Headers: map[string]configfile.SecretSource{"X-Token": {Env: "T"}},
 	}}}
-	if _, _, err := Pipeline(f, func(string) (string, bool) { return "a\tb", true }, nil); err != nil {
+	if _, err := Pipeline(f, DefaultConfig(), func(string) (string, bool) { return "a\tb", true }, nil); err != nil {
 		t.Fatalf("tab rejected: %v", err)
 	}
 }

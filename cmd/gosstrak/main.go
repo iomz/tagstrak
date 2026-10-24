@@ -44,6 +44,8 @@ func bind(fs *flag.FlagSet, s *settings) {
 	fs.StringVar(&c.Reader.Address, "reader", c.Reader.Address, "LLRP reader host:port")
 	fs.StringVar(&c.Reader.Source, "source", c.Reader.Source, "Observation source identifier")
 	fs.StringVar(&c.TelemetryAddress, "telemetry", c.TelemetryAddress, "Read-only health and metrics host:port")
+	fs.StringVar(&c.Control.Socket, "control-socket", c.Control.Socket, "Management API Unix socket in a private directory (same-user trust)")
+	fs.StringVar(&c.Control.Address, "control-address", c.Control.Address, "Management API loopback host:port; requires control.token in the file")
 	fs.IntVar(&c.QueueCapacity, "queue-capacity", c.QueueCapacity, "Maximum queued observations; overflow fails the run")
 	fs.DurationVar(&c.Reader.ConnectTimeout, "connect-timeout", c.Reader.ConnectTimeout, "Per-attempt dial timeout")
 	fs.DurationVar(&c.Reader.HandshakeTimeout, "handshake-timeout", c.Reader.HandshakeTimeout, "Total connection handshake timeout")
@@ -72,11 +74,18 @@ func newFlagSet(output io.Writer, s *settings) *flag.FlagSet {
 	return fs
 }
 
+// loadedFile is a decoded configuration file and the path it came from, which
+// SIGHUP reloads.
+type loadedFile struct {
+	configfile.File
+	Path string
+}
+
 // parseConfig builds one immutable configuration from defaults, the optional
 // configuration file, the environment, and flags, in that order (#2). An
 // optional "start" subcommand is accepted and ignored. It returns the decoded
 // file, or nil without --config, for the pipeline's structured settings.
-func parseConfig(args []string, output io.Writer, lookup func(string) (string, bool)) (app.Config, *configfile.File, error) {
+func parseConfig(args []string, output io.Writer, lookup func(string) (string, bool)) (app.Config, *loadedFile, error) {
 	if len(args) > 0 && args[0] == "start" {
 		args = args[1:]
 	}
@@ -101,13 +110,13 @@ func parseConfig(args []string, output io.Writer, lookup func(string) (string, b
 	// Second pass: rebuild on top of the file, then the environment, then
 	// the explicit flags.
 	layered := settings{config: app.DefaultConfig(), configPath: path}
-	var file *configfile.File
+	var file *loadedFile
 	if path != "" {
 		f, err := configfile.Load(path)
 		if err != nil {
 			return app.Config{}, nil, err
 		}
-		file = &f
+		file = &loadedFile{File: f, Path: path}
 		layered.config = app.ApplyFile(layered.config, f)
 	}
 	fs = newFlagSet(io.Discard, &layered)
@@ -150,21 +159,53 @@ func run(ctx context.Context, args []string, stderr io.Writer, lookup func(strin
 	if file == nil {
 		// Without a file there are no subscriptions or destinations: tags are
 		// translated, matched against nothing, and logged at debug level.
-		file = &configfile.File{Version: configfile.Version}
+		file = &loadedFile{File: configfile.File{Version: configfile.Version}}
 	}
-	consumer, options, err := app.Pipeline(*file, lookup, logger)
+	assembly, err := app.Pipeline(file.File, config, lookup, logger)
 	if err != nil {
 		return err
 	}
-	runtime, err := app.New(config, &net.Dialer{}, consumer, logger, options...)
+	runtime, err := app.New(config, &net.Dialer{}, assembly.Consumer, logger, assembly.Options...)
 	if err != nil {
 		return err
+	}
+	if file.Path != "" && assembly.Source == configfile.SourceFile {
+		stop := reloadOnHangup(ctx, file.Path, assembly.Subscriptions, logger)
+		defer stop()
 	}
 	source := tdt.SourceInfo()
 	logger.Info("starting gosstrak", "mode", "ingestion", "reader", config.Reader.Address, "telemetry", config.TelemetryAddress,
-		"subscriptions", len(file.Subscriptions), "destinations", len(file.Destinations),
+		"subscriptions", len(file.Subscriptions), "subscription_source", assembly.Source, "destinations", len(file.Destinations),
+		"control", config.Control.Enabled(),
 		"tds_version", source.TDSVersion, "tdt_artefacts", source.Commit, "schemes", tdt.SupportedSchemes())
 	return runtime.Run(ctx)
+}
+
+// reloadOnHangup reloads subscriptions from path on every SIGHUP until the
+// returned stop function runs, which also joins the reload goroutine.
+func reloadOnHangup(ctx context.Context, path string, table *app.SubscriptionTable, logger *slog.Logger) (stop func()) {
+	hangup := make(chan os.Signal, 1)
+	signal.Notify(hangup, syscall.SIGHUP)
+	ctx, cancel := context.WithCancel(ctx)
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-hangup:
+				if err := app.ReloadFile(ctx, path, table, logger); err != nil {
+					logger.Warn("subscription reload rejected; keeping current subscriptions", "error", err)
+				}
+			}
+		}
+	}()
+	return func() {
+		signal.Stop(hangup)
+		cancel()
+		<-done
+	}
 }
 
 func main() {

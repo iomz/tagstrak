@@ -17,6 +17,14 @@ address = "127.0.0.1:8080"
 [report]
 flush_interval = "1s"
 
+# Optional management API. A Unix socket trusts the same user; a loopback
+# address requires a token of at least 32 bytes. Remote addresses are refused.
+# [control]
+# socket = "/run/gosstrak/control.sock"
+# address = "127.0.0.1:9090"
+# [control.token]
+# file = "/run/secrets/gosstrak-control"
+
 [[destinations]]
 name = "erp"
 url = "https://erp.example/hooks/rfid"
