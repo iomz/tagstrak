@@ -33,6 +33,10 @@ import (
 // O(subscriptions) per tag, so the budget also bounds per-tag work.
 const MaxSubscriptions = 10000
 
+// MaxPatternsPerSubscription bounds one subscription's alternatives, so the
+// per-tag cost of one subscription is bounded as well.
+const MaxPatternsPerSubscription = 64
+
 // Errors returned by Compile.
 var (
 	ErrEmptyID              = errors.New("filter: empty subscription ID")
@@ -40,6 +44,7 @@ var (
 	ErrNoPatterns           = errors.New("filter: subscription has no patterns")
 	ErrZeroPattern          = errors.New("filter: subscription has an unset pattern")
 	ErrTooManySubscriptions = errors.New("filter: too many subscriptions")
+	ErrTooManyPatterns      = errors.New("filter: subscription has too many patterns")
 )
 
 // ID names a subscription. It is chosen by whoever configures subscriptions
@@ -110,6 +115,9 @@ func validate(subscriptions []Subscription) error {
 		seen[s.ID] = struct{}{}
 		if len(s.Patterns) == 0 {
 			return fmt.Errorf("%w: %q", ErrNoPatterns, s.ID)
+		}
+		if len(s.Patterns) > MaxPatternsPerSubscription {
+			return fmt.Errorf("%w: %q has %d, limit %d", ErrTooManyPatterns, s.ID, len(s.Patterns), MaxPatternsPerSubscription)
 		}
 		for _, p := range s.Patterns {
 			if p.IsZero() {
