@@ -15,7 +15,8 @@ The module path is `github.com/iomz/tagstrak/v2`; v1 was `github.com/iomz/tagstr
 ## Run under a supervisor
 
 gosstrak fails fast rather than degrading silently.
-It exits nonzero when its reconnect budget is spent, when the observation queue overflows, when processing fails, or when reports are still undelivered at the shutdown deadline; SIGINT and SIGTERM shut it down and exit zero.
+It exits nonzero when its reconnect budget is spent, when the observation queue overflows, when processing fails, or when reports are still undelivered at the shutdown deadline.
+SIGINT and SIGTERM request shutdown and exit zero unless shutdown itself fails, for example with reports still undelivered.
 Run it under a supervisor that restarts it: each run's reconnect budget is small by design, and restarts continue at the supervisor's pace.
 A systemd unit, for example:
 
