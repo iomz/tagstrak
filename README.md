@@ -54,6 +54,11 @@ See [docs/report.md](docs/report.md) for the delivery contract, bounds, and wire
 An optional management API on a private Unix socket or authenticated loopback TCP reads status and replaces subscriptions.
 See [docs/control.md](docs/control.md) and the threat model in [docs/security.md](docs/security.md).
 
+## Quality gates
+
+Every pull request passes formatting, tidy modules, vet, staticcheck, govulncheck, race-enabled tests with goroutine leak checks, fuzz seed corpora, and end-to-end scenarios.
+See [docs/testing.md](docs/testing.md).
+
 ## Configuration
 
 Gosstrak reads an optional TOML or JSON configuration file for its settings, subscriptions, and destinations, with secrets from environment or file sources only.
