@@ -14,7 +14,7 @@ func KeepaliveAckMessage(messageID uint32) Message {
 func ReaderEventNotificationMessage(messageID uint32, currentTime uint64) Message {
 	return Message{
 		Header:  Header{Type: ReaderEventNotificationHeader, ID: messageID},
-		Payload: ReaderEventNotificationData(currentTime),
+		Payload: readerEventNotificationData(currentTime),
 	}
 }
 
@@ -22,7 +22,7 @@ func ReaderEventNotificationMessage(messageID uint32, currentTime uint64) Messag
 func SetReaderConfigMessage(messageID uint32) Message {
 	return Message{
 		Header:  Header{Type: SetReaderConfigHeader, ID: messageID},
-		Payload: append([]byte{0}, KeepaliveSpec()...),
+		Payload: append([]byte{0}, keepaliveSpec()...),
 	}
 }
 
@@ -30,7 +30,7 @@ func SetReaderConfigMessage(messageID uint32) Message {
 func SetReaderConfigResponseMessage(messageID uint32) Message {
 	return Message{
 		Header:  Header{Type: SetReaderConfigResponseHeader, ID: messageID},
-		Payload: Status(),
+		Payload: status(),
 	}
 }
 

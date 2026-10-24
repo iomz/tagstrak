@@ -35,11 +35,9 @@ const (
 	ImpinjEnableCustomMessageHeader   = 2047 // type 1023
 )
 
-const ImpinjEnableCutomMessageHeader = ImpinjEnableCustomMessageHeader
-
-// Pack the data into (partial) LLRP packet payload.
+// pack the data into (partial) LLRP packet payload.
 // TODO: count the data size and return resulting length ?
-func Pack(data []interface{}) []byte {
+func pack(data []interface{}) []byte {
 	buf := new(bytes.Buffer)
 	for _, v := range data {
 		err := binary.Write(buf, binary.BigEndian, v)
@@ -54,9 +52,4 @@ func Pack(data []interface{}) []byte {
 type ReadEvent struct {
 	ID []byte
 	PC []byte
-}
-
-// UnmarshalROAccessReportBody extracts ReadEvent values from an RO_ACCESS_REPORT body.
-func UnmarshalROAccessReportBody(roarBody []byte) ([]*ReadEvent, error) {
-	return DecodeReadEvents(roarBody, DefaultLimits())
 }
