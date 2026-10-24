@@ -5,12 +5,14 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
 	"net"
 	"net/http"
 	"sync/atomic"
 	"time"
 
+	"github.com/iomz/tagstrak/v2/internal/control"
 	"github.com/iomz/tagstrak/v2/internal/inventory"
 	"github.com/iomz/tagstrak/v2/internal/reader"
 )
@@ -31,6 +33,8 @@ type Config struct {
 	ConsumeTimeout   time.Duration
 	ShutdownTimeout  time.Duration
 	TelemetryAddress string
+	// Control selects the management API listener; empty disables it.
+	Control control.ListenConfig
 }
 
 // DefaultConfig returns the default application configuration.
@@ -46,6 +50,9 @@ func (c Config) Validate() error {
 	}
 	if _, _, err := net.SplitHostPort(c.TelemetryAddress); err != nil {
 		return fmt.Errorf("%w: telemetry address: %v", reader.ErrConfig, err)
+	}
+	if err := c.Control.Validate(); err != nil {
+		return fmt.Errorf("%w: %w", reader.ErrConfig, err)
 	}
 	return nil
 }
@@ -63,6 +70,9 @@ type App struct {
 	consumerFailed   atomic.Bool
 	telemetryAddress atomic.Value
 	delivery         Delivery
+	control          *ControlSettings
+	controlAddress   atomic.Value
+	logger           *slog.Logger
 }
 
 // Option configures an App.
@@ -90,9 +100,24 @@ func New(config Config, dialer reader.Dialer, consumer Consumer, logger *slog.Lo
 	if err != nil {
 		return nil, err
 	}
-	a := &App{config: config, session: session, consumer: consumer, queue: make(chan inventory.Observation, config.QueueCapacity)}
+	if logger == nil {
+		logger = slog.New(slog.NewTextHandler(io.Discard, nil))
+	}
+	a := &App{config: config, session: session, consumer: consumer, queue: make(chan inventory.Observation, config.QueueCapacity), logger: logger}
 	for _, option := range options {
 		option(a)
+	}
+	if config.Control.Enabled() {
+		if a.control == nil {
+			return nil, fmt.Errorf("%w: control is configured, but the pipeline provides no control settings", reader.ErrConfig)
+		}
+		// Fail before any listener opens: TCP control is always authenticated.
+		if config.Control.Address != "" && len(a.control.Token) == 0 {
+			return nil, fmt.Errorf("%w: control address requires control.token", reader.ErrConfig)
+		}
+		if len(a.control.Token) > 0 && len(a.control.Token) < control.MinTokenBytes {
+			return nil, fmt.Errorf("%w: control token must be at least %d bytes", reader.ErrConfig, control.MinTokenBytes)
+		}
 	}
 	return a, nil
 }
@@ -113,8 +138,29 @@ func (a *App) Run(ctx context.Context) error {
 	}
 	a.telemetryAddress.Store(listener.Addr().String())
 	server := &http.Server{Handler: a.Handler(), ReadHeaderTimeout: 2 * time.Second, ReadTimeout: 5 * time.Second, WriteTimeout: 5 * time.Second, IdleTimeout: 30 * time.Second, MaxHeaderBytes: 8192}
+	// Control binds before dialing too, so a bad control setup fails before
+	// the reader connects.
+	var controlServer *control.Server
+	if a.control != nil && a.config.Control.Enabled() {
+		controlListener, transport, err := control.Listen(a.config.Control)
+		if err != nil {
+			_ = listener.Close()
+			return err
+		}
+		controlServer, err = control.New(controlListener, transport, a.controlHandler(), control.ServerConfig{Token: a.control.Token, Logger: a.logger})
+		if err != nil {
+			_ = controlListener.Close()
+			_ = listener.Close()
+			return err
+		}
+		a.controlAddress.Store(controlServer.Addr().String())
+	}
 	serverDone := make(chan error, 1)
 	go func() { serverDone <- server.Serve(&limitedListener{Listener: listener}) }()
+	controlDone := make(chan error, 1)
+	if controlServer != nil {
+		go func() { controlDone <- controlServer.Serve() }()
+	}
 	a.running.Store(true)
 	defer a.running.Store(false)
 	if a.delivery != nil {
@@ -129,7 +175,7 @@ func (a *App) Run(ctx context.Context) error {
 	go func() { err := a.session.Run(readCtx, a.queue); close(a.queue); readerDone <- err }()
 	go func() { consumerDone <- a.consume(consumeCtx) }()
 	var result error
-	var readFinished, consumeFinished, serverFinished bool
+	var readFinished, consumeFinished, serverFinished, controlFinished bool
 	select {
 	case <-ctx.Done():
 		result = ctx.Err()
@@ -139,6 +185,8 @@ func (a *App) Run(ctx context.Context) error {
 		consumeFinished = true
 	case result = <-serverDone:
 		serverFinished = true
+	case result = <-controlDone:
+		controlFinished = true
 	}
 	a.draining.Store(true)
 	stopReader()
@@ -187,6 +235,17 @@ func (a *App) Run(ctx context.Context) error {
 	if a.delivery != nil {
 		if err := a.delivery.Close(shutdownCtx); err != nil {
 			result = errors.Join(result, err)
+		}
+	}
+	if controlServer != nil {
+		if err := controlServer.Shutdown(shutdownCtx); err != nil {
+			result = errors.Join(result, err)
+			_ = controlServer.Close()
+		}
+		if !controlFinished {
+			if err := <-controlDone; err != nil && !control.IsClosed(err) {
+				result = errors.Join(result, err)
+			}
 		}
 	}
 	if err := server.Shutdown(shutdownCtx); err != nil {

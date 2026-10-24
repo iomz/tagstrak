@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/iomz/tagstrak/v2/internal/filter"
+	configfile "github.com/iomz/tagstrak/v2/internal/config"
 	"github.com/iomz/tagstrak/v2/internal/identity"
 	"github.com/iomz/tagstrak/v2/internal/inventory"
 	"github.com/iomz/tagstrak/v2/internal/report"
@@ -85,38 +85,38 @@ func TestEventOfRendersStandardsBackedValues(t *testing.T) {
 }
 
 func TestDeliverToRejectsUnknownDestinations(t *testing.T) {
-	if _, err := NewMatchingProcessor(nil, nil, DeliverTo(nil, Routes{"a": {"hook"}})); err == nil {
+	if _, err := NewMatchingProcessor(nil, nil, DeliverTo(nil)); err == nil {
 		t.Fatal("nil delivery accepted")
 	}
-	_, err := NewMatchingProcessor(nil, nil, DeliverTo(newFakeDelivery("hook"), Routes{"a": {"nope"}}))
+	// The table may route to "nope", which delivery lacks.
+	_, err := NewMatchingProcessor(NewSubscriptionTable([]string{"nope"}), nil, DeliverTo(newFakeDelivery("hook")))
 	if err == nil || !strings.Contains(err.Error(), `"nope"`) {
 		t.Fatalf("err = %v", err)
 	}
+}
+
+// table builds a subscription table, failing the test on invalid input.
+func table(t *testing.T, destinations []string, spec ...configfile.Subscription) *SubscriptionTable {
+	t.Helper()
+	tbl := NewSubscriptionTable(destinations)
+	if err := tbl.Load(spec, 1); err != nil {
+		t.Fatal(err)
+	}
+	return tbl
 }
 
 // TestProcessorRoutesMatchesByDestination checks grouping: one event per
 // destination, carrying that destination's subscriptions in match order, and
 // one shared observation ID.
 func TestProcessorRoutesMatchesByDestination(t *testing.T) {
-	product := mustPattern(t, "urn:epc:idpat:sgtin:0614141.812345.*")
-	company := mustPattern(t, "urn:epc:idpat:sgtin:0614141.*.*")
-	filter3 := mustPattern(t, "urn:epc:pat:sgtin-96:3.0614141.812345.*")
-	unrouted := mustPattern(t, "urn:epc:idpat:sgtin:*.*.*")
-	var set filter.Set
-	if err := set.Replace([]filter.Subscription{
-		{ID: "product", Patterns: []identity.Pattern{product}},
-		{ID: "company", Patterns: []identity.Pattern{company}},
-		{ID: "filter3", Patterns: []identity.Pattern{filter3}},
-		{ID: "unrouted", Patterns: []identity.Pattern{unrouted}},
-	}); err != nil {
-		t.Fatal(err)
-	}
+	tbl := table(t, []string{"erp", "audit"},
+		configfile.Subscription{ID: "product", Patterns: []string{"urn:epc:idpat:sgtin:0614141.812345.*"}, Destinations: []string{"erp"}},
+		configfile.Subscription{ID: "company", Patterns: []string{"urn:epc:idpat:sgtin:0614141.*.*"}, Destinations: []string{"erp", "audit"}},
+		configfile.Subscription{ID: "filter3", Patterns: []string{"urn:epc:pat:sgtin-96:3.0614141.812345.*"}, Destinations: []string{"audit"}},
+		configfile.Subscription{ID: "unrouted", Patterns: []string{"urn:epc:idpat:sgtin:*.*.*"}},
+	)
 	delivery := newFakeDelivery("erp", "audit")
-	p, err := NewMatchingProcessor(&set, nil, DeliverTo(delivery, Routes{
-		"product": {"erp"},
-		"company": {"erp", "audit"},
-		"filter3": {"audit"},
-	}))
+	p, err := NewMatchingProcessor(tbl, nil, DeliverTo(delivery))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -142,12 +142,9 @@ func TestProcessorRoutesMatchesByDestination(t *testing.T) {
 }
 
 func TestProcessorWithoutRoutedMatchesEnqueuesNothing(t *testing.T) {
-	var set filter.Set
-	if err := set.Replace([]filter.Subscription{{ID: "pallets", Patterns: []identity.Pattern{mustPattern(t, "urn:epc:idpat:sscc:*.*")}}}); err != nil {
-		t.Fatal(err)
-	}
+	tbl := table(t, []string{"hook"}, configfile.Subscription{ID: "pallets", Patterns: []string{"urn:epc:idpat:sscc:*.*"}, Destinations: []string{"hook"}})
 	delivery := newFakeDelivery("hook")
-	p, err := NewMatchingProcessor(&set, nil, DeliverTo(delivery, Routes{"pallets": {"hook"}}))
+	p, err := NewMatchingProcessor(tbl, nil, DeliverTo(delivery))
 	if err != nil {
 		t.Fatal(err)
 	}

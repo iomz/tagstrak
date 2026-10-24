@@ -8,32 +8,20 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/iomz/tagstrak/v2/internal/filter"
-	"github.com/iomz/tagstrak/v2/internal/identity"
+	configfile "github.com/iomz/tagstrak/v2/internal/config"
 	"github.com/iomz/tagstrak/v2/internal/tdt"
 )
 
 // TestMatchingProcessorMatchesTranslations runs the whole processing path:
 // an observation is translated, adapted to a filter subject, and matched.
 func TestMatchingProcessorMatchesTranslations(t *testing.T) {
-	product, err := tdt.CompilePattern("urn:epc:idpat:sgtin:0614141.812345.*")
-	if err != nil {
-		t.Fatal(err)
-	}
-	other, err := tdt.CompilePattern("urn:epc:idpat:sscc:*.*")
-	if err != nil {
-		t.Fatal(err)
-	}
-	var subscriptions filter.Set
-	if err := subscriptions.Replace([]filter.Subscription{
-		{ID: "product", Patterns: []identity.Pattern{product}},
-		{ID: "pallets", Patterns: []identity.Pattern{other}},
-	}); err != nil {
-		t.Fatal(err)
-	}
+	subscriptions := table(t, nil,
+		configfile.Subscription{ID: "product", Patterns: []string{"urn:epc:idpat:sgtin:0614141.812345.*"}},
+		configfile.Subscription{ID: "pallets", Patterns: []string{"urn:epc:idpat:sscc:*.*"}},
+	)
 	var logs bytes.Buffer
 	logger := slog.New(slog.NewTextHandler(&logs, &slog.HandlerOptions{Level: slog.LevelDebug}))
-	processor, err := NewMatchingProcessor(&subscriptions, logger)
+	processor, err := NewMatchingProcessor(subscriptions, logger)
 	if err != nil {
 		t.Fatal(err)
 	}

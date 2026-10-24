@@ -31,20 +31,19 @@ func SubjectOf(translation tdt.Translation) filter.Subject {
 // subscriptions, logs the result at debug level, and, when configured with
 // DeliverTo, enqueues one report event per destination its matches route to.
 type MatchingProcessor struct {
-	subscriptions *filter.Set
+	subscriptions *SubscriptionTable
 	logger        *slog.Logger
 
 	delivery Delivery
-	routes   Routes
 	instance string
 	sequence atomic.Uint64
 }
 
-// NewMatchingProcessor builds a processor around a subscription set. A nil set
-// matches nothing, and a nil logger discards output.
-func NewMatchingProcessor(subscriptions *filter.Set, logger *slog.Logger, options ...ProcessorOption) (*MatchingProcessor, error) {
+// NewMatchingProcessor builds a processor around a subscription table. A nil
+// table matches nothing, and a nil logger discards output.
+func NewMatchingProcessor(subscriptions *SubscriptionTable, logger *slog.Logger, options ...ProcessorOption) (*MatchingProcessor, error) {
 	if subscriptions == nil {
-		subscriptions = &filter.Set{}
+		subscriptions = NewSubscriptionTable(nil)
 	}
 	if logger == nil {
 		logger = slog.New(slog.NewTextHandler(io.Discard, nil))
@@ -65,7 +64,10 @@ func (p *MatchingProcessor) Process(ctx context.Context, observation inventory.O
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	matched := p.subscriptions.Match(SubjectOf(translation), nil)
+	// One snapshot serves the whole observation, so matching and routing
+	// always see the same subscription revision.
+	snapshot := p.subscriptions.current.Load()
+	matched := snapshot.matcher.Match(SubjectOf(translation), nil)
 	if p.logger.Enabled(ctx, slog.LevelDebug) {
 		p.logger.DebugContext(ctx, "translated tag",
 			"source", observation.Source(),
@@ -76,7 +78,7 @@ func (p *MatchingProcessor) Process(ctx context.Context, observation inventory.O
 	if p.delivery == nil || len(matched) == 0 {
 		return nil
 	}
-	order, byDestination := p.route(matched)
+	order, byDestination := route(snapshot.routes, matched)
 	if len(order) == 0 {
 		return nil
 	}

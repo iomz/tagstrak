@@ -178,7 +178,7 @@ func TestExampleConfigurationIsValid(t *testing.T) {
 	if c.Reader.Source != "dock-1" || len(file.Subscriptions) != 2 || len(file.Destinations) != 1 {
 		t.Fatalf("config %+v, file %+v", c, file)
 	}
-	if _, _, err := app.Pipeline(*file, env(map[string]string{"ERP_TOKEN": "t0ken"}), nil); err != nil {
+	if _, err := app.Pipeline(file.File, c, env(map[string]string{"ERP_TOKEN": "t0ken"}), nil); err != nil {
 		t.Fatal(err)
 	}
 }
