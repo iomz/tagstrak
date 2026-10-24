@@ -200,9 +200,20 @@ var compilers = map[string]filter.Compiler{
 // matcherCompiler returns the compiler a file's [filter] section selects.
 // Adaptive bounds belong to the filter package, so they are checked here by
 // compiling an empty set, before anything starts.
+//
+// Load validates names and modes, but Pipeline also accepts files built in
+// code, so both are checked again rather than trusted.
 func matcherCompiler(f configfile.File) (filter.Compiler, error) {
-	if f.FilterMode() == configfile.ModeSingle {
-		return compilers[f.FilterMatcher()], nil
+	switch mode := f.FilterMode(); mode {
+	case configfile.ModeSingle:
+		compile, ok := compilers[f.FilterMatcher()]
+		if !ok {
+			return nil, &FieldError{Field: "filter.matcher", Err: fmt.Errorf("unknown matcher %q", f.FilterMatcher())}
+		}
+		return compile, nil
+	case configfile.ModeAdaptive:
+	default:
+		return nil, &FieldError{Field: "filter.mode", Err: fmt.Errorf("unknown mode %q", mode)}
 	}
 	a := f.Filter.Adaptive
 	names := a.Candidates
@@ -211,8 +222,12 @@ func matcherCompiler(f configfile.File) (filter.Compiler, error) {
 	}
 	cfg := filter.DefaultAdaptiveConfig()
 	cfg.FullShadow = a.Shadow != nil && *a.Shadow == configfile.ShadowFull
-	for _, name := range names {
-		cfg.Candidates = append(cfg.Candidates, filter.Candidate{Name: name, Compile: compilers[name]})
+	for i, name := range names {
+		compile, ok := compilers[name]
+		if !ok {
+			return nil, &FieldError{Field: fmt.Sprintf("filter.adaptive.candidates[%d]", i), Err: fmt.Errorf("unknown matcher %q", name)}
+		}
+		cfg.Candidates = append(cfg.Candidates, filter.Candidate{Name: name, Compile: compile})
 	}
 	setInt(&cfg.SampleEvery, a.SampleEvery)
 	setInt(&cfg.Warmup, a.Warmup)
