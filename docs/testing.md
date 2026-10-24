@@ -1,7 +1,7 @@
 # Quality gates
 
 Issue #11 slice 11a defines the checks every change passes before merge.
-The [#11 design record](https://github.com/iomz/tagstrak/issues/11#issuecomment-6379991213) is the decision source; the benchmark baseline (11b) and release (11c) follow.
+The [#11 design record](https://github.com/iomz/tagstrak/issues/11#issuecomment-6379991213) is the decision source; the [benchmark baseline](benchmarks.md) (11b) and release (11c) follow.
 
 ## CI
 
