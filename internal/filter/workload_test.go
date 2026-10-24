@@ -28,6 +28,12 @@ var (
 	}{
 		{"linear", filter.CompileLinear},
 		{"index", filter.CompileIndex},
+		// Default policy, index selected first; regret is measured against
+		// the better of the two single matchers on each workload.
+		{"adaptive", filter.DefaultAdaptiveConfig(
+			filter.Candidate{Name: "index", Compile: filter.CompileIndex},
+			filter.Candidate{Name: "linear", Compile: filter.CompileLinear},
+		).Compiler()},
 	}
 )
 
