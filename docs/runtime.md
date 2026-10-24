@@ -14,10 +14,11 @@ The architecture decision in #2 keeps gosstrak and golemu as separate processes 
 This milestone slice runs in **ingestion mode**: it validates observations, translates them, matches them against subscriptions, and exposes accepted/processed/translated counts.
 The command's consumer is `internal/app/gosstrak.TranslatingConsumer`, which adapts each observation to the #8 translation boundary described in [tdt.md](tdt.md).
 Its processor, `MatchingProcessor`, matches each translation against the current `filter.Set` described in [filter.md](filter.md) and logs the identity and matched subscription IDs at debug level.
+Configured with `DeliverTo`, it also enqueues one report event per routed destination; [report.md](report.md) describes delivery.
 Tags outside the supported standards are counted as untranslatable and dropped; any other translation error fails the consumer.
 Tags whose reader reports no protocol-control word are translated as GS1 EPC data by explicit configuration, never by guessing from the header.
 The command starts with no subscriptions, because subscription configuration belongs to #10.
-It does not retain observations or deliver matches; #9 supplies delivery through the `Processor` boundary.
+It does not retain observations, and with no subscriptions it delivers nothing until #10 supplies destination and route configuration.
 The old global command runtime, SPDY listener, adaptive engine workers, and InfluxDB worker wiring are removed from the command.
 Their legacy packages remain available to their own workstreams.
 The emulator lifecycle and scenarios implemented by #6 are documented in [golemu.md](golemu.md).
@@ -102,20 +103,21 @@ The consumer runs in one app-owned worker; errors stop ingestion and fail the ap
 On cancellation, ingestion stops first and accepted observations drain through the consumer.
 The shared shutdown deadline cancels an unfinished consumer and forces remaining HTTP connections closed.
 Abandoned observations are counted and a missed drain deadline returns `ErrDrainDeadline`.
+With `WithDelivery`, report delivery starts before ingestion and drains after the consumer, within the remaining shared deadline; undelivered reports are returned as `report.ErrUndelivered`.
 Every app worker is joined before `Run` returns.
 Injected `Dialer` and `Consumer` implementations must honor context cancellation; Go cannot forcibly terminate an arbitrary non-cooperative function.
 Injected log handlers must complete promptly and must not start unowned workers.
 The production consumer performs no blocking I/O.
 
 Normal SIGINT/SIGTERM shutdown exits successfully.
-Protocol failures, exhausted retries, consumer failures, and incomplete shutdown exit nonzero.
+Protocol failures, exhausted retries, consumer failures, and incomplete shutdown, including undelivered reports, exit nonzero.
 A supervisor may restart a failed process, but that external restart policy is separate from the reader's finite retry budget.
 
 ## Telemetry
 
 - `GET /healthz`: JSON process liveness, with HTTP 503 before running or after shutdown.
 - `GET /readyz`: JSON serving capability, with HTTP 503 during connection, handshake, reconnect, failure, or drain.
-- `GET /metrics`: Prometheus text counters and gauges for attempts, reconnects, frames, reports, keepalives, failures, queue overflow, accepted/processed/abandoned/translated/untranslatable observations, queue depth/capacity, readiness, and current retry delay.
+- `GET /metrics`: Prometheus text counters and gauges for attempts, reconnects, frames, reports, keepalives, failures, queue overflow, accepted/processed/abandoned/translated/untranslatable observations, queue depth/capacity, readiness, current retry delay, and, per report destination, enqueued/delivered/dropped/failed/undelivered/retried events and queue depth/capacity.
 
 Status includes reader state, last connection error, and the actual bound telemetry address.
 Health remains live during reconnect and drain; readiness represents ingestion capability only in this milestone slice.

@@ -9,7 +9,7 @@ Candidate evaluation, adaptive mode, and workload benchmarks remain open on #7.
 | Package | Imports | Owns |
 | --- | --- | --- |
 | `internal/filter` | `identity` | `Subject`, `Subscription`, `Matcher`, `Compile`, `Set` |
-| `internal/app/gosstrak` | `filter`, `tdt` | `SubjectOf` adapter and `MatchingProcessor` |
+| `internal/app/gosstrak` | `filter`, `tdt`, `report` | `SubjectOf` adapter, `MatchingProcessor`, routing to delivery |
 
 `internal/filter` never parses pattern text and never imports the translator; `TestFilterDependsOnlyOnIdentity` enforces that.
 Patterns are compiled by `tdt.CompilePattern` ([tdt.md](tdt.md)), so malformed text is rejected before filtering sees it.
@@ -32,7 +32,7 @@ ids := m.Match(subject, buf[:0])
 - Compiled matchers are immutable and copy their input.
 - `Set` holds the current matcher behind `atomic.Pointer`. `Replace` compiles first and publishes the whole matcher, so readers see the old set or the new one, never a mix; on error the current matcher stays.
 
-Matched IDs are the hand-off to delivery in #9.
+Matched IDs are the hand-off to delivery: `MatchingProcessor` routes them to destinations, described in [report.md](report.md).
 Subscription configuration belongs to #10, so `cmd/gosstrak` starts with an empty set and logs matches at debug level.
 
 ## Single-mode baseline
