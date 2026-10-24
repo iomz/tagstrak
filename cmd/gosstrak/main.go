@@ -11,89 +11,166 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 
 	app "github.com/iomz/tagstrak/v2/internal/app/gosstrak"
-	"github.com/iomz/tagstrak/v2/internal/filter"
+	configfile "github.com/iomz/tagstrak/v2/internal/config"
 	"github.com/iomz/tagstrak/v2/internal/tdt"
 )
 
-// parseConfig parses command-line arguments into an application configuration,
-// applying defaults and validating the resulting limits and settings. An optional
-// "start" subcommand is accepted and ignored. It returns a parsing or validation
-// error when the arguments or configuration are invalid.
-func parseConfig(args []string, output io.Writer) (app.Config, error) {
-	config := app.DefaultConfig()
-	flags := flag.NewFlagSet("gosstrak", flag.ContinueOnError)
-	flags.SetOutput(output)
-	flags.StringVar(&config.Reader.Address, "reader", config.Reader.Address, "LLRP reader host:port")
-	flags.StringVar(&config.Reader.Source, "source", config.Reader.Source, "Observation source identifier")
-	flags.StringVar(&config.TelemetryAddress, "telemetry", config.TelemetryAddress, "Read-only health and metrics host:port")
-	flags.IntVar(&config.QueueCapacity, "queue-capacity", config.QueueCapacity, "Maximum queued observations; overflow fails the run")
-	flags.DurationVar(&config.Reader.ConnectTimeout, "connect-timeout", config.Reader.ConnectTimeout, "Per-attempt dial timeout")
-	flags.DurationVar(&config.Reader.HandshakeTimeout, "handshake-timeout", config.Reader.HandshakeTimeout, "Total connection handshake timeout")
-	flags.DurationVar(&config.Reader.ReadTimeout, "read-timeout", config.Reader.ReadTimeout, "Maximum time to read one complete frame")
-	flags.DurationVar(&config.Reader.WriteTimeout, "write-timeout", config.Reader.WriteTimeout, "Maximum time to write one complete frame")
-	flags.DurationVar(&config.Reader.RetryMin, "retry-min", config.Reader.RetryMin, "Initial reconnect delay")
-	flags.DurationVar(&config.Reader.RetryMax, "retry-max", config.Reader.RetryMax, "Maximum reconnect delay")
-	flags.IntVar(&config.Reader.MaxRetries, "max-retries", config.Reader.MaxRetries, "Total reconnect budget for this process run")
-	flags.DurationVar(&config.ConsumeTimeout, "consume-timeout", config.ConsumeTimeout, "Per-observation processing timeout")
-	flags.DurationVar(&config.ShutdownTimeout, "shutdown-timeout", config.ShutdownTimeout, "Queue drain and HTTP shutdown timeout")
-	maxFrame := uint(config.Reader.Limits.MaxFrameSize)
-	maxParameter := uint(config.Reader.Limits.MaxParameterSize)
-	flags.UintVar(&maxFrame, "max-frame-bytes", maxFrame, "Maximum LLRP frame size")
-	flags.UintVar(&maxParameter, "max-parameter-bytes", maxParameter, "Maximum LLRP parameter size")
-	flags.IntVar(&config.Reader.Limits.MaxParameters, "max-parameters", config.Reader.Limits.MaxParameters, "Maximum parameters per codec container")
+// envPrefix names the environment layer: flag --x-y is GOSSTRAK_X_Y.
+const envPrefix = "GOSSTRAK_"
+
+// envName derives a flag's environment variable, so the flag set is the one
+// list of scalar settings and the two layers cannot drift.
+func envName(flagName string) string {
+	return envPrefix + strings.ToUpper(strings.ReplaceAll(flagName, "-", "_"))
+}
+
+// settings holds what the flag set binds to. Codec limits are bound as uint
+// and checked against their wire sizes after parsing.
+type settings struct {
+	config       app.Config
+	configPath   string
+	maxFrame     uint
+	maxParameter uint
+}
+
+// bind defines every flag on fs with s's current values as defaults.
+func bind(fs *flag.FlagSet, s *settings) {
+	c := &s.config
+	fs.StringVar(&s.configPath, "config", s.configPath, "Configuration file (.toml or .json); subscriptions and destinations come only from here")
+	fs.StringVar(&c.Reader.Address, "reader", c.Reader.Address, "LLRP reader host:port")
+	fs.StringVar(&c.Reader.Source, "source", c.Reader.Source, "Observation source identifier")
+	fs.StringVar(&c.TelemetryAddress, "telemetry", c.TelemetryAddress, "Read-only health and metrics host:port")
+	fs.IntVar(&c.QueueCapacity, "queue-capacity", c.QueueCapacity, "Maximum queued observations; overflow fails the run")
+	fs.DurationVar(&c.Reader.ConnectTimeout, "connect-timeout", c.Reader.ConnectTimeout, "Per-attempt dial timeout")
+	fs.DurationVar(&c.Reader.HandshakeTimeout, "handshake-timeout", c.Reader.HandshakeTimeout, "Total connection handshake timeout")
+	fs.DurationVar(&c.Reader.ReadTimeout, "read-timeout", c.Reader.ReadTimeout, "Maximum time to read one complete frame")
+	fs.DurationVar(&c.Reader.WriteTimeout, "write-timeout", c.Reader.WriteTimeout, "Maximum time to write one complete frame")
+	fs.DurationVar(&c.Reader.RetryMin, "retry-min", c.Reader.RetryMin, "Initial reconnect delay")
+	fs.DurationVar(&c.Reader.RetryMax, "retry-max", c.Reader.RetryMax, "Maximum reconnect delay")
+	fs.IntVar(&c.Reader.MaxRetries, "max-retries", c.Reader.MaxRetries, "Total reconnect budget for this process run")
+	fs.DurationVar(&c.ConsumeTimeout, "consume-timeout", c.ConsumeTimeout, "Per-observation processing timeout")
+	fs.DurationVar(&c.ShutdownTimeout, "shutdown-timeout", c.ShutdownTimeout, "Queue drain, report drain and HTTP shutdown timeout")
+	s.maxFrame = uint(c.Reader.Limits.MaxFrameSize)
+	s.maxParameter = uint(c.Reader.Limits.MaxParameterSize)
+	fs.UintVar(&s.maxFrame, "max-frame-bytes", s.maxFrame, "Maximum LLRP frame size")
+	fs.UintVar(&s.maxParameter, "max-parameter-bytes", s.maxParameter, "Maximum LLRP parameter size")
+	fs.IntVar(&c.Reader.Limits.MaxParameters, "max-parameters", c.Reader.Limits.MaxParameters, "Maximum parameters per codec container")
+}
+
+func newFlagSet(output io.Writer, s *settings) *flag.FlagSet {
+	fs := flag.NewFlagSet("gosstrak", flag.ContinueOnError)
+	fs.SetOutput(output)
+	bind(fs, s)
+	fs.Usage = func() {
+		fmt.Fprintf(output, "Usage: gosstrak [start] [flags]\n\nSettings apply in order: defaults, --config file, %s<FLAG> environment variables, flags.\n\n", envPrefix)
+		fs.PrintDefaults()
+	}
+	return fs
+}
+
+// parseConfig builds one immutable configuration from defaults, the optional
+// configuration file, the environment, and flags, in that order (#2). An
+// optional "start" subcommand is accepted and ignored. It returns the decoded
+// file, or nil without --config, for the pipeline's structured settings.
+func parseConfig(args []string, output io.Writer, lookup func(string) (string, bool)) (app.Config, *configfile.File, error) {
 	if len(args) > 0 && args[0] == "start" {
 		args = args[1:]
 	}
-	if err := flags.Parse(args); err != nil {
-		return config, err
+	// First pass: learn which flags were given explicitly, and the file.
+	first := settings{config: app.DefaultConfig()}
+	fs := newFlagSet(output, &first)
+	if err := fs.Parse(args); err != nil {
+		return app.Config{}, nil, err
 	}
-	if flags.NArg() != 0 {
-		return config, fmt.Errorf("unexpected arguments: %v", flags.Args())
+	if fs.NArg() != 0 {
+		return app.Config{}, nil, fmt.Errorf("unexpected arguments: %v", fs.Args())
 	}
-	if maxFrame > uint(^uint32(0)) || maxParameter > uint(^uint16(0)) {
-		return config, fmt.Errorf("codec limit exceeds wire size")
+	explicit := map[string]string{}
+	fs.Visit(func(f *flag.Flag) { explicit[f.Name] = f.Value.String() })
+	path := first.configPath
+	if _, ok := explicit["config"]; !ok {
+		if v, ok := lookup(envName("config")); ok {
+			path = v
+		}
 	}
-	config.Reader.Limits.MaxFrameSize = uint32(maxFrame)
-	config.Reader.Limits.MaxParameterSize = uint16(maxParameter)
-	return config, config.Validate()
+
+	// Second pass: rebuild on top of the file, then the environment, then
+	// the explicit flags.
+	layered := settings{config: app.DefaultConfig(), configPath: path}
+	var file *configfile.File
+	if path != "" {
+		f, err := configfile.Load(path)
+		if err != nil {
+			return app.Config{}, nil, err
+		}
+		file = &f
+		layered.config = app.ApplyFile(layered.config, f)
+	}
+	fs = newFlagSet(io.Discard, &layered)
+	var envErr error
+	fs.VisitAll(func(f *flag.Flag) {
+		if _, ok := explicit[f.Name]; ok || f.Name == "config" || envErr != nil {
+			return
+		}
+		if v, ok := lookup(envName(f.Name)); ok {
+			if err := fs.Set(f.Name, v); err != nil {
+				envErr = fmt.Errorf("environment %s: %w", envName(f.Name), err)
+			}
+		}
+	})
+	if envErr != nil {
+		return app.Config{}, nil, envErr
+	}
+	for name, value := range explicit {
+		if err := fs.Set(name, value); err != nil {
+			return app.Config{}, nil, fmt.Errorf("flag --%s: %w", name, err)
+		}
+	}
+
+	if layered.maxFrame > uint(^uint32(0)) || layered.maxParameter > uint(^uint16(0)) {
+		return app.Config{}, nil, fmt.Errorf("codec limit exceeds wire size")
+	}
+	c := layered.config
+	c.Reader.Limits.MaxFrameSize = uint32(layered.maxFrame)
+	c.Reader.Limits.MaxParameterSize = uint16(layered.maxParameter)
+	return c, file, c.Validate()
 }
 
-// run parses the command-line arguments, initializes the ingestion runtime, and runs it with the supplied context.
-// It returns any configuration, initialization, or runtime error encountered.
-func run(ctx context.Context, args []string, stderr io.Writer) error {
-	config, err := parseConfig(args, stderr)
+// Flag output and structured application logs are written to stderr.
+func run(ctx context.Context, args []string, stderr io.Writer, lookup func(string) (string, bool)) error {
+	config, file, err := parseConfig(args, stderr, lookup)
 	if err != nil {
 		return err
 	}
 	logger := slog.New(slog.NewJSONHandler(stderr, nil))
-	// Tags without a protocol-control word are assumed to be GS1 EPC data.
-	// That assumption is explicit rather than inferred from the tag itself,
-	// and readers that report the PC word are believed instead.
-	translator := tdt.New(tdt.WithDefaultFormat(tdt.FormatGS1))
-	// Subscriptions start empty: their configuration belongs to issue #10.
-	// Matching runs regardless, so translated tags and their matches are
-	// logged at debug level through the same path delivery will use.
-	processor, err := app.NewMatchingProcessor(&filter.Set{}, logger)
+	if file == nil {
+		// Without a file there are no subscriptions or destinations: tags are
+		// translated, matched against nothing, and logged at debug level.
+		file = &configfile.File{Version: configfile.Version}
+	}
+	consumer, options, err := app.Pipeline(*file, lookup, logger)
 	if err != nil {
 		return err
 	}
-	consumer := app.NewTranslatingConsumer(translator, processor)
-	runtime, err := app.New(config, &net.Dialer{}, consumer, logger)
+	runtime, err := app.New(config, &net.Dialer{}, consumer, logger, options...)
 	if err != nil {
 		return err
 	}
 	source := tdt.SourceInfo()
 	logger.Info("starting gosstrak", "mode", "ingestion", "reader", config.Reader.Address, "telemetry", config.TelemetryAddress,
+		"subscriptions", len(file.Subscriptions), "destinations", len(file.Destinations),
 		"tds_version", source.TDSVersion, "tdt_artefacts", source.Commit, "schemes", tdt.SupportedSchemes())
 	return runtime.Run(ctx)
 }
+
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	if err := run(ctx, os.Args[1:], os.Stderr); err != nil && !errors.Is(err, flag.ErrHelp) {
+	if err := run(ctx, os.Args[1:], os.Stderr, os.LookupEnv); err != nil && !errors.Is(err, flag.ErrHelp) {
 		// A normal signal is successful only when shutdown did not also fail.
 		if ctx.Err() != nil && err == ctx.Err() {
 			return

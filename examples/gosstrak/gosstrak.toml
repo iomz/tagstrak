@@ -1,0 +1,39 @@
+# Example gosstrak configuration. Run against the golemu example scenario:
+#
+#   ERP_TOKEN=... go run ./cmd/gosstrak --config examples/gosstrak/gosstrak.toml
+#
+# Settings apply in order: defaults, this file, GOSSTRAK_* environment
+# variables, flags. Secrets come only from env or file sources, never from
+# this file, so it is safe to commit.
+version = 1
+
+[reader]
+address = "127.0.0.1:5084"
+source = "dock-1"
+
+[telemetry]
+address = "127.0.0.1:8080"
+
+[report]
+flush_interval = "1s"
+
+[[destinations]]
+name = "erp"
+url = "https://erp.example/hooks/rfid"
+
+# The header value is "Bearer " followed by the ERP_TOKEN environment
+# variable. Use file = "/run/secrets/erp-token" for a file source instead;
+# the file must not be readable by group or others.
+[destinations.headers.Authorization]
+env = "ERP_TOKEN"
+prefix = "Bearer "
+
+[[subscriptions]]
+id = "product"
+patterns = ["urn:epc:idpat:sgtin:0614141.812345.*"]
+destinations = ["erp"]
+
+# A subscription without destinations is matched and logged at debug level.
+[[subscriptions]]
+id = "pallets"
+patterns = ["urn:epc:idpat:sscc:0614141.*"]
