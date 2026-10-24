@@ -67,8 +67,10 @@ Tables show the median with a 95% confidence interval, and differences use the M
 | Machine | Apple M1 Pro, 10 CPUs, 32 GiB, macOS (Darwin 27.0.0) |
 | Go | go1.26.10 darwin/arm64, GOMAXPROCS 10 |
 | v1 | `v1.0.0` at `1dfeaf1` |
-| v2 | `b739546`, clean tree |
+| v2 | `d060dd8` on `main`, clean tree |
 | Dataset manifest SHA-256 | `5da49f52e3609fcbcf040c22b4c1466e5f77135f5cfb9858c95da265a86781ed` |
+
+The run measured `b739546` on `feat/benchmark-baseline`, which `meta.json` records; the rebase merge rewrote it as `d060dd8`, with an identical tree.
 
 ### Decode and translate
 
@@ -117,6 +119,18 @@ This table compares the shipped products, not the matching algorithms.
 Peak memory grows by 56%, and by 78% with delivery; that is a regression.
 
 The feeder sends all 90 reports as fast as the socket accepts them, so delivery latency reflects queueing behind that burst rather than steady-state latency.
+
+### Raw results
+
+The raw `go test` output, end-to-end runs, configurations, benchstat tables, and `meta.json` are kept as release assets, not in the repository.
+
+| Asset | Release | SHA-256 |
+| --- | --- | --- |
+| [`tagstrak-v1.0.0-baseline-2026-10-24.tar.gz`](https://github.com/iomz/tagstrak/releases/download/v1.0.0/tagstrak-v1.0.0-baseline-2026-10-24.tar.gz): v1 results and `meta.json` | `v1.0.0` | `97068856af6e4d22feb6253d8ee33dd11a5574e862e131aa1bb4d8a6bd295547` |
+| `tagstrak-bench-2026-10-24-interim.tar.gz`: the whole run | draft `v2.0.0` | `4dade9e6b7bed3bb6d7b7d95f476e44a60a7d341a6f286c78b049968784732aa` |
+
+The draft is not public; once `v2.0.0` is published, the interim archive is at `https://github.com/iomz/tagstrak/releases/download/v2.0.0/tagstrak-bench-2026-10-24-interim.tar.gz`.
+This run predates benchrun keeping the overlay file out of the results, so the archive's `overlay.json` has its local paths replaced by `<v1-worktree>` and `<repo>`.
 
 ### Uncertainty
 
