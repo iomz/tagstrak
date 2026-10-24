@@ -197,12 +197,22 @@ func readBounded(path string, limit int64) ([]byte, error) {
 		return nil, fmt.Errorf("%w: %v", ErrConfig, err)
 	}
 	defer file.Close()
-	body, err := io.ReadAll(io.LimitReader(file, limit+1))
+	body, err := readAllBounded(file, limit)
 	if err != nil {
 		return nil, fmt.Errorf("%w: %s: %v", ErrConfig, path, err)
 	}
+	return body, nil
+}
+
+// readAllBounded reads r to the end, failing rather than truncating when it
+// holds more than limit bytes.
+func readAllBounded(r io.Reader, limit int64) ([]byte, error) {
+	body, err := io.ReadAll(io.LimitReader(r, limit+1))
+	if err != nil {
+		return nil, err
+	}
 	if int64(len(body)) > limit {
-		return nil, fmt.Errorf("%w: %s exceeds %d bytes", ErrConfig, path, limit)
+		return nil, fmt.Errorf("exceeds %d bytes", limit)
 	}
 	return body, nil
 }

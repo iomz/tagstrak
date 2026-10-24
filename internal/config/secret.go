@@ -94,24 +94,37 @@ func (s SecretSource) Resolve(lookup func(string) (string, bool)) (Secret, error
 
 // readSecretFile reads a private, regular, bounded secret file and trims one
 // trailing newline, which editors and `echo` add.
+//
+// The path is checked before opening, so a FIFO or device is never opened,
+// and the opened handle is checked again: if the path was replaced between
+// the two, the handle is not the object that was validated, and reading
+// stops. Everything read comes from that one handle.
 func readSecretFile(path string) ([]byte, error) {
-	info, err := os.Stat(path)
+	before, err := os.Stat(path)
 	if err != nil {
 		return nil, fmt.Errorf("%w: secret file %s: %v", ErrSecret, path, errors.Unwrap(err))
 	}
-	if !info.Mode().IsRegular() {
-		return nil, fmt.Errorf("%w: secret file %s is not a regular file", ErrSecret, path)
+	if err := checkSecretFile(path, before); err != nil {
+		return nil, err
 	}
-	// Unix permission bits are meaningless on Windows, where ACLs apply.
-	if runtime.GOOS != "windows" && info.Mode().Perm()&0o077 != 0 {
-		return nil, fmt.Errorf("%w: secret file %s has mode %s; group and other permissions must be unset", ErrSecret, path, info.Mode().Perm())
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("%w: secret file %s: %v", ErrSecret, path, errors.Unwrap(err))
 	}
-	if info.Size() > MaxSecretBytes {
-		return nil, fmt.Errorf("%w: secret file %s exceeds %d bytes", ErrSecret, path, MaxSecretBytes)
-	}
-	body, err := readBounded(path, MaxSecretBytes)
+	defer file.Close()
+	opened, err := file.Stat()
 	if err != nil {
 		return nil, fmt.Errorf("%w: secret file %s unreadable", ErrSecret, path)
+	}
+	if !os.SameFile(before, opened) {
+		return nil, fmt.Errorf("%w: secret file %s changed while it was being opened", ErrSecret, path)
+	}
+	if err := checkSecretFile(path, opened); err != nil {
+		return nil, err
+	}
+	body, err := readAllBounded(file, MaxSecretBytes)
+	if err != nil {
+		return nil, fmt.Errorf("%w: secret file %s unreadable or over %d bytes", ErrSecret, path, MaxSecretBytes)
 	}
 	body = bytes.TrimSuffix(body, []byte("\n"))
 	body = bytes.TrimSuffix(body, []byte("\r"))
@@ -119,4 +132,19 @@ func readSecretFile(path string) ([]byte, error) {
 		return nil, fmt.Errorf("%w: secret file %s is empty", ErrSecret, path)
 	}
 	return body, nil
+}
+
+// checkSecretFile enforces the private-file contract on one file's metadata.
+func checkSecretFile(path string, info os.FileInfo) error {
+	if !info.Mode().IsRegular() {
+		return fmt.Errorf("%w: secret file %s is not a regular file", ErrSecret, path)
+	}
+	// Unix permission bits are meaningless on Windows, where ACLs apply.
+	if runtime.GOOS != "windows" && info.Mode().Perm()&0o077 != 0 {
+		return fmt.Errorf("%w: secret file %s has mode %s; group and other permissions must be unset", ErrSecret, path, info.Mode().Perm())
+	}
+	if info.Size() > MaxSecretBytes {
+		return fmt.Errorf("%w: secret file %s exceeds %d bytes", ErrSecret, path, MaxSecretBytes)
+	}
+	return nil
 }
