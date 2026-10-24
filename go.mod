@@ -6,6 +6,7 @@ toolchain go1.26.10
 
 require (
 	github.com/BurntSushi/toml v1.6.0
+	go.uber.org/goleak v1.3.0
 	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 )
 
