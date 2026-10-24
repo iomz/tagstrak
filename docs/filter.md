@@ -1,8 +1,8 @@
 # Subscription matching
 
 Issue #7 rebuilds filtering in the v2 milestone tracked by #1.
-This page covers slices 1 to 3 from the [#7 design records](https://github.com/iomz/tagstrak/issues/7): the matcher contract, atomic replacement, the linear reference matcher, the prefix index that is the default, and the experimental adaptive mode.
-Benchmarks of adaptive overhead, switch stability, and selection regret remain open on #7.
+This page covers slices 1 to 4 from the [#7 design records](https://github.com/iomz/tagstrak/issues/7): the matcher contract, atomic replacement, the linear reference matcher, the prefix index that is the default, and the experimental adaptive mode.
+Slice 4 measures adaptive overhead, convergence, switch stability, and selection regret.
 
 ## Packages and scope
 
@@ -135,10 +135,50 @@ Unsampled calls read the selection atomically; only sampled calls take a lock.
 
 Memory is bounded by the candidate count times one compiled matcher under the 10,000-subscription budget, plus a fixed window per candidate.
 A subscription replacement compiles a new adaptive matcher, so warmup and statistics start over.
-With today's two candidates and the workloads above, the controller is expected to settle on the index; the remaining #7 slice measures what adaptivity costs and how stable its choices are.
+With today's two candidates, the controller settles on the index; the results below measure what that costs.
 
 Telemetry reports the decisions for the current snapshot: `gosstrak_filter_adaptive_{sampled,shadows_skipped,switches}_total`, `gosstrak_filter_adaptive_shadow_seconds_total`, and per `candidate` label `gosstrak_filter_adaptive_selected`, `gosstrak_filter_adaptive_samples_total`, and `gosstrak_filter_adaptive_mean_cost_seconds`.
 `/healthz` and `/readyz` include the same under `filter`.
+
+### Adaptive results
+
+Medians of six runs, same machine and date as the workload results, with the default policy and the index as the first candidate.
+The raw output is `tagstrak-filter-adaptive-2026-10-24.txt` on the draft `v2.0.0` release, SHA-256 `8aacc6bb65aa1799eceff62cd6ff36e5b5af9c1c29707e5cc1ed9125bfc1d610`, measured on `main` at `7cfdb1b` plus the benchmarks in this change.
+
+**Regret.** Against the hindsight-best candidate on each of the 72 workloads, which was the index on every one, adaptive mode costs a median of 7% more time per tag, 9.7% in geometric mean, and between 1.4% and 24.8%.
+The highest regret is on the cheapest workloads, where a fixed per-call cost is a large share; it never allocates and never selected linear.
+
+**Where the overhead goes**, per tag, with no matching gain to offset it because the index is already selected:
+
+| Workload | Index | Adaptive | Shadow time | Bookkeeping, clock, controller |
+| --- | ---: | ---: | ---: | ---: |
+| 100 subscriptions, no ranges | 96.5 ns | 112.1 ns (+16%) | 5.8 ns | 9.8 ns |
+| 10,000 subscriptions, no ranges | 128.9 ns | 158.8 ns (+23%) | 17.4 ns | 12.5 ns |
+| 100 subscriptions, 50% ranges | 1.15 µs | 1.19 µs (no significant change) | 25 ns | |
+| 10,000 subscriptions, 50% ranges | 120 µs | 126 µs (no significant change) | 4.1 µs | |
+
+The matching gain is the index's over linear in the workload results above; adaptive mode adds the overhead in this table on top of the index.
+The budget is relative to the selected candidate's sampled cost, which includes clock reads and, on the samples where the index runs right after a linear shadow, a colder cache; that is why shadow time at 10,000 subscriptions is 13.5% of the index's time, not 5%.
+
+**Convergence.** Starting on linear, the controller selects the index after exactly 2,000 calls, warmup times `sample_every`, at every size.
+Those calls run on linear, which at 10,000 subscriptions is about half a second of matching before the switch.
+
+**Stability.** Between two identical index candidates, so that every switch is a reaction to timing noise, the controller switched 1.3 times per million calls with and without hysteresis, against the cooldown's ceiling of 20.
+
+**Decision.** Single mode with the index stays the default.
+Adaptive mode is retained as an experimental facility, as #7 scopes it: it is bounded and observable, but with candidates where one dominates it only adds its overhead, so it is not recommended in production until a candidate exists that wins on some workload.
+
+```sh
+go test -run '^$' -bench 'Workload|Adaptive' -benchmem -count 6 ./internal/filter/
+```
+
+### Retained and rejected candidates
+
+| Candidate | Status | Maintenance tradeoff |
+| --- | --- | --- |
+| Prefix index | default | about 280 lines; differential tests and fuzzing against linear guard every change |
+| Linear | retained | the reference every other matcher is tested against, and adaptive mode's control group; trivial to maintain |
+| Adaptive | retained, experimental | about 400 lines of controller and sampling with deterministic tests; worth keeping only as a research facility while no candidate beats the index |
 
 ### Candidates not built
 
