@@ -40,6 +40,7 @@ Errors are structured and never echo headers or secrets:
 | `PUT /v1/subscriptions` | Replace the whole set and its routes; `"api"` source only |
 
 `PUT` takes `{"subscriptions": [...]}` in the configuration file's subscription schema and honours `If-Match: "<revision>"`.
+The field is required: `[]` removes every subscription, while a missing or `null` field is rejected so a malformed request cannot clear the set.
 
 | Status | Code | Meaning |
 | --- | --- | --- |
@@ -47,7 +48,7 @@ Errors are structured and never echo headers or secrets:
 | 400 | `invalid_json`, `invalid_subscriptions`, `invalid_precondition` | Malformed body, invalid subscription (with `field`), or malformed `If-Match` |
 | 409 | `managed_by_file` | The configuration file owns subscriptions; edit it and send `SIGHUP` |
 | 412 | `revision_mismatch` | `If-Match` is not the current revision |
-| 413 | `body_too_large` | Over 1 MiB |
+| 413 | `body_too_large`, `state_too_large` | Body over 1 MiB, or subscriptions that would make the indented state file exceed 1 MiB; nothing changed |
 | 415 | `unsupported_media_type` | Not `application/json` |
 | 500 | `state_not_saved` | The state file could not be written; nothing changed |
 

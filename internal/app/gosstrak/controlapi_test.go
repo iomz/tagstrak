@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net"
 	"net/http"
@@ -173,6 +174,8 @@ func TestControlAPIRejections(t *testing.T) {
 		{"bad pattern", `{"subscriptions":[{"id":"a","patterns":["urn:nope"]}]}`, jsonHeader, 400, "invalid_subscriptions", "subscriptions[0].patterns[0]"},
 		{"unknown route", `{"subscriptions":[{"id":"a","patterns":["urn:epc:idpat:sgtin:*.*.*"],"destinations":["crm"]}]}`, jsonHeader, 400, "invalid_subscriptions", "subscriptions[0].destinations[0]"},
 		{"unknown field", `{"subscription":[]}`, jsonHeader, 400, "invalid_json", ""},
+		{"missing subscriptions", `{}`, jsonHeader, 400, "invalid_subscriptions", "subscriptions"},
+		{"null subscriptions", `{"subscriptions":null}`, jsonHeader, 400, "invalid_subscriptions", "subscriptions"},
 		{"wrong content type", `{"subscriptions":[]}`, map[string]string{"Content-Type": "text/plain"}, 415, "unsupported_media_type", ""},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -325,5 +328,44 @@ func TestPipelineLoadsAPIState(t *testing.T) {
 	f.Control.Token = &configfile.SecretSource{Env: "T"}
 	if _, err := Pipeline(f, DefaultConfig(), noLookup, nil); err == nil || !strings.Contains(err.Error(), "control.token is set") {
 		t.Fatalf("err = %v", err)
+	}
+}
+
+func TestControlAPIEmptyListClears(t *testing.T) {
+	f := newAPI(t, configfile.SourceAPI)
+	if w := f.do(t, http.MethodPut, "/v1/subscriptions", `{"subscriptions":[]}`, jsonHeader); w.Code != 200 {
+		t.Fatalf("status %d %s", w.Code, w.Body)
+	}
+	if spec, rev := f.table.Snapshot(); rev != 2 || len(spec) != 0 {
+		t.Fatalf("after clearing: %v at %d", spec, rev)
+	}
+}
+
+// TestControlAPIStateTooLarge checks that a body within the request limit
+// whose indented state would exceed the state limit is a client error that
+// changes nothing.
+func TestControlAPIStateTooLarge(t *testing.T) {
+	f := newAPI(t, configfile.SourceAPI)
+	var b strings.Builder
+	b.WriteString(`{"subscriptions":[`)
+	// Many patterns per subscription maximise the indentation overhead.
+	pattern := `"urn:epc:idpat:sgtin:*.*.*"`
+	patterns := strings.Repeat(pattern+",", 7) + pattern
+	for i := range 4000 {
+		if i > 0 {
+			b.WriteByte(',')
+		}
+		fmt.Fprintf(&b, `{"id":"s%05d","patterns":[%s]}`, i, patterns)
+	}
+	b.WriteString(`]}`)
+	if b.Len() >= configfile.MaxFileBytes {
+		t.Fatalf("fixture body %d bytes exceeds the request limit", b.Len())
+	}
+	w := f.do(t, http.MethodPut, "/v1/subscriptions", b.String(), jsonHeader)
+	if code, _ := errorCode(t, w); w.Code != http.StatusRequestEntityTooLarge || code != "state_too_large" {
+		t.Fatalf("status %d code %s", w.Code, code)
+	}
+	if f.table.Revision() != 1 {
+		t.Fatal("oversized state changed subscriptions")
 	}
 }
