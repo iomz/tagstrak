@@ -258,7 +258,7 @@ func TestReadJSON(t *testing.T) {
 		{"wrong type", "text/plain", `{"name":"a"}`, 415, "unsupported_media_type"},
 		{"no type", "", `{"name":"a"}`, 415, "unsupported_media_type"},
 		{"too large", "application/json", `{"name":"` + strings.Repeat("a", 100) + `"}`, 413, "body_too_large"},
-		{"unknown field", "application/json", `{"nam":"a"}`, 400, "invalid_json"},
+		{"unknown field", "application/json", `{"injected-name":"a"}`, 400, "invalid_json"},
 		{"trailing", "application/json", `{"name":"a"} {}`, 400, "invalid_json"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -279,6 +279,9 @@ func TestReadJSON(t *testing.T) {
 			_ = json.Unmarshal(w.Body.Bytes(), &body)
 			if ok || w.Code != tc.status || body.Error.Code != tc.code {
 				t.Fatalf("ok=%v status %d code %q", ok, w.Code, body.Error.Code)
+			}
+			if strings.Contains(w.Body.String(), "injected-name") {
+				t.Fatalf("error echoes request content: %s", w.Body)
 			}
 		})
 	}
