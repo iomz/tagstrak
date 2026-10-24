@@ -137,7 +137,7 @@ func run(ctx context.Context, out string, s settings) error {
 	}
 
 	step("benchmarking " + v1Tag)
-	overlay, err := writeOverlay(out, worktree)
+	overlay, err := writeOverlay(worktree)
 	if err != nil {
 		return err
 	}
@@ -262,7 +262,10 @@ func metadata(s settings) (map[string]any, error) {
 	}, nil
 }
 
-func writeOverlay(out, worktree string) (string, error) {
+// writeOverlay writes the go test -overlay file into the temporary worktree,
+// not the results directory: it needs absolute local paths, which published
+// results should not carry. Removing the worktree removes it.
+func writeOverlay(worktree string) (string, error) {
 	harness, err := filepath.Abs("benchmarks/v1harness")
 	if err != nil {
 		return "", err
@@ -276,7 +279,7 @@ func writeOverlay(out, worktree string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	path := filepath.Join(out, "overlay.json")
+	path := filepath.Join(worktree, "benchrun-overlay.json")
 	return path, os.WriteFile(path, body, 0o644)
 }
 
