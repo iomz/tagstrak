@@ -167,6 +167,7 @@ func TestCompileRejectsInvalidSubscriptions(t *testing.T) {
 		{"no patterns", []filter.Subscription{{ID: "a"}}, filter.ErrNoPatterns},
 		{"zero pattern", []filter.Subscription{{ID: "a", Patterns: []identity.Pattern{{}}}}, filter.ErrZeroPattern},
 		{"too many", tooMany, filter.ErrTooManySubscriptions},
+		{"too many patterns", []filter.Subscription{{ID: "a", Patterns: make([]identity.Pattern, filter.MaxPatternsPerSubscription+1)}}, filter.ErrTooManyPatterns},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			m, err := filter.Compile(tc.subs)
