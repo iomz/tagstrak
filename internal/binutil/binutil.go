@@ -13,7 +13,6 @@ import (
 	"os"
 	"regexp"
 	"strconv"
-	"time"
 )
 
 var (
@@ -26,7 +25,6 @@ var (
 // GenerateNLengthAlphabetString returns random alphabet rune for n length
 func GenerateNLengthAlphabetString(n int) string {
 	b := make([]rune, n)
-	rand.Seed(time.Now().UTC().UnixNano())
 	for i := range b {
 		b[i] = alphabetRunes[rand.Intn(len(alphabetRunes))]
 	}
@@ -36,7 +34,6 @@ func GenerateNLengthAlphabetString(n int) string {
 // GenerateNLengthAlphanumericString returns random alphanumeric rune for n length
 func GenerateNLengthAlphanumericString(n int) string {
 	b := make([]rune, n)
-	rand.Seed(time.Now().UTC().UnixNano())
 	for i := range b {
 		b[i] = alphanumericRunes[rand.Intn(len(alphanumericRunes))]
 	}
@@ -46,7 +43,6 @@ func GenerateNLengthAlphanumericString(n int) string {
 // GenerateNLengthDigitString returns random digit rune for n length
 func GenerateNLengthDigitString(n int) string {
 	b := make([]rune, n)
-	rand.Seed(time.Now().UTC().UnixNano())
 	for i := range b {
 		b[i] = digitRunes[rand.Intn(len(digitRunes))]
 	}
@@ -56,7 +52,6 @@ func GenerateNLengthDigitString(n int) string {
 // GenerateNLengthHexString returns random hex rune for n length
 func GenerateNLengthHexString(n int) string {
 	b := make([]rune, n)
-	rand.Seed(time.Now().UTC().UnixNano())
 	for i := range b {
 		b[i] = hexRunes[rand.Intn(len(hexRunes))]
 	}
@@ -68,8 +63,6 @@ func GenerateNLengthHexString(n int) string {
 func GenerateNLengthRandomBinRuneSlice(n int, max uint) ([]rune, uint) {
 	binstr := make([]rune, n)
 	sum := uint(0)
-	rand.Seed(time.Now().UTC().UnixNano())
-
 	for i := 0; i < n; i++ {
 		var b rune
 		if max != uint(0) && max < uint(math.Pow(float64(2), float64(n-i))) {
@@ -105,7 +98,6 @@ func GenerateNLengthZeroPaddingRuneSlice(n int) []rune {
 
 // GenerateRandomInt return random int value with min-max
 func GenerateRandomInt(min, max int) int {
-	rand.Seed(time.Now().UTC().UnixNano())
 	return rand.Intn(max-min) + min
 }
 
@@ -121,7 +113,7 @@ func Pack(data []interface{}) []byte {
 // Parse6BinRuneSliceToRune translate 6 rune slices into a 6-bit encoded rune
 func Parse6BinRuneSliceToRune(r []rune) (rune, error) {
 	if len(r) != 6 {
-		return 0, errors.New("Given rune should be exactley len=6")
+		return 0, errors.New("given rune should be exactly len=6")
 	}
 	i, err := strconv.ParseInt(string(r), 2, 64)
 	if err != nil {
@@ -172,7 +164,7 @@ func ParseBinRuneSliceToInt(bs []rune) int {
 func ParseBinStringToDecArrayString(s string) (string, error) {
 	re := regexp.MustCompile("[^01]")
 	if re.FindStringIndex(s) != nil || len(s)%8 != 0 {
-		return "", errors.New("Input to ParseBinStringToHexString is not a bin string")
+		return "", errors.New("input to ParseBinStringToHexString is not a bin string")
 	}
 
 	ds := ""
@@ -194,7 +186,7 @@ func ParseBinStringToDecArrayString(s string) (string, error) {
 func ParseBinStringToHexString(s string) (string, error) {
 	re := regexp.MustCompile("[^01]")
 	if re.FindStringIndex(s) != nil || len(s)%8 != 0 {
-		return "", errors.New("Input to ParseBinStringToHexString is not a bin string")
+		return "", errors.New("input to ParseBinStringToHexString is not a bin string")
 	}
 
 	var hs string
@@ -224,7 +216,7 @@ func ParseDecimalStringToBinRuneSlice(s string) []rune {
 func ParseHexStringToBinString(s string) (string, error) {
 	re := regexp.MustCompile("[^0-9a-fA-F]")
 	if re.FindStringIndex(s) != nil {
-		return "", errors.New("Input to ParseHexStringToBinString is not a hex string")
+		return "", errors.New("input to ParseHexStringToBinString is not a hex string")
 	}
 
 	var bs string
@@ -239,7 +231,7 @@ func ParseHexStringToBinString(s string) (string, error) {
 func ParseHexStringToDecArrayString(s string) (string, error) {
 	re := regexp.MustCompile("[^0-9a-fA-F]")
 	if re.FindStringIndex(s) != nil {
-		return "", errors.New("Input to ParseHexStringToBinString is not a hex string")
+		return "", errors.New("input to ParseHexStringToBinString is not a hex string")
 	}
 
 	ds := ""
