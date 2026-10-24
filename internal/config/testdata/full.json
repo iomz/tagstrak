@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "reader": {"address": "10.0.0.5:5084", "source": "dock-1", "connect_timeout": "3s", "max_retries": 0},
+  "telemetry": {"address": "127.0.0.1:9090"},
+  "runtime": {"queue_capacity": 256, "shutdown_timeout": "15s"},
+  "report": {"queue_capacity": 5000, "flush_interval": "500ms"},
+  "destinations": [
+    {"name": "erp", "url": "https://erp.example/hooks/rfid",
+     "headers": {"Authorization": {"env": "ERP_TOKEN", "prefix": "Bearer "}}}
+  ],
+  "subscriptions": [
+    {"id": "product", "patterns": ["urn:epc:idpat:sgtin:0614141.812345.*"], "destinations": ["erp"]},
+    {"id": "pallets", "patterns": ["urn:epc:idpat:sscc:0614141.*"]}
+  ]
+}

@@ -5,6 +5,7 @@ go 1.23.2
 toolchain go1.26.10
 
 require (
+	github.com/BurntSushi/toml v1.6.0
 	github.com/alecthomas/kingpin/v2 v2.4.0
 	github.com/influxdata/influxdb1-client v0.0.0-20220302092344-a9ab5670611c
 	github.com/looplab/fsm v1.0.2
