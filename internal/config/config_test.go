@@ -72,6 +72,11 @@ func TestLoadRejectsMalformedFiles(t *testing.T) {
 		{"two sources", "c.json", `{"version":1,"destinations":[{"name":"a","url":"https://a","headers":{"X":{"env":"A","file":"/b"}}}]}`, "not both"},
 		{"subscription without patterns", "c.toml", "version = 1\n[[subscriptions]]\nid = \"a\"\n", "subscriptions[0].patterns is required"},
 		{"unknown matcher", "c.toml", "version = 1\n[filter]\nmatcher = \"splay\"\n", `filter.matcher "splay" must be "index" or "linear"`},
+		{"unknown mode", "c.toml", "version = 1\n[filter]\nmode = \"auto\"\n", `filter.mode "auto" must be "single" or "adaptive"`},
+		{"adaptive settings in single mode", "c.toml", "version = 1\n[filter.adaptive]\nwarmup = 5\n", `filter.adaptive applies only to mode "adaptive"`},
+		{"matcher in adaptive mode", "c.toml", "version = 1\n[filter]\nmode = \"adaptive\"\nmatcher = \"index\"\n", `filter.matcher applies only to mode "single"`},
+		{"unknown candidate", "c.toml", "version = 1\n[filter]\nmode = \"adaptive\"\n[filter.adaptive]\ncandidates = [\"index\", \"splay\"]\n", `filter.adaptive.candidates[1] "splay"`},
+		{"unknown shadow", "c.json", `{"version":1,"filter":{"mode":"adaptive","adaptive":{"shadow":"all"}}}`, `filter.adaptive.shadow "all"`},
 		{"destination without url", "c.json", `{"version":1,"destinations":[{"name":"a"}]}`, "destinations[0].url is required"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

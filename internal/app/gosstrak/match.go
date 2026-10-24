@@ -57,6 +57,11 @@ func NewMatchingProcessor(subscriptions *SubscriptionTable, logger *slog.Logger,
 	return p, nil
 }
 
+// AdaptiveStats reports the subscription table's adaptive decisions, if any.
+func (p *MatchingProcessor) AdaptiveStats() (filter.AdaptiveStats, bool) {
+	return p.subscriptions.AdaptiveStats()
+}
+
 // Process matches one translation and hands any routed matches to delivery.
 // Enqueueing never blocks; a full destination queue drops and counts the
 // event there, so a slow destination cannot stall ingestion.

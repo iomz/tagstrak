@@ -65,6 +65,14 @@ func NewSubscriptionTableWith(destinations []string, compile filter.Compiler) *S
 	return t
 }
 
+// AdaptiveStats reports the current matcher's decisions when it is adaptive.
+func (t *SubscriptionTable) AdaptiveStats() (filter.AdaptiveStats, bool) {
+	if a, ok := t.current.Load().matcher.(*filter.Adaptive); ok {
+		return a.Stats(), true
+	}
+	return filter.AdaptiveStats{}, false
+}
+
 // Destinations returns the destination names routes may use.
 func (t *SubscriptionTable) Destinations() []string {
 	names := make([]string, 0, len(t.destinations))

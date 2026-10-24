@@ -5,6 +5,7 @@ import (
 	"errors"
 	"sync/atomic"
 
+	"github.com/iomz/tagstrak/v2/internal/filter"
 	"github.com/iomz/tagstrak/v2/internal/inventory"
 	"github.com/iomz/tagstrak/v2/internal/tdt"
 )
@@ -66,6 +67,14 @@ func (c *TranslatingConsumer) Consume(ctx context.Context, observation inventory
 
 // Counts reports how many observations translated and how many carried data
 // outside the supported standards.
+// AdaptiveStats forwards the processor's adaptive decisions, if it has any.
+func (c *TranslatingConsumer) AdaptiveStats() (filter.AdaptiveStats, bool) {
+	if source, ok := c.processor.(adaptiveStatsSource); ok {
+		return source.AdaptiveStats()
+	}
+	return filter.AdaptiveStats{}, false
+}
+
 func (c *TranslatingConsumer) Counts() (translated, untranslatable uint64) {
 	return c.translated.Load(), c.untranslated.Load()
 }
