@@ -113,36 +113,48 @@ func BenchmarkTranslateAndMatch(b *testing.B) {
 	tags := loadTags(b, translateTags)
 	translator := tdt.New()
 	for _, n := range []int{100, 1000, 10000} {
-		m := loadMatcher(b, n)
-		matches := 0
-		buf := make([]filter.ID, 0, 4)
-		match := func(t tag) int {
-			tr, err := translator.Translate(tdt.Input{Bits: t.epc, BitLen: len(t.epc) * 8, PC: t.pc, HasPC: true})
-			if err != nil {
-				return 0
-			}
-			buf = m.Match(filter.Subject{Identity: tr.Identity, Scheme: tr.Encoding.Scheme, Fields: tr.Encoding.RawFields(), Bits: tr.Encoding.RawBits(), BitLen: tr.Encoding.BitLen}, buf[:0])
-			return len(buf)
+		for _, engine := range []struct {
+			name    string
+			compile filter.Compiler
+		}{
+			{"index", filter.CompileIndex}, // the v2 default
+			{"linear", filter.CompileLinear},
+		} {
+			benchmarkTranslateAndMatch(b, translator, tags, n, engine.name, loadMatcher(b, n, engine.compile))
 		}
-		for _, t := range tags {
-			if match(t) > 0 {
-				matches++
-			}
-		}
-		// The engine key lines this up with v1's engines in one benchstat table.
-		b.Run(fmt.Sprintf("engine=linear/subs=%d", n), func(b *testing.B) {
-			b.ReportAllocs()
-			for range b.N {
-				for _, t := range tags {
-					match(t)
-				}
-			}
-			b.ReportMetric(float64(matches), "matches/op")
-		})
 	}
 }
 
-func loadMatcher(b *testing.B, n int) filter.Matcher {
+// benchmarkTranslateAndMatch translates and matches every tag per op.
+func benchmarkTranslateAndMatch(b *testing.B, translator *tdt.Translator, tags []tag, n int, engine string, m filter.Matcher) {
+	matches := 0
+	buf := make([]filter.ID, 0, 4)
+	match := func(t tag) int {
+		tr, err := translator.Translate(tdt.Input{Bits: t.epc, BitLen: len(t.epc) * 8, PC: t.pc, HasPC: true})
+		if err != nil {
+			return 0
+		}
+		buf = m.Match(filter.Subject{Identity: tr.Identity, Scheme: tr.Encoding.Scheme, Fields: tr.Encoding.RawFields(), Bits: tr.Encoding.RawBits(), BitLen: tr.Encoding.BitLen}, buf[:0])
+		return len(buf)
+	}
+	for _, t := range tags {
+		if match(t) > 0 {
+			matches++
+		}
+	}
+	// The engine key lines this up with v1's engines in one benchstat table.
+	b.Run(fmt.Sprintf("engine=%s/subs=%d", engine, n), func(b *testing.B) {
+		b.ReportAllocs()
+		for range b.N {
+			for _, t := range tags {
+				match(t)
+			}
+		}
+		b.ReportMetric(float64(matches), "matches/op")
+	})
+}
+
+func loadMatcher(b *testing.B, n int, compile filter.Compiler) filter.Matcher {
 	b.Helper()
 	f, err := os.Open(filepath.Join(dataDir(b), fmt.Sprintf("subs-%d.v2.txt", n)))
 	if err != nil {
@@ -159,7 +171,7 @@ func loadMatcher(b *testing.B, n int) filter.Matcher {
 		}
 		subs = append(subs, filter.Subscription{ID: filter.ID(id), Patterns: []identity.Pattern{p}})
 	}
-	m, err := filter.Compile(subs)
+	m, err := compile(subs)
 	if err != nil {
 		b.Fatal(err)
 	}
