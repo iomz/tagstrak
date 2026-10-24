@@ -46,8 +46,41 @@ type File struct {
 	Telemetry     Telemetry      `toml:"telemetry" json:"telemetry"`
 	Runtime       Runtime        `toml:"runtime" json:"runtime"`
 	Report        Report         `toml:"report" json:"report"`
+	Control       Control        `toml:"control" json:"control"`
+	Store         Store          `toml:"subscription_store" json:"subscription_store"`
 	Destinations  []Destination  `toml:"destinations" json:"destinations"`
 	Subscriptions []Subscription `toml:"subscriptions" json:"subscriptions"`
+}
+
+// Control configures the management API listener. It is off unless socket or
+// address is set. A TCP address must be loopback and requires a token.
+type Control struct {
+	Socket  *string       `toml:"socket" json:"socket"`
+	Address *string       `toml:"address" json:"address"`
+	Token   *SecretSource `toml:"token" json:"token"`
+}
+
+// Subscription sources.
+const (
+	SourceFile = "file"
+	SourceAPI  = "api"
+)
+
+// Store selects the one source of truth for subscriptions. With "file", the
+// default, this file holds them and SIGHUP reloads it. With "api", a state
+// file owned by gosstrak holds them and the management API replaces them; this
+// file must then list none.
+type Store struct {
+	Source    *string `toml:"source" json:"source"`
+	StateFile *string `toml:"state_file" json:"state_file"`
+}
+
+// SubscriptionSource returns the configured source, "file" by default.
+func (f File) SubscriptionSource() string {
+	if f.Store.Source == nil {
+		return SourceFile
+	}
+	return *f.Store.Source
 }
 
 // Reader configures the LLRP reader session.
@@ -103,7 +136,7 @@ type Destination struct {
 type Subscription struct {
 	ID           string   `toml:"id" json:"id"`
 	Patterns     []string `toml:"patterns" json:"patterns"`
-	Destinations []string `toml:"destinations" json:"destinations"`
+	Destinations []string `toml:"destinations" json:"destinations,omitempty"`
 }
 
 // Duration is a Go duration string such as "5s".
@@ -178,7 +211,40 @@ func (f File) validate() error {
 			}
 		}
 	}
-	for i, s := range f.Subscriptions {
+	if err := validateSubscriptions(f.Subscriptions); err != nil {
+		return err
+	}
+	if f.Control.Socket != nil && f.Control.Address != nil {
+		return errors.New("control: set socket or address, not both")
+	}
+	if f.Control.Token != nil {
+		if err := f.Control.Token.validate(); err != nil {
+			return fmt.Errorf("control.token: %v", err)
+		}
+	}
+	switch source := f.SubscriptionSource(); source {
+	case SourceFile:
+		if f.Store.StateFile != nil {
+			return errors.New("subscription_store.state_file applies only to source \"api\"")
+		}
+	case SourceAPI:
+		if f.Store.StateFile == nil || *f.Store.StateFile == "" {
+			return errors.New("subscription_store.state_file is required for source \"api\"")
+		}
+		if !filepath.IsAbs(*f.Store.StateFile) {
+			return errors.New("subscription_store.state_file must be absolute")
+		}
+		if len(f.Subscriptions) > 0 {
+			return errors.New("subscriptions must not be listed when subscription_store.source is \"api\"; the state file holds them")
+		}
+	default:
+		return fmt.Errorf("subscription_store.source %q must be %q or %q", source, SourceFile, SourceAPI)
+	}
+	return nil
+}
+
+func validateSubscriptions(subscriptions []Subscription) error {
+	for i, s := range subscriptions {
 		if s.ID == "" {
 			return fmt.Errorf("subscriptions[%d].id is required", i)
 		}
@@ -194,7 +260,7 @@ func (f File) validate() error {
 func readBounded(path string, limit int64) ([]byte, error) {
 	file, err := os.Open(path)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrConfig, err)
+		return nil, fmt.Errorf("%w: %w", ErrConfig, err)
 	}
 	defer file.Close()
 	body, err := readAllBounded(file, limit)
