@@ -274,8 +274,8 @@ func compare(out string) error {
 		name string
 		args []string
 	}{
-		{"compare-decode-translate.txt", []string{"-filter", ".name:/^(DecodeReport|Translate)$/", "v1=" + filepath.Join(out, "v1.txt"), "v2=" + filepath.Join(out, "v2.txt")}},
-		{"compare-match.txt", []string{"-filter", ".name:TranslateAndMatch", "-col", "/engine", filepath.Join(out, "v1.txt"), filepath.Join(out, "v2.txt")}},
+		{"compare-decode-translate.txt", []string{"-ignore", "pkg", "-filter", ".name:/^(DecodeReport|Translate)$/", "v1=" + filepath.Join(out, "v1.txt"), "v2=" + filepath.Join(out, "v2.txt")}},
+		{"compare-match.txt", []string{"-ignore", "pkg", "-filter", ".name:TranslateAndMatch", "-col", "/engine", filepath.Join(out, "v1.txt"), filepath.Join(out, "v2.txt")}},
 		{"compare-e2e.txt", []string{"-col", "/impl", filepath.Join(out, "v1-e2e.txt"), filepath.Join(out, "v2-e2e.txt"), filepath.Join(out, "v2-deliver-e2e.txt")}},
 	}
 	for _, t := range tables {
