@@ -119,10 +119,11 @@ curl --unix-socket /tmp/golemu-control.EXAMPLE/control.sock \
 ```
 
 `GET /status` returns bound data address, running state, active/accepted/rejected clients, failures, completed cycles, reports, keepalives, and scenario revision.
-`PUT /scenario` returns 204 after validation and publication, or 400 without changing state.
+`PUT /scenario` requires `Content-Type: application/json` and returns 204 after validation and publication, 400 with a structured error without changing state, or 415 for another content type.
+Each replacement attempt is audited with the scenario revision and cycle count, never the scenario.
 A one-cycle repeating scenario updates a server inventory through the same operation.
 All control I/O runs on the separate Unix socket; LLRP sockets cannot mutate scenarios.
-Authenticated network control remains a separate milestone concern.
+The transport is shared with gosstrak's management API; see [control.md](control.md).
 
 ## Protocol and resource budgets
 
