@@ -20,6 +20,14 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go-version }}
+      - name: Check formatting
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "gofmt needed:"; echo "$unformatted"; exit 1
+          fi
+      - name: Check module files are tidy
+        run: go mod tidy -diff
       # Verify the vendored GS1 TDT artefacts still match the pinned digests.
       # This step reads local files only; tdtsync reaches the network only with
       # -update, which a maintainer runs deliberately.
@@ -30,7 +38,18 @@ jobs:
         run: |
           go generate ./internal/tdt/...
           git diff --exit-code
-      - name: Test
-        run: go test ./...
+      - name: Vet
+        run: go vet ./...
+      # Pinned rather than added to go.mod. staticcheck v0.8.1 cannot read
+      # Go 1.27 export data, and one toolchain is enough for static analysis.
+      - name: Static analysis
+        if: matrix.go-version == '1.26.10'
+        run: go run honnef.co/go/tools/cmd/staticcheck@v0.8.1 ./...
+      # Scanned per toolchain, because standard-library vulnerabilities
+      # depend on the Go release that builds the binaries.
+      - name: Vulnerability scan
+        run: go run golang.org/x/vuln/cmd/govulncheck@v1.8.0 ./...
+      # One run covers every package, fuzz seed corpora, goleak checks, and
+      # the end-to-end scenarios.
       - name: Test with race detector
-        run: go test -race ./internal/tdt/... ./internal/identity/... ./internal/filter/... ./internal/config/... ./internal/control/... ./internal/report/... ./internal/app/... ./internal/e2e/...
+        run: go test -race ./...
