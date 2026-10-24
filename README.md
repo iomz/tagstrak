@@ -14,6 +14,7 @@ Modern Go stack for LLRP-based RFID, combining reusable protocol tooling, gosstr
 - `internal/app/golemu`: golemu composition and local control
 - `internal/identity`, `internal/tdt`: canonical identities and tag data translation
 - `internal/filter`: subscription matching over translated tags
+- `internal/report`: bounded report delivery and destination adapters
 - `internal/gosstrak`: gosstrak application packages
 
 ## Legacy import
@@ -40,3 +41,8 @@ See [docs/tdt.md](docs/tdt.md) for supported schemes, artefact maintenance, gold
 
 Translated tags are matched against an immutable, atomically replaced subscription set.
 See [docs/filter.md](docs/filter.md) for the matcher contract, conformance, and the single-mode baseline.
+
+## Report delivery
+
+Matches are delivered as JSON batches over HTTP through bounded per-destination queues with bounded retries.
+See [docs/report.md](docs/report.md) for the delivery contract, bounds, and wire schema.
