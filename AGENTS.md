@@ -2,7 +2,7 @@
 
 ## Commit attribution
 
-A commit materially authored by an AI tool ends with exactly one trailer: a `Co-authored-by` line naming that tool, in the format the tool specifies.
+A commit materially authored by AI tools ends with one `Co-authored-by` trailer per tool that materially authored it, each naming that tool in the format the tool specifies, and no other trailers.
 Examples from this repository's history:
 
 ```text
