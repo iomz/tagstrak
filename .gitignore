@@ -33,3 +33,6 @@ go.work.sum
 
 # Misc.
 .DS_Store
+
+# Benchmark results and generated datasets; raw results are release assets (#11).
+/results/
