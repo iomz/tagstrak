@@ -159,12 +159,22 @@ func Load(path string) (File, error) {
 	if err != nil {
 		return File{}, err
 	}
+	f, err := decode(strings.ToLower(filepath.Ext(path)), body)
+	if err != nil {
+		return File{}, fmt.Errorf("%w: %s: %v", ErrConfig, path, err)
+	}
+	return f, nil
+}
+
+// decode strictly decodes and validates a configuration body in the format
+// its extension names. It never touches the filesystem, so it can be fuzzed.
+func decode(ext string, body []byte) (File, error) {
 	var f File
-	switch ext := strings.ToLower(filepath.Ext(path)); ext {
+	switch ext {
 	case ".toml":
 		md, err := toml.Decode(string(body), &f)
 		if err != nil {
-			return File{}, fmt.Errorf("%w: %s: %v", ErrConfig, path, err)
+			return File{}, err
 		}
 		if undecoded := md.Undecoded(); len(undecoded) > 0 {
 			keys := make([]string, len(undecoded))
@@ -172,22 +182,22 @@ func Load(path string) (File, error) {
 				keys[i] = k.String()
 			}
 			sort.Strings(keys)
-			return File{}, fmt.Errorf("%w: %s: unknown keys: %s", ErrConfig, path, strings.Join(keys, ", "))
+			return File{}, fmt.Errorf("unknown keys: %s", strings.Join(keys, ", "))
 		}
 	case ".json":
 		dec := json.NewDecoder(bytes.NewReader(body))
 		dec.DisallowUnknownFields()
 		if err := dec.Decode(&f); err != nil {
-			return File{}, fmt.Errorf("%w: %s: %v", ErrConfig, path, err)
+			return File{}, err
 		}
 		if _, err := dec.Token(); !errors.Is(err, io.EOF) {
-			return File{}, fmt.Errorf("%w: %s: trailing data after the configuration object", ErrConfig, path)
+			return File{}, errors.New("trailing data after the configuration object")
 		}
 	default:
-		return File{}, fmt.Errorf("%w: %s: unsupported format %q; use .toml or .json", ErrConfig, path, ext)
+		return File{}, fmt.Errorf("unsupported format %q; use .toml or .json", ext)
 	}
 	if err := f.validate(); err != nil {
-		return File{}, fmt.Errorf("%w: %s: %v", ErrConfig, path, err)
+		return File{}, err
 	}
 	return f, nil
 }

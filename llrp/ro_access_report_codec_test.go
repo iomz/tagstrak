@@ -40,6 +40,7 @@ func TestDecodeReadEventsNeverPanicsOnMalformedInput(t *testing.T) {
 
 func FuzzDecodeReadEventsNeverPanics(f *testing.F) {
 	f.Add([]byte{0, 240, 0, 4})
+	addParameterBoundarySeeds(f)
 	f.Fuzz(func(t *testing.T, body []byte) {
 		_, _ = DecodeReadEvents(body, DefaultLimits())
 	})

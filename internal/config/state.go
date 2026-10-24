@@ -31,20 +31,29 @@ func LoadState(path string) (State, error) {
 		}
 		return State{}, err
 	}
+	s, err := decodeState(body)
+	if err != nil {
+		return State{}, fmt.Errorf("%w: state %s: %v", ErrConfig, path, err)
+	}
+	return s, nil
+}
+
+// decodeState strictly decodes and validates a state body.
+func decodeState(body []byte) (State, error) {
 	var s State
 	dec := json.NewDecoder(bytes.NewReader(body))
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(&s); err != nil {
-		return State{}, fmt.Errorf("%w: state %s: %v", ErrConfig, path, err)
+		return State{}, err
 	}
 	if _, err := dec.Token(); !errors.Is(err, io.EOF) {
-		return State{}, fmt.Errorf("%w: state %s: trailing data", ErrConfig, path)
+		return State{}, errors.New("trailing data")
 	}
 	if s.Version != Version {
-		return State{}, fmt.Errorf("%w: state %s: version %d is not supported; want %d", ErrConfig, path, s.Version, Version)
+		return State{}, fmt.Errorf("version %d is not supported; want %d", s.Version, Version)
 	}
 	if err := validateSubscriptions(s.Subscriptions); err != nil {
-		return State{}, fmt.Errorf("%w: state %s: %v", ErrConfig, path, err)
+		return State{}, err
 	}
 	return s, nil
 }
