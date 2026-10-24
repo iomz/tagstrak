@@ -59,6 +59,11 @@ See [docs/control.md](docs/control.md) and the threat model in [docs/security.md
 Every pull request passes formatting, tidy modules, vet, staticcheck, govulncheck, race-enabled tests with goroutine leak checks, fuzz seed corpora, and end-to-end scenarios.
 See [docs/testing.md](docs/testing.md).
 
+## Benchmarks
+
+`go run ./tools/benchrun` compares `v1.0.0` with the current tree on shared datasets and end to end.
+See [docs/benchmarks.md](docs/benchmarks.md) for the procedure and the interim results, including regressions.
+
 ## Configuration
 
 Gosstrak reads an optional TOML or JSON configuration file for its settings, subscriptions, and destinations, with secrets from environment or file sources only.
