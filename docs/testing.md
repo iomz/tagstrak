@@ -37,6 +37,7 @@ Tests also check that control and telemetry listeners stop accepting and that Un
 | golemu scenarios | `emulator.FuzzDecodeScenario` |
 | Control request bodies | `control.FuzzReadJSON` |
 | Patterns and identifiers | `tdt.FuzzCompilePattern`, `FuzzParseURI`, `FuzzTranslate` |
+| Matcher equivalence | `filter.FuzzIndexAgreesWithLinear` |
 
 Seeds include malformed inputs and inputs exactly at and one byte over each size limit.
 `go test` runs every seed in CI; there is no scheduled fuzzing.
