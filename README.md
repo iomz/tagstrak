@@ -15,6 +15,7 @@ Modern Go stack for LLRP-based RFID, combining reusable protocol tooling, gosstr
 - `internal/identity`, `internal/tdt`: canonical identities and tag data translation
 - `internal/filter`: subscription matching over translated tags
 - `internal/report`: bounded report delivery and destination adapters
+- `internal/config`: versioned configuration file and redacted secret sources
 - `internal/gosstrak`: gosstrak application packages
 
 ## Legacy import
@@ -46,3 +47,8 @@ See [docs/filter.md](docs/filter.md) for the matcher contract, conformance, and 
 
 Matches are delivered as JSON batches over HTTP through bounded per-destination queues with bounded retries.
 See [docs/report.md](docs/report.md) for the delivery contract, bounds, and wire schema.
+
+## Configuration
+
+Gosstrak reads an optional TOML or JSON configuration file for its settings, subscriptions, and destinations, with secrets from environment or file sources only.
+See [docs/configuration.md](docs/configuration.md) and [examples/gosstrak/gosstrak.toml](examples/gosstrak/gosstrak.toml).

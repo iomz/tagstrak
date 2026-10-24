@@ -33,7 +33,7 @@ ids := m.Match(subject, buf[:0])
 - `Set` holds the current matcher behind `atomic.Pointer`. `Replace` compiles first and publishes the whole matcher, so readers see the old set or the new one, never a mix; on error the current matcher stays.
 
 Matched IDs are the hand-off to delivery: `MatchingProcessor` routes them to destinations, described in [report.md](report.md).
-Subscription configuration belongs to #10, so `cmd/gosstrak` starts with an empty set and logs matches at debug level.
+Subscriptions come from the configuration file ([configuration.md](configuration.md)); without one, `cmd/gosstrak` starts with an empty set.
 
 ## Single-mode baseline
 
