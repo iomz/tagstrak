@@ -67,7 +67,7 @@ See [docs/testing.md](docs/testing.md).
 ## Benchmarks
 
 `go run ./tools/benchrun` compares `v1.0.0` with the current tree on shared datasets and end to end.
-See [docs/benchmarks.md](docs/benchmarks.md) for the procedure and the interim results, including regressions.
+See [docs/benchmarks.md](docs/benchmarks.md) for the procedure, the final results, and the budget check, regressions included.
 
 ## Deployment
 
