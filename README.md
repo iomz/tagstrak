@@ -17,7 +17,7 @@ Modern Go stack for LLRP-based RFID, combining reusable protocol tooling, gosstr
 - `internal/report`: bounded report delivery and destination adapters
 - `internal/config`: versioned configuration file and redacted secret sources
 - `internal/control`: hardened management transport shared by both commands
-- `internal/gosstrak`: gosstrak application packages
+- `internal/app/gosstrak`, `internal/app/golemu`: application composition for each command
 
 ## Legacy import
 

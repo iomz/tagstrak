@@ -25,9 +25,7 @@ ISO 17363 (AFI `0xA9`, `0xAA`) is recognised and refused, because its Gen2 carri
 Every other scheme returns `ErrUnsupportedScheme`; the remaining evidence gates are listed in #8 Amendment 2.
 
 `cmd/uiigen` now uses these packages instead of its own EPC/ISO helpers.
-The duplicate v1 generator in `internal/gosstrak/scheme` and the `internal/gosstrak/test/gendataset.go` command that used it are removed.
-The committed datasets in `internal/gosstrak/test/data` stay, because the legacy filtering tests and benchmarks load them.
-`internal/gosstrak/tdt` remains only because the legacy filtering engine imports it; #7 replaces both.
+The duplicate v1 generators and the legacy `internal/gosstrak` translation and filtering packages are removed (#8, #11); they remain readable at the `v1.0.0` tag.
 
 ## Vendored artefacts and generation
 

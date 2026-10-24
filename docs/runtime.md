@@ -19,8 +19,7 @@ Tags outside the supported standards are counted as untranslatable and dropped; 
 Tags whose reader reports no protocol-control word are translated as GS1 EPC data by explicit configuration, never by guessing from the header.
 Subscriptions, destinations, and routes come from the `--config` file described in [configuration.md](configuration.md); without one the command matches nothing and delivers nothing.
 It does not retain observations.
-The old global command runtime, SPDY listener, adaptive engine workers, and InfluxDB worker wiring are removed from the command.
-Their legacy packages remain available to their own workstreams.
+The old global command runtime, SPDY listener, adaptive engine workers, and InfluxDB worker wiring are removed, together with their legacy packages (#11); they remain readable at the `v1.0.0` tag.
 The emulator lifecycle and scenarios implemented by #6 are documented in [golemu.md](golemu.md).
 
 ## Run
