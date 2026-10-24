@@ -246,11 +246,11 @@ func TestAppServesControlOverLoopbackTCP(t *testing.T) {
 	if err := await(t, done); err != nil && !errors.Is(err, context.Canceled) {
 		t.Fatalf("run: %v", err)
 	}
-	if _, err := net.Dial("tcp", a.ControlAddress()); err == nil {
-		t.Fatal("control listener survived shutdown")
-	}
-	if _, err := net.Dial("tcp", a.Status().TelemetryAddress); err == nil {
-		t.Fatal("telemetry listener survived shutdown")
+	for name, address := range map[string]string{"control": a.ControlAddress(), "telemetry": a.Status().TelemetryAddress} {
+		if conn, err := net.Dial("tcp", address); err == nil {
+			_ = conn.Close()
+			t.Fatalf("%s listener survived shutdown", name)
+		}
 	}
 }
 

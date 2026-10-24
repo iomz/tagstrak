@@ -46,6 +46,11 @@ func FuzzDecodeInventoryJSON(f *testing.F) {
 }
 
 func FuzzReadInventoryCSV(f *testing.F) {
+	// Valid rows are "label,binary EPC"; these start the fuzzer from accepted
+	// input, including the distinct-tag and duplicate-tag paths.
+	f.Add([]byte("3000,0011000000000000\n"))
+	f.Add([]byte("3000,0011000000000000\n3001,0011000000000001\n"))
+	f.Add([]byte("3000,0011000000000000\n3000,0011000000000000\n"))
 	f.Add([]byte("3074257bf7194e4000001a85\n"))
 	f.Add([]byte("3074,extra\n"))
 	f.Add([]byte("\"unterminated\n"))
