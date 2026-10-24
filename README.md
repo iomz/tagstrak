@@ -69,6 +69,11 @@ See [docs/testing.md](docs/testing.md).
 `go run ./tools/benchrun` compares `v1.0.0` with the current tree on shared datasets and end to end.
 See [docs/benchmarks.md](docs/benchmarks.md) for the procedure and the interim results, including regressions.
 
+## Deployment
+
+Run gosstrak under a supervisor that restarts it, since it exits on exhausted reconnects or overflow rather than degrading silently.
+See [docs/deployment.md](docs/deployment.md) for a systemd unit, the settings to decide, monitoring, and migrating from v1.
+
 ## Configuration
 
 Gosstrak reads an optional TOML or JSON configuration file for its settings, subscriptions, and destinations, with secrets from environment or file sources only.
