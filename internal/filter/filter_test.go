@@ -55,10 +55,11 @@ func forEachMatcher(t *testing.T, test func(t *testing.T, compile filter.Compile
 	}{
 		{"linear", filter.CompileLinear},
 		{"index", filter.CompileIndex},
-		{"adaptive", filter.AdaptiveConfig{
-			Candidates:  []filter.Candidate{{Name: "index", Compile: filter.CompileIndex}, {Name: "linear", Compile: filter.CompileLinear}},
-			SampleEvery: filter.MinSampleEvery,
-		}.Compiler()},
+		{"adaptive", func() filter.Compiler {
+			cfg := filter.DefaultAdaptiveConfig(filter.Candidate{Name: "index", Compile: filter.CompileIndex}, filter.Candidate{Name: "linear", Compile: filter.CompileLinear})
+			cfg.SampleEvery = filter.MinSampleEvery
+			return cfg.Compiler()
+		}()},
 	} {
 		t.Run(m.name, func(t *testing.T) { test(t, m.compile) })
 	}

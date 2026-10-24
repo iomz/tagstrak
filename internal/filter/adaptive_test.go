@@ -3,6 +3,7 @@ package filter_test
 import (
 	"errors"
 	"slices"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -174,33 +175,56 @@ func TestAdaptiveShadowNeverTouchesDst(t *testing.T) {
 
 func TestCompileAdaptiveRejectsBadConfig(t *testing.T) {
 	two := []filter.Candidate{{Name: "index", Compile: filter.CompileIndex}, {Name: "linear", Compile: filter.CompileLinear}}
-	five := append(append([]filter.Candidate{}, two...), filter.Candidate{Name: "c", Compile: filter.CompileLinear}, filter.Candidate{Name: "d", Compile: filter.CompileLinear}, filter.Candidate{Name: "e", Compile: filter.CompileLinear})
 	for _, tc := range []struct {
-		name string
-		cfg  filter.AdaptiveConfig
+		name, want string
+		change     func(*filter.AdaptiveConfig)
 	}{
-		{"one candidate", filter.AdaptiveConfig{Candidates: two[:1]}},
-		{"five candidates", filter.AdaptiveConfig{Candidates: five}},
-		{"duplicate", filter.AdaptiveConfig{Candidates: []filter.Candidate{two[0], two[0]}}},
-		{"unnamed", filter.AdaptiveConfig{Candidates: []filter.Candidate{two[0], {Name: "", Compile: filter.CompileLinear}}}},
-		{"no compiler", filter.AdaptiveConfig{Candidates: []filter.Candidate{two[0], {Name: "x", Compile: nil}}}},
-		{"full shadow without experimental", filter.AdaptiveConfig{Candidates: two, FullShadow: true}},
-		{"sampling too dense", filter.AdaptiveConfig{Candidates: two, SampleEvery: 9}},
-		{"window too large", filter.AdaptiveConfig{Candidates: two, Window: filter.MaxObservations + 1}},
-		{"warmup too large", filter.AdaptiveConfig{Candidates: two, Warmup: filter.MaxObservations + 1}},
-		{"negative window", filter.AdaptiveConfig{Candidates: two, Window: -1}},
-		{"negative cooldown", filter.AdaptiveConfig{Candidates: two, Cooldown: -1}},
-		{"hysteresis of one", filter.AdaptiveConfig{Candidates: two, Hysteresis: 1}},
-		{"negative hysteresis", filter.AdaptiveConfig{Candidates: two, Hysteresis: -0.1}},
+		{"one candidate", "1 candidates", func(c *filter.AdaptiveConfig) { c.Candidates = two[:1] }},
+		{"five candidates", "5 candidates", func(c *filter.AdaptiveConfig) {
+			for _, name := range []string{"c", "d", "e"} {
+				c.Candidates = append(c.Candidates, filter.Candidate{Name: name, Compile: filter.CompileLinear})
+			}
+		}},
+		{"duplicate", "duplicate", func(c *filter.AdaptiveConfig) { c.Candidates = []filter.Candidate{two[0], two[0]} }},
+		{"unnamed", "no name", func(c *filter.AdaptiveConfig) { c.Candidates[1].Name = "" }},
+		{"no compiler", "no compiler", func(c *filter.AdaptiveConfig) { c.Candidates[1].Compile = nil }},
+		{"full shadow without experimental", "experimental", func(c *filter.AdaptiveConfig) { c.FullShadow = true }},
+		{"sampling too dense", "sample_every 9", func(c *filter.AdaptiveConfig) { c.SampleEvery = 9 }},
+		{"zero window", "window 0", func(c *filter.AdaptiveConfig) { c.Window = 0 }},
+		{"window too large", "window 1001", func(c *filter.AdaptiveConfig) { c.Window = filter.MaxObservations + 1 }},
+		{"zero warmup", "warmup 0", func(c *filter.AdaptiveConfig) { c.Warmup = 0 }},
+		{"warmup too large", "warmup 1001", func(c *filter.AdaptiveConfig) { c.Warmup = filter.MaxObservations + 1 }},
+		{"negative cooldown", "cooldown", func(c *filter.AdaptiveConfig) { c.Cooldown = -1 }},
+		{"hysteresis of one", "hysteresis 1", func(c *filter.AdaptiveConfig) { c.Hysteresis = 1 }},
+		{"negative hysteresis", "hysteresis -0.1", func(c *filter.AdaptiveConfig) { c.Hysteresis = -0.1 }},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			if _, err := filter.CompileAdaptive(nil, tc.cfg); !errors.Is(err, filter.ErrAdaptiveConfig) {
-				t.Fatalf("err = %v, want ErrAdaptiveConfig", err)
+			cfg := filter.DefaultAdaptiveConfig(append([]filter.Candidate(nil), two...)...)
+			tc.change(&cfg)
+			_, err := filter.CompileAdaptive(nil, cfg)
+			if !errors.Is(err, filter.ErrAdaptiveConfig) || !strings.Contains(err.Error(), tc.want) {
+				t.Fatalf("err = %v, want ErrAdaptiveConfig naming %q", err, tc.want)
 			}
 		})
 	}
-	if _, err := filter.CompileAdaptive([]filter.Subscription{{ID: ""}}, filter.AdaptiveConfig{Candidates: two}); !errors.Is(err, filter.ErrEmptyID) {
+	if _, err := filter.CompileAdaptive(nil, filter.DefaultAdaptiveConfig(two...)); err != nil {
+		t.Fatalf("defaults rejected: %v", err)
+	}
+	if _, err := filter.CompileAdaptive([]filter.Subscription{{ID: ""}}, filter.DefaultAdaptiveConfig(two...)); !errors.Is(err, filter.ErrEmptyID) {
 		t.Fatalf("subscriptions are not validated: %v", err)
+	}
+}
+
+// TestAdaptiveZeroCooldownIsKept checks an explicit zero is not replaced by
+// the default: without cooldown the controller may switch straight back.
+func TestAdaptiveZeroCooldownIsKept(t *testing.T) {
+	cfg := filter.AdaptiveConfig{SampleEvery: 10, Warmup: 1, Window: 1, Hysteresis: 0.1, Cooldown: 0}
+	h := newHarness(t, cfg, map[string]time.Duration{"a": 100, "b": 50}, "a", "b")
+	h.call(t, 10)
+	*h.costs["a"] = 10
+	h.call(t, 10)
+	if st := h.m.Stats(); st.Selected != "a" || st.Switches != 2 {
+		t.Fatalf("stats %+v, want an immediate switch back to a", st)
 	}
 }
 

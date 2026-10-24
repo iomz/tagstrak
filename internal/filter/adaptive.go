@@ -29,8 +29,9 @@ type Candidate struct {
 	Compile Compiler
 }
 
-// AdaptiveConfig configures CompileAdaptive. Zero numeric fields take the
-// defaults above.
+// AdaptiveConfig configures CompileAdaptive. Every field is used as given,
+// so an explicit zero, such as no cooldown, is kept; start from
+// DefaultAdaptiveConfig to get the defaults.
 type AdaptiveConfig struct {
 	// Candidates are compiled in order, one at a time; the first is selected
 	// until the controller has evidence for another.
@@ -55,23 +56,17 @@ type AdaptiveConfig struct {
 	Now func() time.Time
 }
 
-func (c AdaptiveConfig) withDefaults() AdaptiveConfig {
-	if c.SampleEvery == 0 {
-		c.SampleEvery = DefaultSampleEvery
+// DefaultAdaptiveConfig returns the default policy over the given
+// candidates.
+func DefaultAdaptiveConfig(candidates ...Candidate) AdaptiveConfig {
+	return AdaptiveConfig{
+		Candidates:  candidates,
+		SampleEvery: DefaultSampleEvery,
+		Warmup:      DefaultWarmup,
+		Window:      DefaultWindow,
+		Hysteresis:  DefaultHysteresis,
+		Cooldown:    DefaultCooldown,
 	}
-	if c.Warmup == 0 {
-		c.Warmup = DefaultWarmup
-	}
-	if c.Window == 0 {
-		c.Window = DefaultWindow
-	}
-	if c.Cooldown == 0 {
-		c.Cooldown = DefaultCooldown
-	}
-	if c.Now == nil {
-		c.Now = time.Now
-	}
-	return c
 }
 
 func (c AdaptiveConfig) validate() error {
@@ -155,9 +150,11 @@ func CompileAdaptive(subscriptions []Subscription, cfg AdaptiveConfig) (*Adaptiv
 	if err := validate(subscriptions); err != nil {
 		return nil, err
 	}
-	cfg = cfg.withDefaults()
 	if err := cfg.validate(); err != nil {
 		return nil, err
+	}
+	if cfg.Now == nil {
+		cfg.Now = time.Now
 	}
 	a := &Adaptive{
 		every: uint64(cfg.SampleEvery),

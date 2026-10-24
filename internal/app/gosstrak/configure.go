@@ -209,7 +209,8 @@ func matcherCompiler(f configfile.File) (filter.Compiler, error) {
 	if names == nil {
 		names = []string{configfile.MatcherIndex, configfile.MatcherLinear}
 	}
-	cfg := filter.AdaptiveConfig{FullShadow: a.Shadow != nil && *a.Shadow == configfile.ShadowFull}
+	cfg := filter.DefaultAdaptiveConfig()
+	cfg.FullShadow = a.Shadow != nil && *a.Shadow == configfile.ShadowFull
 	for _, name := range names {
 		cfg.Candidates = append(cfg.Candidates, filter.Candidate{Name: name, Compile: compilers[name]})
 	}
@@ -219,8 +220,6 @@ func matcherCompiler(f configfile.File) (filter.Compiler, error) {
 	setInt(&cfg.Cooldown, a.Cooldown)
 	if a.Hysteresis != nil {
 		cfg.Hysteresis = *a.Hysteresis
-	} else {
-		cfg.Hysteresis = filter.DefaultHysteresis
 	}
 	if a.Experimental != nil {
 		cfg.Experimental = *a.Experimental
