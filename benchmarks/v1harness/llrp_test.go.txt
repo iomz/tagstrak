@@ -1,0 +1,33 @@
+package llrp
+
+import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"testing"
+)
+
+// BenchmarkDecodeReport decodes the shared ROAccessReport bodies with v1's
+// UnmarshalROAccessReportBody (#11 baseline).
+func BenchmarkDecodeReport(b *testing.B) {
+	dir := os.Getenv("TAGSTRAK_BENCH_DATA")
+	if dir == "" {
+		b.Skip("TAGSTRAK_BENCH_DATA is not set")
+	}
+	for _, n := range []int{100, 500, 1000} {
+		body, err := os.ReadFile(filepath.Join(dir, fmt.Sprintf("report-%d.bin", n)))
+		if err != nil {
+			b.Fatal(err)
+		}
+		if got := len(UnmarshalROAccessReportBody(body)); got != n {
+			b.Fatalf("report-%d decodes to %d events", n, got)
+		}
+		b.Run(fmt.Sprintf("tags=%d", n), func(b *testing.B) {
+			b.ReportAllocs()
+			b.SetBytes(int64(len(body)))
+			for i := 0; i < b.N; i++ {
+				_ = UnmarshalROAccessReportBody(body)
+			}
+		})
+	}
+}
