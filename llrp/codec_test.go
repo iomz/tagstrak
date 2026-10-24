@@ -117,6 +117,7 @@ func TestDecodeParametersRejectsUnsafeTVAndTruncation(t *testing.T) {
 
 func FuzzDecodeMessageNeverPanics(f *testing.F) {
 	f.Add([]byte{4, 62, 0, 0, 0, 10, 0, 0, 0, 1})
+	addMessageBoundarySeeds(f)
 	f.Fuzz(func(t *testing.T, data []byte) {
 		_, _ = DecodeMessage(data, DefaultLimits())
 	})
@@ -124,6 +125,7 @@ func FuzzDecodeMessageNeverPanics(f *testing.F) {
 
 func FuzzDecodeParametersNeverPanics(f *testing.F) {
 	f.Add([]byte{0, 240, 0, 4})
+	addParameterBoundarySeeds(f)
 	f.Fuzz(func(t *testing.T, data []byte) {
 		_, _ = DecodeParameters(data, DefaultLimits())
 	})

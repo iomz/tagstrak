@@ -19,7 +19,12 @@ func LoadCSV(path string, limits Limits) ([]Tag, error) {
 		return nil, err
 	}
 	defer func() { _ = file.Close() }()
-	reader := csv.NewReader(&countingReader{reader: io.LimitReader(file, limits.MaxInputBytes+1), limit: limits.MaxInputBytes})
+	return readCSV(file, limits)
+}
+
+// readCSV parses CSV inventory from r within limits.
+func readCSV(r io.Reader, limits Limits) ([]Tag, error) {
+	reader := csv.NewReader(&countingReader{reader: io.LimitReader(r, limits.MaxInputBytes+1), limit: limits.MaxInputBytes})
 	seen := make(map[string]struct{})
 	tags := make([]Tag, 0)
 	for line := 1; ; line++ {
