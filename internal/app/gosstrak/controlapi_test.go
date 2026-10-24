@@ -249,6 +249,9 @@ func TestAppServesControlOverLoopbackTCP(t *testing.T) {
 	if _, err := net.Dial("tcp", a.ControlAddress()); err == nil {
 		t.Fatal("control listener survived shutdown")
 	}
+	if _, err := net.Dial("tcp", a.Status().TelemetryAddress); err == nil {
+		t.Fatal("telemetry listener survived shutdown")
+	}
 }
 
 func TestNewRefusesUnauthenticatedTCPControl(t *testing.T) {
