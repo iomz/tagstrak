@@ -17,8 +17,8 @@ Its processor, `MatchingProcessor`, matches each translation against the current
 Configured with `DeliverTo`, it also enqueues one report event per routed destination; [report.md](report.md) describes delivery.
 Tags outside the supported standards are counted as untranslatable and dropped; any other translation error fails the consumer.
 Tags whose reader reports no protocol-control word are translated as GS1 EPC data by explicit configuration, never by guessing from the header.
-The command starts with no subscriptions, because subscription configuration belongs to #10.
-It does not retain observations, and with no subscriptions it delivers nothing until #10 supplies destination and route configuration.
+Subscriptions, destinations, and routes come from the `--config` file described in [configuration.md](configuration.md); without one the command matches nothing and delivers nothing.
+It does not retain observations.
 The old global command runtime, SPDY listener, adaptive engine workers, and InfluxDB worker wiring are removed from the command.
 Their legacy packages remain available to their own workstreams.
 The emulator lifecycle and scenarios implemented by #6 are documented in [golemu.md](golemu.md).
@@ -35,7 +35,7 @@ go run ./cmd/gosstrak start \
 
 `start` is optional.
 Use `--help` for all supported flags.
-Configuration uses explicit command flags and validated defaults in this slice; shared file/environment configuration remains operations work in #10.
+Settings apply in order: defaults, the `--config` file, `GOSSTRAK_*` environment variables, then flags; see [configuration.md](configuration.md).
 V1 flags and behavior are not compatibility contracts.
 
 | Budget | Default | Behavior |

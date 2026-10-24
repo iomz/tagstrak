@@ -51,7 +51,7 @@ A permanent error, exhausted attempts, or an exhausted retry budget is a final f
 - Redirects are never followed, so request credentials cannot reach another host; a redirect is a permanent failure.
 - TLS certificates are always verified against the system roots, with no option to skip verification. This is gosstrak's first outbound TLS path, so the patched Go toolchain and CA bundle from #20 apply to it.
 - Destination URLs never appear in errors, logs, or metrics, because their user information, path, or query may carry credentials. Destinations are named, and the name is the label; transport errors may name the host and port.
-- Credentials belong in `WithHeader`, never in the URL. Secret sources are #10's.
+- Credentials belong in `WithHeader`, never in the URL. The configuration file supplies them as redacted header secrets from environment or file sources ([configuration.md](configuration.md)).
 
 ## Wire schema
 
@@ -86,7 +86,7 @@ A permanent error, exhausted attempts, or an exhausted retry budget is a final f
 ## Routing and configuration
 
 `Routes` maps subscription IDs to destination names, and `DeliverTo` rejects routes to unknown destinations.
-Subscriptions, destinations, and routes are configured by #10, so `cmd/gosstrak` starts with none and delivers nothing.
+Subscriptions, destinations, and routes come from the configuration file ([configuration.md](configuration.md)); without one, `cmd/gosstrak` delivers nothing.
 The end-to-end path is exercised in-process by `internal/e2e`.
 
 ## Telemetry
