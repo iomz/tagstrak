@@ -107,7 +107,9 @@ func run(out string, s settings) error {
 	defer func() { _ = command("", nil, io.Discard, "git", "worktree", "remove", "--force", worktree) }()
 
 	env := []string{"TAGSTRAK_BENCH_DATA=" + data}
-	bench := []string{"test", "-run", "^$", "-bench", ".", "-benchmem", "-count", fmt.Sprint(s.Count), "-benchtime", s.Benchtime}
+	// Only the shared harness benchmarks: v1's packages ship many of their own,
+	// which would take hours and have no v2 counterpart.
+	bench := []string{"test", "-run", "^$", "-bench", "^Benchmark(DecodeReport|Translate|TranslateAndMatch)$", "-benchmem", "-count", fmt.Sprint(s.Count), "-benchtime", s.Benchtime}
 
 	step("benchmarking v2")
 	if err := toFile(filepath.Join(out, "v2.txt"), func(w io.Writer) error {
