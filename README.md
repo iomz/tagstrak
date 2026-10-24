@@ -19,6 +19,11 @@ Modern Go stack for LLRP-based RFID, combining reusable protocol tooling, gosstr
 - `internal/control`: hardened management transport shared by both commands
 - `internal/app/gosstrak`, `internal/app/golemu`: application composition for each command
 
+## LLRP package
+
+`llrp` is the public, protocol-only codec: bounded frame and parameter encoding and decoding, tag report decoding, and the typed messages a reader session uses.
+See [docs/llrp.md](docs/llrp.md) for the API, bounds, ownership, and an example.
+
 ## Legacy import
 
 Initial source was moved from the archived `go-llrp`, `golemu`, and `gosstrak` repositories without intentional behavior changes.
@@ -41,8 +46,8 @@ See [docs/tdt.md](docs/tdt.md) for supported schemes, artefact maintenance, gold
 
 ## Subscription matching
 
-Translated tags are matched against an immutable, atomically replaced subscription set.
-See [docs/filter.md](docs/filter.md) for the matcher contract, conformance, and the single-mode baseline.
+Translated tags are matched against an atomically replaced subscription set by a prefix index, with a linear reference matcher and an experimental adaptive mode.
+See [docs/filter.md](docs/filter.md) for the matcher contract, workload evidence, and adaptive results.
 
 ## Report delivery
 
