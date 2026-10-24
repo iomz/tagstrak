@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net"
+	"strings"
 	"testing"
 	"time"
 
@@ -120,5 +121,25 @@ func TestInvalidConfig(t *testing.T) {
 		if _, err := New(c, scenario(t), SystemClock{}, SeededRandom, nil); !errors.Is(err, ErrConfig) {
 			t.Fatal(err)
 		}
+	}
+}
+
+func TestReplaceRevisionCountsUpByOne(t *testing.T) {
+	scenario, err := DecodeScenario(strings.NewReader(`{"version":1,"seed":1,"repeat":true,"cycles":[["0001"]]}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	s, err := New(DefaultConfig(), scenario, SystemClock{}, SeededRandom, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for want := uint64(2); want <= 4; want++ {
+		got, err := s.ReplaceRevision(scenario)
+		if err != nil || got != want || s.Status().Revision != want {
+			t.Fatalf("revision %d (status %d), want %d: %v", got, s.Status().Revision, want, err)
+		}
+	}
+	if _, err := s.ReplaceRevision(nil); !errors.Is(err, ErrScenario) {
+		t.Fatalf("nil scenario: %v", err)
 	}
 }
