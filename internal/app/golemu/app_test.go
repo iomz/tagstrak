@@ -78,10 +78,14 @@ func TestLocalControlAndShutdown(t *testing.T) {
 	defer transport.CloseIdleConnections()
 	client := &http.Client{Transport: transport, Timeout: time.Second}
 	for _, tc := range []struct {
-		body string
-		code int
-	}{{`{"invalid":true}`, 400}, {validScenario, 204}, {strings.Repeat("x", emulator.MaxScenarioBytes+1), 400}} {
+		body        string
+		code        int
+		contentType string
+	}{{`{"invalid":true}`, 400, "application/json"}, {validScenario, 204, "application/json"}, {strings.Repeat("x", emulator.MaxScenarioBytes+1), 400, "application/json"}, {validScenario, 415, "text/plain"}, {validScenario, 415, ""}} {
 		request, err := http.NewRequest(http.MethodPut, "http://local/scenario", strings.NewReader(tc.body))
+		if tc.contentType != "" {
+			request.Header.Set("Content-Type", tc.contentType)
+		}
 		if err != nil {
 			t.Fatal(err)
 		}
