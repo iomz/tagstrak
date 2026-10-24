@@ -11,8 +11,8 @@ Their Git histories remain available in the original repositories.
 
 Initialization made only structural changes required by the monorepo:
 
-- changed module and import paths to `github.com/iomz/tagstrak/v2`
-- exposed LLRP as `github.com/iomz/tagstrak/v2/llrp`
+- changed module and import paths to `github.com/iomz/tagstrak`, which is the module path at the `v1.0.0` tag; the `/v2` suffix followed in `68442ba` with the v2 work
+- exposed LLRP as `github.com/iomz/tagstrak/llrp`, now `github.com/iomz/tagstrak/v2/llrp`
 - moved application-only packages beneath `internal`
 - renamed the `gosstrak-fc` command directory to `gosstrak`
 - combined existing dependency manifests while retaining legacy versions
