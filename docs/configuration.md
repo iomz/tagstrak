@@ -58,7 +58,8 @@ prefix = "Bearer "       # optional, prepended literally, not secret
 
 - A source is exactly one of `env` or `file`. Inline values are rejected, so the file can be committed or shared.
 - An `env` source must be set and non-empty.
-- A `file` source must be a regular file of at most 4 KiB with no group or other permissions; one trailing newline is trimmed.
+- A `file` source must be a regular file of at most 4 KiB with no group or other permissions; one trailing newline is trimmed. The file is validated and read through the same open handle, so replacing the path while it is read fails rather than reading an unchecked file.
+- Header names must be valid HTTP tokens, and resolved values must contain no control characters other than tab, so a secret cannot split a header line.
 - Secrets are resolved once at startup; rotation means a restart. A missing or invalid source stops startup.
 - `config.Secret` prints `[redacted]` through `fmt`, `slog`, and JSON. Only the HTTP adapter's header function reads the value.
 - No flag accepts secret material.

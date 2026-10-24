@@ -5,6 +5,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	configfile "github.com/iomz/tagstrak/v2/internal/config"
@@ -138,9 +139,17 @@ func buildDestinations(in []configfile.Destination, lookup func(string) (string,
 		}
 		headers := make(map[string]configfile.Secret, len(d.Headers))
 		for name, source := range d.Headers {
+			// net/http rejects invalid headers per request, which would turn
+			// a configuration error into a stream of failed deliveries.
+			if !validHeaderName(name) {
+				return nil, fmt.Errorf("destinations[%d].headers: %q is not a valid header name", i, name)
+			}
 			secret, err := source.Resolve(lookup)
 			if err != nil {
 				return nil, fmt.Errorf("destinations[%d].headers.%s: %w", i, name, err)
+			}
+			if !validHeaderValue(secret.Reveal()) {
+				return nil, fmt.Errorf("destinations[%d].headers.%s: secret contains control characters", i, name)
 			}
 			headers[http.CanonicalHeaderKey(name)] = secret
 		}
@@ -155,6 +164,34 @@ func buildDestinations(in []configfile.Destination, lookup func(string) (string,
 		destinations[i] = report.Destination{Name: d.Name, Reporter: reporter}
 	}
 	return destinations, nil
+}
+
+// validHeaderName reports whether name is an RFC 9110 token.
+func validHeaderName(name string) bool {
+	if name == "" {
+		return false
+	}
+	for i := 0; i < len(name); i++ {
+		c := name[i]
+		switch {
+		case 'a' <= c && c <= 'z', 'A' <= c && c <= 'Z', '0' <= c && c <= '9':
+		case strings.IndexByte("!#$%&'*+-.^_`|~", c) >= 0:
+		default:
+			return false
+		}
+	}
+	return true
+}
+
+// validHeaderValue reports whether value is free of control characters other
+// than horizontal tab, so it cannot split or end a header line.
+func validHeaderValue(value []byte) bool {
+	for _, c := range value {
+		if (c < 0x20 && c != '\t') || c == 0x7f {
+			return false
+		}
+	}
+	return true
 }
 
 func setString(dst *string, v *string) {
