@@ -1,0 +1,61 @@
+package filtering
+
+import (
+	"bufio"
+	"encoding/hex"
+	"fmt"
+	"os"
+	"path/filepath"
+	"sort"
+	"strings"
+	"testing"
+
+	"github.com/iomz/tagstrak/llrp"
+)
+
+// BenchmarkTranslateAndMatch runs every v1 engine's Search, which translates
+// and matches, over the shared tags and subscriptions (#11 baseline).
+func BenchmarkTranslateAndMatch(b *testing.B) {
+	dir := os.Getenv("TAGSTRAK_BENCH_DATA")
+	if dir == "" {
+		b.Skip("TAGSTRAK_BENCH_DATA is not set")
+	}
+	f, err := os.Open(filepath.Join(dir, "tags.txt"))
+	if err != nil {
+		b.Fatal(err)
+	}
+	var events []llrp.ReadEvent
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() && len(events) < 1000 {
+		pcHex, idHex, _ := strings.Cut(scanner.Text(), " ")
+		pc, _ := hex.DecodeString(pcHex)
+		id, _ := hex.DecodeString(idHex)
+		events = append(events, llrp.ReadEvent{ID: id, PC: pc})
+	}
+	f.Close()
+	names := make([]string, 0, len(AvailableEngines))
+	for name := range AvailableEngines {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	for _, name := range names {
+		for _, n := range []int{100, 1000, 10000} {
+			engine := AvailableEngines[name](LoadSubscriptionsFromCSVFile(filepath.Join(dir, fmt.Sprintf("subs-%d.v1.csv", n))))
+			matches := 0
+			for _, re := range events {
+				if _, uris, err := engine.Search(re); err == nil && len(uris) > 0 {
+					matches++
+				}
+			}
+			b.Run(fmt.Sprintf("engine=%s/subs=%d", name, n), func(b *testing.B) {
+				b.ReportAllocs()
+				for i := 0; i < b.N; i++ {
+					for _, re := range events {
+						_, _, _ = engine.Search(re)
+					}
+				}
+				b.ReportMetric(float64(matches), "matches/op")
+			})
+		}
+	}
+}

@@ -1,0 +1,48 @@
+package tdt
+
+import (
+	"bufio"
+	"encoding/hex"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+	"testing"
+)
+
+// BenchmarkTranslate translates the shared tags with v1's Core.Translate,
+// which returns the EPC Pure Identity URI (#11 baseline).
+func BenchmarkTranslate(b *testing.B) {
+	dir := os.Getenv("TAGSTRAK_BENCH_DATA")
+	if dir == "" {
+		b.Skip("TAGSTRAK_BENCH_DATA is not set")
+	}
+	f, err := os.Open(filepath.Join(dir, "tags.txt"))
+	if err != nil {
+		b.Fatal(err)
+	}
+	defer f.Close()
+	type tag struct{ pc, id []byte }
+	var tags []tag
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() && len(tags) < 1000 {
+		pcHex, idHex, _ := strings.Cut(scanner.Text(), " ")
+		pc, _ := hex.DecodeString(pcHex)
+		id, _ := hex.DecodeString(idHex)
+		tags = append(tags, tag{pc, id})
+	}
+	core := NewCore()
+	for _, t := range tags {
+		if _, err := core.Translate(t.pc, t.id); err != nil {
+			b.Fatalf("%x: %v", t.id, err)
+		}
+	}
+	b.Run(fmt.Sprintf("tags=%d", len(tags)), func(b *testing.B) {
+		b.ReportAllocs()
+		for i := 0; i < b.N; i++ {
+			for _, t := range tags {
+				_, _ = core.Translate(t.pc, t.id)
+			}
+		}
+	})
+}
