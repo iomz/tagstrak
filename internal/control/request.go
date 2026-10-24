@@ -65,7 +65,8 @@ func ReadJSON(w http.ResponseWriter, r *http.Request, limit int64, v any) bool {
 	dec := json.NewDecoder(bytes.NewReader(body))
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(v); err != nil {
-		WriteError(w, http.StatusBadRequest, "invalid_json", err.Error(), "")
+		// A fixed message: decoder errors can repeat request content.
+		WriteError(w, http.StatusBadRequest, "invalid_json", "request body is not a valid JSON document for this endpoint", "")
 		return false
 	}
 	if _, err := dec.Token(); !errors.Is(err, io.EOF) {
