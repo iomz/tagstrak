@@ -5,14 +5,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
-	"net"
-	"net/http"
-	"os"
 	"path/filepath"
 	"sync/atomic"
 	"time"
 
+	"github.com/iomz/tagstrak/v2/internal/control"
 	"github.com/iomz/tagstrak/v2/internal/emulator"
 )
 
@@ -49,6 +48,7 @@ func (c Config) Validate() error {
 type App struct {
 	config  Config
 	server  *emulator.Server
+	logger  *slog.Logger
 	started atomic.Bool
 }
 
@@ -62,7 +62,10 @@ func New(config Config, scenario *emulator.Scenario, clock emulator.Clock, rando
 	if err != nil {
 		return nil, err
 	}
-	return &App{config: config, server: server}, nil
+	if logger == nil {
+		logger = slog.New(slog.NewTextHandler(io.Discard, nil))
+	}
+	return &App{config: config, server: server, logger: logger}, nil
 }
 
 // Status returns a race-safe snapshot of the emulator's operational state.
@@ -80,27 +83,24 @@ func (a *App) Run(ctx context.Context) error {
 	if a.config.ControlSocket == "" {
 		return a.server.Run(ctx)
 	}
-	directory, err := os.Stat(filepath.Dir(a.config.ControlSocket))
+	listener, transport, err := control.Listen(control.ListenConfig{Socket: a.config.ControlSocket})
 	if err != nil {
+		if errors.Is(err, control.ErrConfig) {
+			return fmt.Errorf("%w: %w", emulator.ErrConfig, err)
+		}
 		return err
 	}
-	if !directory.IsDir() || directory.Mode().Perm()&0077 != 0 {
-		return fmt.Errorf("%w: control parent must be a private directory (0700)", emulator.ErrConfig)
-	}
-	listener, err := net.Listen("unix", a.config.ControlSocket)
+	// Four connections preserve golemu's original local-control budget.
+	controlServer, err := control.New(listener, transport, a.control(), control.ServerConfig{MaxConns: 4, Logger: a.logger})
 	if err != nil {
-		return err
-	}
-	defer listener.Close()
-	if err = os.Chmod(a.config.ControlSocket, 0600); err != nil {
+		_ = listener.Close()
 		return err
 	}
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
-	httpServer := &http.Server{Handler: a.control(), ReadHeaderTimeout: 2 * time.Second, ReadTimeout: 5 * time.Second, WriteTimeout: 5 * time.Second, IdleTimeout: 5 * time.Second, MaxHeaderBytes: 8192}
 	controlDone := make(chan error, 1)
 	dataDone := make(chan error, 1)
-	go func() { controlDone <- httpServer.Serve(&controlListener{Listener: listener}) }()
+	go func() { controlDone <- controlServer.Serve() }()
 	go func() { dataDone <- a.server.Run(ctx) }()
 	var result error
 	var dataFinished, controlFinished bool
@@ -115,9 +115,9 @@ func (a *App) Run(ctx context.Context) error {
 	cancel()
 	shutdown, cancelShutdown := context.WithTimeout(context.Background(), a.config.ShutdownTimeout)
 	defer cancelShutdown()
-	if err := httpServer.Shutdown(shutdown); err != nil {
+	if err := controlServer.Shutdown(shutdown); err != nil {
 		result = errors.Join(result, err)
-		_ = httpServer.Close()
+		_ = controlServer.Close()
 	}
 	if !dataFinished {
 		if err := <-dataDone; err != nil && !errors.Is(err, context.Canceled) {
@@ -125,7 +125,7 @@ func (a *App) Run(ctx context.Context) error {
 		}
 	}
 	if !controlFinished {
-		if err := <-controlDone; err != nil && !errors.Is(err, http.ErrServerClosed) {
+		if err := <-controlDone; err != nil && !control.IsClosed(err) {
 			result = errors.Join(result, err)
 		}
 	}

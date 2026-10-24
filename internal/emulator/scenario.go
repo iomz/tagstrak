@@ -29,6 +29,9 @@ type Scenario struct {
 	shuffle bool
 }
 
+// Cycles reports how many inventory cycles the scenario holds.
+func (s *Scenario) Cycles() int { return len(s.cycles) }
+
 // NewScenario validates all cycles before publishing a scenario. MaxTags bounds
 // total records across cycles, including repeated tags in different cycles.
 func NewScenario(cycles [][]inventory.Tag, seed int64, repeat, shuffle bool) (*Scenario, error) {
