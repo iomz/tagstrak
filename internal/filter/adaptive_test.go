@@ -77,7 +77,7 @@ func (h *harness) call(t *testing.T, n int) {
 func (h *harness) selected() string { return h.m.Stats().Selected }
 
 func TestAdaptiveSwitchesAfterWarmup(t *testing.T) {
-	cfg := filter.AdaptiveConfig{SampleEvery: 10, Warmup: 3, Window: 3, Hysteresis: 0.1, Cooldown: 1}
+	cfg := filter.AdaptiveConfig{SampleEvery: 10, Warmup: 3, Window: 3, Hysteresis: 0.1, Cooldown: 1, OverheadBudget: 1}
 	h := newHarness(t, cfg, map[string]time.Duration{"a": 100, "b": 50}, "a", "b")
 	h.call(t, 29) // two sampled calls: b has only two samples
 	if h.selected() != "a" {
@@ -101,7 +101,7 @@ func TestAdaptiveHysteresis(t *testing.T) {
 		{90, false}, // exactly the threshold: must be more than 10% cheaper
 		{89, true},
 	} {
-		cfg := filter.AdaptiveConfig{SampleEvery: 10, Warmup: 1, Window: 1, Hysteresis: 0.1, Cooldown: 1}
+		cfg := filter.AdaptiveConfig{SampleEvery: 10, Warmup: 1, Window: 1, Hysteresis: 0.1, Cooldown: 1, OverheadBudget: 1}
 		h := newHarness(t, cfg, map[string]time.Duration{"a": 100, "b": tc.cost}, "a", "b")
 		h.call(t, 100)
 		if got := h.selected() == "b"; got != tc.switch_ {
@@ -111,7 +111,7 @@ func TestAdaptiveHysteresis(t *testing.T) {
 }
 
 func TestAdaptiveCooldown(t *testing.T) {
-	cfg := filter.AdaptiveConfig{SampleEvery: 10, Warmup: 1, Window: 1, Hysteresis: 0.1, Cooldown: 5}
+	cfg := filter.AdaptiveConfig{SampleEvery: 10, Warmup: 1, Window: 1, Hysteresis: 0.1, Cooldown: 5, OverheadBudget: 1}
 	h := newHarness(t, cfg, map[string]time.Duration{"a": 100, "b": 50}, "a", "b")
 	h.call(t, 10) // first sampled call switches to b
 	if h.selected() != "b" {
@@ -129,7 +129,7 @@ func TestAdaptiveCooldown(t *testing.T) {
 }
 
 func TestAdaptiveRoundRobinShadows(t *testing.T) {
-	cfg := filter.AdaptiveConfig{SampleEvery: 10, Warmup: 1000, Window: 1}
+	cfg := filter.AdaptiveConfig{SampleEvery: 10, Warmup: 1000, Window: 1, OverheadBudget: 1}
 	h := newHarness(t, cfg, map[string]time.Duration{"a": 1, "b": 1, "c": 1}, "a", "b", "c")
 	h.call(t, 100) // ten sampled calls
 	samples := map[string]uint64{}
@@ -158,7 +158,7 @@ func TestAdaptiveFullShadow(t *testing.T) {
 // TestAdaptiveShadowNeverTouchesDst checks shadow results go to the
 // matcher's own scratch, not into spare capacity of the caller's buffer.
 func TestAdaptiveShadowNeverTouchesDst(t *testing.T) {
-	cfg := filter.AdaptiveConfig{SampleEvery: 10, Warmup: 1000, Window: 1}
+	cfg := filter.AdaptiveConfig{SampleEvery: 10, Warmup: 1000, Window: 1, OverheadBudget: 1}
 	h := newHarness(t, cfg, map[string]time.Duration{"a": 1, "b": 1}, "a", "b")
 	buf := make([]filter.ID, 0, 4)
 	full := buf[:4]
@@ -197,6 +197,8 @@ func TestCompileAdaptiveRejectsBadConfig(t *testing.T) {
 		{"negative cooldown", "cooldown", func(c *filter.AdaptiveConfig) { c.Cooldown = -1 }},
 		{"hysteresis of one", "hysteresis 1", func(c *filter.AdaptiveConfig) { c.Hysteresis = 1 }},
 		{"negative hysteresis", "hysteresis -0.1", func(c *filter.AdaptiveConfig) { c.Hysteresis = -0.1 }},
+		{"zero budget", "overhead_budget 0", func(c *filter.AdaptiveConfig) { c.OverheadBudget = 0 }},
+		{"budget over one", "overhead_budget 1.5", func(c *filter.AdaptiveConfig) { c.OverheadBudget = 1.5 }},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			cfg := filter.DefaultAdaptiveConfig(append([]filter.Candidate(nil), two...)...)
@@ -215,10 +217,30 @@ func TestCompileAdaptiveRejectsBadConfig(t *testing.T) {
 	}
 }
 
+// TestAdaptiveOverheadBudget checks that once warm, a far slower candidate
+// is shadowed only as often as the budget allows, yet keeps being observed.
+func TestAdaptiveOverheadBudget(t *testing.T) {
+	cfg := filter.AdaptiveConfig{SampleEvery: 10, Warmup: 2, Window: 2, Hysteresis: 0.1, Cooldown: 1, OverheadBudget: 0.05}
+	h := newHarness(t, cfg, map[string]time.Duration{"fast": 10, "slow": 10000}, "fast", "slow")
+	const calls = 100000
+	h.call(t, calls)
+	st := h.m.Stats()
+	// The budget is checked before a shadow runs, so one shadow may overshoot.
+	if limit := time.Duration(0.05*10*calls) + 10000; st.ShadowTime > limit {
+		t.Fatalf("shadow time %v exceeds the budget %v", st.ShadowTime, limit)
+	}
+	if st.SkippedShadows == 0 || st.Candidates[1].Samples <= uint64(cfg.Warmup) {
+		t.Fatalf("stats %+v: want skipped shadows and continued samples of slow", st)
+	}
+	if st.Selected != "fast" || st.Switches != 0 {
+		t.Fatalf("stats %+v, want fast kept", st)
+	}
+}
+
 // TestAdaptiveZeroCooldownIsKept checks an explicit zero is not replaced by
 // the default: without cooldown the controller may switch straight back.
 func TestAdaptiveZeroCooldownIsKept(t *testing.T) {
-	cfg := filter.AdaptiveConfig{SampleEvery: 10, Warmup: 1, Window: 1, Hysteresis: 0.1, Cooldown: 0}
+	cfg := filter.AdaptiveConfig{SampleEvery: 10, Warmup: 1, Window: 1, Hysteresis: 0.1, Cooldown: 0, OverheadBudget: 1}
 	h := newHarness(t, cfg, map[string]time.Duration{"a": 100, "b": 50}, "a", "b")
 	h.call(t, 10)
 	*h.costs["a"] = 10
@@ -237,7 +259,7 @@ func TestAdaptiveConcurrentMatch(t *testing.T) {
 	}
 	m, err := filter.CompileAdaptive(subs, filter.AdaptiveConfig{
 		Candidates:  []filter.Candidate{{Name: "linear", Compile: filter.CompileLinear}, {Name: "index", Compile: filter.CompileIndex}},
-		SampleEvery: 10, Warmup: 1, Window: 5, Cooldown: 1,
+		SampleEvery: 10, Warmup: 1, Window: 5, Cooldown: 1, OverheadBudget: 1,
 	})
 	if err != nil {
 		t.Fatal(err)

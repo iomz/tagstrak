@@ -221,6 +221,9 @@ func matcherCompiler(f configfile.File) (filter.Compiler, error) {
 	if a.Hysteresis != nil {
 		cfg.Hysteresis = *a.Hysteresis
 	}
+	if a.OverheadBudget != nil {
+		cfg.OverheadBudget = *a.OverheadBudget
+	}
 	if a.Experimental != nil {
 		cfg.Experimental = *a.Experimental
 	}

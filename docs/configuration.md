@@ -40,7 +40,7 @@ YAML 1.1 parsers resolve unquoted scalars implicitly, which can turn a GS1 compa
 | `[control]` | `socket` or `address`, and `token` (a secret source, required for `address`) |
 | `[subscription_store]` | `source` (`"file"` or `"api"`) and, for `"api"`, an absolute `state_file` |
 | `[filter]` | `mode` (`"single"`, the default, or the experimental `"adaptive"`) and, in single mode, `matcher` (`"index"`, the default, or `"linear"`) |
-| `[filter.adaptive]` | adaptive mode only: `candidates`, `sample_every`, `warmup`, `window`, `hysteresis`, `cooldown`, `shadow` (`"sampled"` or `"full"`), `experimental` |
+| `[filter.adaptive]` | adaptive mode only: `candidates`, `sample_every`, `warmup`, `window`, `hysteresis`, `cooldown`, `overhead_budget`, `shadow` (`"sampled"` or `"full"`), `experimental` |
 | `[[destinations]]` | `name`, `url`, `headers.<Header-Name>` secret sources |
 | `[[subscriptions]]` | `id`, `patterns`, optional `destinations` |
 

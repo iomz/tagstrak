@@ -261,6 +261,7 @@ func TestPipelineAdaptiveMode(t *testing.T) {
 		"sampling too dense":               {SampleEvery: ptr(5)},
 		"full shadow without experimental": {Shadow: ptr(configfile.ShadowFull)},
 		"one candidate":                    {Candidates: []string{configfile.MatcherIndex}},
+		"budget over one":                  {OverheadBudget: ptr(1.5)},
 	} {
 		_, err := Pipeline(file(a), DefaultConfig(), noLookup, nil)
 		var fe *FieldError
