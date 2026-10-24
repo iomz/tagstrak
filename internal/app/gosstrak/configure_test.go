@@ -270,6 +270,19 @@ func TestPipelineAdaptiveMode(t *testing.T) {
 		}
 	}
 
+	// Files built in code skip Load's validation; Pipeline must not trust them.
+	for field, f := range map[string]configfile.File{
+		"filter.matcher":                {Version: configfile.Version, Filter: configfile.Filter{Matcher: ptr("splay")}},
+		"filter.mode":                   {Version: configfile.Version, Filter: configfile.Filter{Mode: ptr("auto")}},
+		"filter.adaptive.candidates[1]": file(configfile.FilterAdaptive{Candidates: []string{"index", "splay"}}),
+	} {
+		_, err := Pipeline(f, DefaultConfig(), noLookup, nil)
+		var fe *FieldError
+		if !errors.As(err, &fe) || fe.Field != field {
+			t.Errorf("%s: err = %v, want a field error", field, err)
+		}
+	}
+
 	assembly, err := Pipeline(file(configfile.FilterAdaptive{SampleEvery: ptr(10), Warmup: ptr(1), Window: ptr(1)}), DefaultConfig(), noLookup, nil)
 	if err != nil {
 		t.Fatal(err)

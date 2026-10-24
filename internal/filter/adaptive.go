@@ -3,6 +3,7 @@ package filter
 import (
 	"errors"
 	"fmt"
+	"math"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -113,10 +114,12 @@ func (c AdaptiveConfig) validate() error {
 	if c.Cooldown < 0 {
 		return fmt.Errorf("%w: negative cooldown", ErrAdaptiveConfig)
 	}
-	if c.Hysteresis < 0 || c.Hysteresis >= 1 {
+	// NaN fails every comparison, so it is rejected explicitly; TOML can
+	// spell it.
+	if math.IsNaN(c.Hysteresis) || c.Hysteresis < 0 || c.Hysteresis >= 1 {
 		return fmt.Errorf("%w: hysteresis %g is outside [0, 1)", ErrAdaptiveConfig, c.Hysteresis)
 	}
-	if !c.FullShadow && (c.OverheadBudget <= 0 || c.OverheadBudget > 1) {
+	if !c.FullShadow && (math.IsNaN(c.OverheadBudget) || c.OverheadBudget <= 0 || c.OverheadBudget > 1) {
 		return fmt.Errorf("%w: overhead_budget %g is outside (0, 1]", ErrAdaptiveConfig, c.OverheadBudget)
 	}
 	return nil

@@ -2,6 +2,7 @@ package filter_test
 
 import (
 	"errors"
+	"math"
 	"slices"
 	"strings"
 	"sync"
@@ -199,6 +200,9 @@ func TestCompileAdaptiveRejectsBadConfig(t *testing.T) {
 		{"negative hysteresis", "hysteresis -0.1", func(c *filter.AdaptiveConfig) { c.Hysteresis = -0.1 }},
 		{"zero budget", "overhead_budget 0", func(c *filter.AdaptiveConfig) { c.OverheadBudget = 0 }},
 		{"budget over one", "overhead_budget 1.5", func(c *filter.AdaptiveConfig) { c.OverheadBudget = 1.5 }},
+		{"NaN hysteresis", "hysteresis NaN", func(c *filter.AdaptiveConfig) { c.Hysteresis = math.NaN() }},
+		{"NaN budget", "overhead_budget NaN", func(c *filter.AdaptiveConfig) { c.OverheadBudget = math.NaN() }},
+		{"infinite budget", "overhead_budget +Inf", func(c *filter.AdaptiveConfig) { c.OverheadBudget = math.Inf(1) }},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			cfg := filter.DefaultAdaptiveConfig(append([]filter.Candidate(nil), two...)...)
