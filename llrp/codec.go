@@ -222,47 +222,73 @@ func EncodeParameters(parameters []Parameter, limits Limits) ([]byte, error) {
 // DecodeParameters parses bounded TLV and known fixed-width TV parameters.
 // Unknown TLV parameters are preserved. Unknown TV parameters are rejected
 // because their length is implicit and cannot be safely skipped.
+//
+// Every returned Data is a copy, so the result does not alias data.
 func DecodeParameters(data []byte, limits Limits) ([]Parameter, error) {
+	var parameters []Parameter
+	err := walkParameters(data, limits, func(p Parameter) error {
+		p.Data = append([]byte(nil), p.Data...)
+		parameters = append(parameters, p)
+		return nil
+	})
+	if err != nil {
+		return nil, err
+	}
+	if parameters == nil {
+		parameters = []Parameter{}
+	}
+	return parameters, nil
+}
+
+// walkParameters validates and visits each parameter in data. Data in the
+// visited Parameter is a view into data, valid only during the call; this is
+// what lets report decoding avoid copying every nested payload.
+func walkParameters(data []byte, limits Limits, visit func(Parameter) error) error {
 	limits = limits.normalized()
-	parameters := make([]Parameter, 0, minInt(len(data)/4, limits.MaxParameters))
+	count := 0
 	for len(data) > 0 {
-		if len(parameters) >= limits.MaxParameters {
-			return nil, ErrParameterLimit
+		if count >= limits.MaxParameters {
+			return ErrParameterLimit
 		}
+		count++
 		if data[0]&0x80 != 0 {
 			typeID := uint16(data[0] & 0x7f)
 			total, ok := tvParameterSize(typeID)
 			if !ok {
-				return nil, fmt.Errorf("%w: type %d", ErrUnsupportedParameter, typeID)
+				return fmt.Errorf("%w: type %d", ErrUnsupportedParameter, typeID)
 			}
 			if total > len(data) {
-				return nil, ErrParameterTruncated
+				return ErrParameterTruncated
 			}
 			if total > int(limits.MaxParameterSize) {
-				return nil, ErrParameterTooLarge
+				return ErrParameterTooLarge
 			}
-			parameters = append(parameters, Parameter{Type: typeID, TV: true, Data: append([]byte(nil), data[1:total]...)})
+			if err := visit(Parameter{Type: typeID, TV: true, Data: data[1:total:total]}); err != nil {
+				return err
+			}
 			data = data[total:]
 			continue
 		}
 		if len(data) < 4 {
-			return nil, ErrParameterTruncated
+			return ErrParameterTruncated
 		}
 		typeID := binary.BigEndian.Uint16(data[0:2]) & 0x03ff
 		length := int(binary.BigEndian.Uint16(data[2:4]))
 		if length < 4 {
-			return nil, fmt.Errorf("%w: parameter length %d", ErrParameterTruncated, length)
+			return fmt.Errorf("%w: parameter length %d", ErrParameterTruncated, length)
 		}
 		if length > int(limits.MaxParameterSize) {
-			return nil, ErrParameterTooLarge
+			return ErrParameterTooLarge
 		}
 		if length > len(data) {
-			return nil, ErrParameterTruncated
+			return ErrParameterTruncated
 		}
-		parameters = append(parameters, Parameter{Type: typeID, Data: append([]byte(nil), data[4:length]...)})
+		if err := visit(Parameter{Type: typeID, Data: data[4:length:length]}); err != nil {
+			return err
+		}
 		data = data[length:]
 	}
-	return parameters, nil
+	return nil
 }
 
 func tvParameterSize(typeID uint16) (int, bool) {
@@ -277,11 +303,4 @@ var tvParameterSizes = map[uint16]int{
 	8:  3,  // TAG_SEEN_COUNT
 	12: 3,  // C1G2_PC
 	13: 13, // EPC_DATA with 96-bit EPC
-}
-
-func minInt(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
 }
