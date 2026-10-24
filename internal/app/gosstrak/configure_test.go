@@ -163,6 +163,7 @@ func TestPipelineRejectsMisconfiguration(t *testing.T) {
 		{"unusable URL", configfile.File{Destinations: []configfile.Destination{{Name: "erp", URL: "ftp://erp.example/"}}}, "destinations[0].url"},
 		{"bad destination name", configfile.File{Destinations: []configfile.Destination{{Name: "e r p", URL: "https://erp.example/"}}}, "destination name"},
 		{"missing secret", configfile.File{Destinations: []configfile.Destination{{Name: "erp", URL: "https://erp.example/", Headers: map[string]configfile.SecretSource{"Authorization": {Env: "ERP_TOKEN"}}}}}, "destinations[0].headers.Authorization"},
+		{"invalid header name", configfile.File{Destinations: []configfile.Destination{{Name: "erp", URL: "https://erp.example/", Headers: map[string]configfile.SecretSource{"Bad Header": {Env: "ERP_TOKEN"}}}}}, `"Bad Header" is not a valid header name`},
 		{"bad report bounds", configfile.File{Report: configfile.Report{QueueCapacity: ptr(0)}, Destinations: []configfile.Destination{dest}}, "report:"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -175,5 +176,30 @@ func TestPipelineRejectsMisconfiguration(t *testing.T) {
 				t.Fatalf("error leaks a credential: %v", err)
 			}
 		})
+	}
+}
+
+// TestPipelineRejectsHeaderInjection checks that a secret able to split a
+// header line fails startup, and that the error does not carry the secret.
+func TestPipelineRejectsHeaderInjection(t *testing.T) {
+	for _, value := range []string{"t0ken\r\nX-Injected: 1", "t0ken\n", "t0\x00ken", "t0\x7fken"} {
+		f := configfile.File{Version: configfile.Version, Destinations: []configfile.Destination{{
+			Name: "erp", URL: "https://erp.example/",
+			Headers: map[string]configfile.SecretSource{"Authorization": {Env: "ERP_TOKEN"}},
+		}}}
+		_, _, err := Pipeline(f, func(string) (string, bool) { return value, true }, nil)
+		if err == nil || !strings.Contains(err.Error(), "control characters") {
+			t.Errorf("%q: err = %v", value, err)
+		} else if strings.Contains(err.Error(), "t0") {
+			t.Errorf("%q: error leaks the secret: %v", value, err)
+		}
+	}
+	// A horizontal tab is legal inside a header value.
+	f := configfile.File{Version: configfile.Version, Destinations: []configfile.Destination{{
+		Name: "erp", URL: "https://erp.example/",
+		Headers: map[string]configfile.SecretSource{"X-Token": {Env: "T"}},
+	}}}
+	if _, _, err := Pipeline(f, func(string) (string, bool) { return "a\tb", true }, nil); err != nil {
+		t.Fatalf("tab rejected: %v", err)
 	}
 }
