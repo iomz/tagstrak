@@ -1,7 +1,7 @@
 # Configuration
 
 Issue #10 slice 10a adds file and environment configuration to gosstrak in the v2 milestone tracked by #1.
-The [#10 design record](https://github.com/iomz/tagstrak/issues/10#issuecomment-6378251881) is the decision source; runtime management through a control API is slice 10b.
+The [#10 design record](https://github.com/iomz/tagstrak/issues/10#issuecomment-6378251881) is the decision source; the management API is described in [control.md](control.md).
 
 ## Layers
 
@@ -37,6 +37,8 @@ YAML 1.1 parsers resolve unquoted scalars implicitly, which can turn a GS1 compa
 | `[telemetry]` | `address` |
 | `[runtime]` | `queue_capacity`, `consume_timeout`, `shutdown_timeout` |
 | `[report]` | `queue_capacity`, `batch_events`, `batch_bytes`, `flush_interval`, `request_timeout`, `max_attempts`, `backoff_base`, `backoff_max`, `retry_budget` |
+| `[control]` | `socket` or `address`, and `token` (a secret source, required for `address`) |
+| `[subscription_store]` | `source` (`"file"` or `"api"`) and, for `"api"`, an absolute `state_file` |
 | `[[destinations]]` | `name`, `url`, `headers.<Header-Name>` secret sources |
 | `[[subscriptions]]` | `id`, `patterns`, optional `destinations` |
 
@@ -47,6 +49,13 @@ Errors name the field, such as `subscriptions[1].patterns[0]`.
 A subscription's `destinations` are its routes; one without destinations is matched and logged at debug level only.
 Routes must name configured destinations.
 A destination URL must not carry user information; credentials go in header secrets.
+
+## Subscription source and reload
+
+With `[subscription_store] source = "file"`, the default, the file's `[[subscriptions]]` are the truth and `SIGHUP` re-reads them; destinations, secrets, and other settings change only on restart.
+With `source = "api"`, the file must list no subscriptions; gosstrak loads and writes `state_file` and the management API replaces them.
+The design record names this setting `subscriptions.source`; it lives in `[subscription_store]` because `subscriptions` is already the array of subscription tables.
+See [control.md](control.md) for both modes.
 
 ## Secrets
 

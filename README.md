@@ -16,6 +16,7 @@ Modern Go stack for LLRP-based RFID, combining reusable protocol tooling, gosstr
 - `internal/filter`: subscription matching over translated tags
 - `internal/report`: bounded report delivery and destination adapters
 - `internal/config`: versioned configuration file and redacted secret sources
+- `internal/control`: hardened management transport shared by both commands
 - `internal/gosstrak`: gosstrak application packages
 
 ## Legacy import
@@ -47,6 +48,11 @@ See [docs/filter.md](docs/filter.md) for the matcher contract, conformance, and 
 
 Matches are delivered as JSON batches over HTTP through bounded per-destination queues with bounded retries.
 See [docs/report.md](docs/report.md) for the delivery contract, bounds, and wire schema.
+
+## Management and security
+
+An optional management API on a private Unix socket or authenticated loopback TCP reads status and replaces subscriptions.
+See [docs/control.md](docs/control.md) and the threat model in [docs/security.md](docs/security.md).
 
 ## Configuration
 

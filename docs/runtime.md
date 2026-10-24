@@ -124,7 +124,7 @@ Health remains live during reconnect and drain; readiness represents ingestion c
 State and connection-failure logs use structured `slog` fields.
 Per-frame state changes are debug-level to avoid turning tag throughput into an info-log flood.
 The telemetry server defaults to loopback and has no mutation endpoints or authentication.
-Bind it to a trusted operations network; authenticated management is separate work.
+Bind it to a trusted operations network; authenticated management is the separate control listener in [control.md](control.md), which binds before the reader dials and shuts down within the same deadline.
 
 ## Design evaluation
 
