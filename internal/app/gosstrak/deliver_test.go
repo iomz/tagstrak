@@ -13,7 +13,6 @@ import (
 	"time"
 
 	configfile "github.com/iomz/tagstrak/v2/internal/config"
-	"github.com/iomz/tagstrak/v2/internal/identity"
 	"github.com/iomz/tagstrak/v2/internal/inventory"
 	"github.com/iomz/tagstrak/v2/internal/report"
 	"github.com/iomz/tagstrak/v2/internal/tdt"
@@ -49,15 +48,6 @@ func (f *fakeDelivery) Close(context.Context) error {
 }
 func (f *fakeDelivery) Stats() []report.Stats {
 	return []report.Stats{{Destination: "hook", Delivered: 3, QueueCapacity: 10}}
-}
-
-func mustPattern(t *testing.T, text string) identity.Pattern {
-	t.Helper()
-	p, err := tdt.CompilePattern(text)
-	if err != nil {
-		t.Fatal(err)
-	}
-	return p
 }
 
 func TestEventOfRendersStandardsBackedValues(t *testing.T) {

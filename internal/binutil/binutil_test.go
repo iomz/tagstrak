@@ -188,7 +188,7 @@ func TestParse6BinRuneSliceToRune(t *testing.T) {
 			if got, err := Parse6BinRuneSliceToRune(tt.args.r); got != tt.want {
 				t.Errorf("Parse6BinRuneSliceToRune() = %c, want %c", got, tt.want)
 			} else if err != nil {
-				t.Errorf(err.Error())
+				t.Error(err)
 			}
 		})
 	}

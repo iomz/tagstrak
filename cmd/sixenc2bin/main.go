@@ -20,5 +20,5 @@ func main() {
 	if len(os.Args) < 1 {
 		fmt.Println("Must pass a string input")
 	}
-	fmt.Printf(string(sixenc2bin([]rune(os.Args[1]))))
+	fmt.Print(string(sixenc2bin([]rune(os.Args[1]))))
 }
