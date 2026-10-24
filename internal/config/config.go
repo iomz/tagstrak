@@ -84,17 +84,50 @@ func (f File) SubscriptionSource() string {
 	return *f.Store.Source
 }
 
-// Matchers a file may select.
+// Matchers a file may select, and filter modes.
 const (
 	MatcherIndex  = "index"
 	MatcherLinear = "linear"
+	ModeSingle    = "single"
+	ModeAdaptive  = "adaptive"
+	ShadowSampled = "sampled"
+	ShadowFull    = "full"
 )
 
-// Filter selects the subscription matcher. Both honour the same contract;
-// "index", the default, looks candidates up by pattern prefix, and "linear"
-// tests every subscription and is the reference.
+// Filter selects the subscription matcher. Every matcher honours the same
+// contract. In "single" mode, the default, matcher picks one: "index", the
+// default, looks candidates up by pattern prefix, and "linear" tests every
+// subscription and is the reference. "adaptive" mode is experimental: it
+// compiles several candidates and selects among them by sampled cost.
 type Filter struct {
-	Matcher *string `toml:"matcher" json:"matcher"`
+	Mode     *string        `toml:"mode" json:"mode"`
+	Matcher  *string        `toml:"matcher" json:"matcher"`
+	Adaptive FilterAdaptive `toml:"adaptive" json:"adaptive"`
+}
+
+// FilterAdaptive configures adaptive mode. Omitted fields take the filter
+// package defaults, and the filter package checks the bounds.
+type FilterAdaptive struct {
+	Candidates   []string `toml:"candidates" json:"candidates"`
+	SampleEvery  *int     `toml:"sample_every" json:"sample_every"`
+	Warmup       *int     `toml:"warmup" json:"warmup"`
+	Window       *int     `toml:"window" json:"window"`
+	Hysteresis   *float64 `toml:"hysteresis" json:"hysteresis"`
+	Cooldown     *int     `toml:"cooldown" json:"cooldown"`
+	Shadow       *string  `toml:"shadow" json:"shadow"`
+	Experimental *bool    `toml:"experimental" json:"experimental"`
+}
+
+func (a FilterAdaptive) set() bool {
+	return a.Candidates != nil || a.SampleEvery != nil || a.Warmup != nil || a.Window != nil || a.Hysteresis != nil || a.Cooldown != nil || a.Shadow != nil || a.Experimental != nil
+}
+
+// FilterMode returns the configured mode, "single" by default.
+func (f File) FilterMode() string {
+	if f.Filter.Mode == nil {
+		return ModeSingle
+	}
+	return *f.Filter.Mode
 }
 
 // FilterMatcher returns the configured matcher, "index" by default.
@@ -272,8 +305,32 @@ func (f File) validate() error {
 	default:
 		return fmt.Errorf("subscription_store.source %q must be %q or %q", source, SourceFile, SourceAPI)
 	}
-	if m := f.FilterMatcher(); m != MatcherIndex && m != MatcherLinear {
-		return fmt.Errorf("filter.matcher %q must be %q or %q", m, MatcherIndex, MatcherLinear)
+	return f.Filter.validate(f.FilterMode(), f.FilterMatcher())
+}
+
+func (flt Filter) validate(mode, matcher string) error {
+	if matcher != MatcherIndex && matcher != MatcherLinear {
+		return fmt.Errorf("filter.matcher %q must be %q or %q", matcher, MatcherIndex, MatcherLinear)
+	}
+	switch mode {
+	case ModeSingle:
+		if flt.Adaptive.set() {
+			return errors.New("filter.adaptive applies only to mode \"adaptive\"")
+		}
+	case ModeAdaptive:
+		if flt.Matcher != nil {
+			return errors.New("filter.matcher applies only to mode \"single\"; adaptive mode uses filter.adaptive.candidates")
+		}
+		for i, c := range flt.Adaptive.Candidates {
+			if c != MatcherIndex && c != MatcherLinear {
+				return fmt.Errorf("filter.adaptive.candidates[%d] %q must be %q or %q", i, c, MatcherIndex, MatcherLinear)
+			}
+		}
+		if s := flt.Adaptive.Shadow; s != nil && *s != ShadowSampled && *s != ShadowFull {
+			return fmt.Errorf("filter.adaptive.shadow %q must be %q or %q", *s, ShadowSampled, ShadowFull)
+		}
+	default:
+		return fmt.Errorf("filter.mode %q must be %q or %q", mode, ModeSingle, ModeAdaptive)
 	}
 	return nil
 }

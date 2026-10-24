@@ -88,9 +88,9 @@ func Pipeline(f configfile.File, c Config, lookup func(string) (string, bool), l
 	for i, d := range f.Destinations {
 		names[i] = d.Name
 	}
-	compile := filter.CompileIndex
-	if f.FilterMatcher() == configfile.MatcherLinear {
-		compile = filter.CompileLinear
+	compile, err := matcherCompiler(f)
+	if err != nil {
+		return Assembly{}, err
 	}
 	table := NewSubscriptionTableWith(names, compile)
 	source := f.SubscriptionSource()
@@ -189,6 +189,46 @@ func ReloadFile(ctx context.Context, path string, table *SubscriptionTable, logg
 	}
 	audit("ok", "", after, len(f.Subscriptions))
 	return nil
+}
+
+// compilers maps the matcher names a file may use to their compilers.
+var compilers = map[string]filter.Compiler{
+	configfile.MatcherIndex:  filter.CompileIndex,
+	configfile.MatcherLinear: filter.CompileLinear,
+}
+
+// matcherCompiler returns the compiler a file's [filter] section selects.
+// Adaptive bounds belong to the filter package, so they are checked here by
+// compiling an empty set, before anything starts.
+func matcherCompiler(f configfile.File) (filter.Compiler, error) {
+	if f.FilterMode() == configfile.ModeSingle {
+		return compilers[f.FilterMatcher()], nil
+	}
+	a := f.Filter.Adaptive
+	names := a.Candidates
+	if names == nil {
+		names = []string{configfile.MatcherIndex, configfile.MatcherLinear}
+	}
+	cfg := filter.AdaptiveConfig{FullShadow: a.Shadow != nil && *a.Shadow == configfile.ShadowFull}
+	for _, name := range names {
+		cfg.Candidates = append(cfg.Candidates, filter.Candidate{Name: name, Compile: compilers[name]})
+	}
+	setInt(&cfg.SampleEvery, a.SampleEvery)
+	setInt(&cfg.Warmup, a.Warmup)
+	setInt(&cfg.Window, a.Window)
+	setInt(&cfg.Cooldown, a.Cooldown)
+	if a.Hysteresis != nil {
+		cfg.Hysteresis = *a.Hysteresis
+	} else {
+		cfg.Hysteresis = filter.DefaultHysteresis
+	}
+	if a.Experimental != nil {
+		cfg.Experimental = *a.Experimental
+	}
+	if _, err := filter.CompileAdaptive(nil, cfg); err != nil {
+		return nil, &FieldError{Field: "filter.adaptive", Err: err}
+	}
+	return cfg.Compiler(), nil
 }
 
 func buildDestinations(in []configfile.Destination, lookup func(string) (string, bool)) ([]report.Destination, error) {

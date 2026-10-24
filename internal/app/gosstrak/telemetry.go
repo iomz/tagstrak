@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/iomz/tagstrak/v2/internal/filter"
 	"github.com/iomz/tagstrak/v2/internal/reader"
 	"github.com/iomz/tagstrak/v2/internal/report"
 )
@@ -22,12 +23,21 @@ type Status struct {
 	Translated       uint64          `json:"translated"`
 	Untranslatable   uint64          `json:"untranslatable"`
 	Delivery         []report.Stats  `json:"delivery,omitempty"`
+	// Filter is present in adaptive filter mode. It covers the current
+	// subscription snapshot, so replacing subscriptions starts it over.
+	Filter *filter.AdaptiveStats `json:"filter,omitempty"`
 }
 
 // translationCounter is implemented by consumers that translate observations,
 // so their counts can be reported without the App knowing how they work.
 type translationCounter interface {
 	Counts() (translated, untranslatable uint64)
+}
+
+// adaptiveStatsSource is implemented along the consumer chain when matching
+// may be adaptive.
+type adaptiveStatsSource interface {
+	AdaptiveStats() (filter.AdaptiveStats, bool)
 }
 
 func (a *App) Status() Status {
@@ -45,6 +55,11 @@ func (a *App) Status() Status {
 	}
 	if a.delivery != nil {
 		status.Delivery = a.delivery.Stats()
+	}
+	if source, ok := a.consumer.(adaptiveStatsSource); ok {
+		if st, ok := source.AdaptiveStats(); ok {
+			status.Filter = &st
+		}
 	}
 	return status
 }
@@ -74,6 +89,18 @@ func (a *App) Handler() http.Handler {
 			label := fmt.Sprintf("{destination=%q}", d.Destination)
 			_, _ = fmt.Fprintf(w, "gosstrak_report_enqueued_total%s %d\ngosstrak_report_delivered_total%s %d\ngosstrak_report_dropped_total%s %d\ngosstrak_report_failed_total%s %d\ngosstrak_report_undelivered_total%s %d\ngosstrak_report_retries_total%s %d\ngosstrak_report_queue_depth%s %d\ngosstrak_report_queue_capacity%s %d\n",
 				label, d.Enqueued, label, d.Delivered, label, d.Dropped, label, d.Failed, label, d.Undelivered, label, d.Retries, label, d.QueueDepth, label, d.QueueCapacity)
+		}
+		// Candidate names come from the configuration's fixed vocabulary.
+		// Counters cover the current subscription snapshot and restart from
+		// zero when subscriptions are replaced.
+		if f := s.Filter; f != nil {
+			_, _ = fmt.Fprintf(w, "gosstrak_filter_adaptive_sampled_total %d\ngosstrak_filter_adaptive_switches_total %d\ngosstrak_filter_adaptive_shadow_seconds_total %g\n",
+				f.SampledCalls, f.Switches, f.ShadowTime.Seconds())
+			for _, c := range f.Candidates {
+				label := fmt.Sprintf("{candidate=%q}", c.Name)
+				_, _ = fmt.Fprintf(w, "gosstrak_filter_adaptive_selected%s %d\ngosstrak_filter_adaptive_samples_total%s %d\ngosstrak_filter_adaptive_mean_cost_seconds%s %g\n",
+					label, boolInt(c.Name == f.Selected), label, c.Samples, label, c.MeanCost.Seconds())
+			}
 		}
 	})
 	return mux

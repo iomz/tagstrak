@@ -2,7 +2,9 @@ package gosstrak
 
 import (
 	"context"
+	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -241,5 +243,56 @@ func TestPipelineRejectsHeaderInjection(t *testing.T) {
 	}}}
 	if _, err := Pipeline(f, DefaultConfig(), func(string) (string, bool) { return "a\tb", true }, nil); err != nil {
 		t.Fatalf("tab rejected: %v", err)
+	}
+}
+
+// TestPipelineAdaptiveMode checks that adaptive mode builds an adaptive
+// matcher, rejects out-of-bounds settings before starting, and reports its
+// decisions in telemetry.
+func TestPipelineAdaptiveMode(t *testing.T) {
+	file := func(a configfile.FilterAdaptive) configfile.File {
+		return configfile.File{
+			Version:       configfile.Version,
+			Filter:        configfile.Filter{Mode: ptr(configfile.ModeAdaptive), Adaptive: a},
+			Subscriptions: []configfile.Subscription{{ID: "a", Patterns: []string{"urn:epc:idpat:sgtin:*.*.*"}}},
+		}
+	}
+	for name, a := range map[string]configfile.FilterAdaptive{
+		"sampling too dense":               {SampleEvery: ptr(5)},
+		"full shadow without experimental": {Shadow: ptr(configfile.ShadowFull)},
+		"one candidate":                    {Candidates: []string{configfile.MatcherIndex}},
+	} {
+		_, err := Pipeline(file(a), DefaultConfig(), noLookup, nil)
+		var fe *FieldError
+		if !errors.As(err, &fe) || fe.Field != "filter.adaptive" || !errors.Is(err, filter.ErrAdaptiveConfig) {
+			t.Errorf("%s: err = %v, want a filter.adaptive field error", name, err)
+		}
+	}
+
+	assembly, err := Pipeline(file(configfile.FilterAdaptive{SampleEvery: ptr(10), Warmup: ptr(1), Window: ptr(1)}), DefaultConfig(), noLookup, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := fmt.Sprintf("%T", assembly.Subscriptions.current.Load().matcher); got != "*filter.Adaptive" {
+		t.Fatalf("built %s, want *filter.Adaptive", got)
+	}
+	for range 20 {
+		if err := assembly.Consumer.Consume(context.Background(), observation(t, "3074257bf7194e4000001a85", 0x3000, true)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	a, err := New(config(), dialFunc(func(ctx context.Context, _, _ string) (net.Conn, error) { return nil, ctx.Err() }), assembly.Consumer, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if st := a.Status().Filter; st == nil || st.SampledCalls != 2 {
+		t.Fatalf("status filter %+v, want two sampled calls", st)
+	}
+	metrics := httptest.NewRecorder()
+	a.Handler().ServeHTTP(metrics, httptest.NewRequest(http.MethodGet, "/metrics", nil))
+	for _, want := range []string{"gosstrak_filter_adaptive_sampled_total 2\n", `gosstrak_filter_adaptive_selected{candidate="index"} `, `gosstrak_filter_adaptive_samples_total{candidate="linear"} `} {
+		if !strings.Contains(metrics.Body.String(), want) {
+			t.Fatalf("metrics lack %q:\n%s", want, metrics.Body.String())
+		}
 	}
 }
