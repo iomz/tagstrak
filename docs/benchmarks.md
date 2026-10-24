@@ -7,7 +7,7 @@ This page records the procedure and the interim results; 11c reruns it after #7 
 ## Procedure
 
 ```sh
-go run ./tools/benchrun -out results/<date>-<label> -count 10 -e2e-runs 10
+go run ./tools/benchrun -out results/2026-10-24-interim -count 10 -e2e-runs 10
 ```
 
 `tools/benchrun` does the following, and never modifies the `v1.0.0` tag:
@@ -19,6 +19,7 @@ go run ./tools/benchrun -out results/<date>-<label> -count 10 -e2e-runs 10
 5. Both `cmd/gosstrak` binaries are built and driven end to end over a real LLRP socket.
 6. `benchstat` compares the raw results, and `meta.json` records the run.
 
+Name the output directory by date and purpose; benchrun refuses to overwrite one.
 Run it on one otherwise idle machine.
 Results from different machines are not comparable.
 
@@ -127,4 +128,5 @@ The feeder sends all 90 reports as fast as the socket accepts them, so delivery 
 ## Side effects
 
 v1 creates `/var/tmp/gosstrak-fc-cache` on the host when it starts, and benchrun does not remove it.
-benchrun removes its temporary worktree, binaries, and datasets when it finishes; a run that is killed leaves the worktree behind, which `git worktree remove --force <path>` cleans up.
+benchrun removes its temporary worktree, binaries, and datasets when it finishes.
+An interrupt or SIGTERM stops its child processes and still removes the worktree; only SIGKILL leaves the worktree behind, which `git worktree remove --force <path>` cleans up.
