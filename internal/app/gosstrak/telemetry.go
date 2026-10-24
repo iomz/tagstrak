@@ -94,8 +94,8 @@ func (a *App) Handler() http.Handler {
 		// Counters cover the current subscription snapshot and restart from
 		// zero when subscriptions are replaced.
 		if f := s.Filter; f != nil {
-			_, _ = fmt.Fprintf(w, "gosstrak_filter_adaptive_sampled_total %d\ngosstrak_filter_adaptive_switches_total %d\ngosstrak_filter_adaptive_shadow_seconds_total %g\n",
-				f.SampledCalls, f.Switches, f.ShadowTime.Seconds())
+			_, _ = fmt.Fprintf(w, "gosstrak_filter_adaptive_sampled_total %d\ngosstrak_filter_adaptive_shadows_skipped_total %d\ngosstrak_filter_adaptive_switches_total %d\ngosstrak_filter_adaptive_shadow_seconds_total %g\n",
+				f.SampledCalls, f.SkippedShadows, f.Switches, f.ShadowTime.Seconds())
 			for _, c := range f.Candidates {
 				label := fmt.Sprintf("{candidate=%q}", c.Name)
 				_, _ = fmt.Fprintf(w, "gosstrak_filter_adaptive_selected%s %d\ngosstrak_filter_adaptive_samples_total%s %d\ngosstrak_filter_adaptive_mean_cost_seconds%s %g\n",

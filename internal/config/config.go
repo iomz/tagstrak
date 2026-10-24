@@ -108,18 +108,19 @@ type Filter struct {
 // FilterAdaptive configures adaptive mode. Omitted fields take the filter
 // package defaults, and the filter package checks the bounds.
 type FilterAdaptive struct {
-	Candidates   []string `toml:"candidates" json:"candidates"`
-	SampleEvery  *int     `toml:"sample_every" json:"sample_every"`
-	Warmup       *int     `toml:"warmup" json:"warmup"`
-	Window       *int     `toml:"window" json:"window"`
-	Hysteresis   *float64 `toml:"hysteresis" json:"hysteresis"`
-	Cooldown     *int     `toml:"cooldown" json:"cooldown"`
-	Shadow       *string  `toml:"shadow" json:"shadow"`
-	Experimental *bool    `toml:"experimental" json:"experimental"`
+	Candidates     []string `toml:"candidates" json:"candidates"`
+	SampleEvery    *int     `toml:"sample_every" json:"sample_every"`
+	Warmup         *int     `toml:"warmup" json:"warmup"`
+	Window         *int     `toml:"window" json:"window"`
+	Hysteresis     *float64 `toml:"hysteresis" json:"hysteresis"`
+	Cooldown       *int     `toml:"cooldown" json:"cooldown"`
+	OverheadBudget *float64 `toml:"overhead_budget" json:"overhead_budget"`
+	Shadow         *string  `toml:"shadow" json:"shadow"`
+	Experimental   *bool    `toml:"experimental" json:"experimental"`
 }
 
 func (a FilterAdaptive) set() bool {
-	return a.Candidates != nil || a.SampleEvery != nil || a.Warmup != nil || a.Window != nil || a.Hysteresis != nil || a.Cooldown != nil || a.Shadow != nil || a.Experimental != nil
+	return a.Candidates != nil || a.SampleEvery != nil || a.Warmup != nil || a.Window != nil || a.Hysteresis != nil || a.Cooldown != nil || a.OverheadBudget != nil || a.Shadow != nil || a.Experimental != nil
 }
 
 // FilterMode returns the configured mode, "single" by default.

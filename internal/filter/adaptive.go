@@ -18,6 +18,9 @@ const (
 	DefaultWindow      = 50
 	DefaultHysteresis  = 0.10
 	DefaultCooldown    = 500
+	// DefaultOverheadBudget caps shadow time at 5% of the selected
+	// candidate's estimated matching time once every candidate is warm.
+	DefaultOverheadBudget = 0.05
 )
 
 // ErrAdaptiveConfig reports an adaptive configuration outside its bounds.
@@ -47,6 +50,13 @@ type AdaptiveConfig struct {
 	// Cooldown is how many sampled calls must pass after a switch before
 	// the next one.
 	Cooldown int
+	// OverheadBudget bounds shadow time, once every candidate has finished
+	// warmup, to this fraction of the selected candidate's estimated total
+	// matching time (its mean cost times calls). A sampled call whose shadow
+	// would exceed it times only the selected candidate. Without it, sampling
+	// a candidate a thousand times slower costs ten times the matching at a
+	// 1% rate.
+	OverheadBudget float64
 	// FullShadow runs every candidate on every call. It multiplies matching
 	// cost by the candidate count, so it requires Experimental.
 	FullShadow   bool
@@ -60,12 +70,13 @@ type AdaptiveConfig struct {
 // candidates.
 func DefaultAdaptiveConfig(candidates ...Candidate) AdaptiveConfig {
 	return AdaptiveConfig{
-		Candidates:  candidates,
-		SampleEvery: DefaultSampleEvery,
-		Warmup:      DefaultWarmup,
-		Window:      DefaultWindow,
-		Hysteresis:  DefaultHysteresis,
-		Cooldown:    DefaultCooldown,
+		Candidates:     candidates,
+		SampleEvery:    DefaultSampleEvery,
+		Warmup:         DefaultWarmup,
+		Window:         DefaultWindow,
+		Hysteresis:     DefaultHysteresis,
+		Cooldown:       DefaultCooldown,
+		OverheadBudget: DefaultOverheadBudget,
 	}
 }
 
@@ -105,6 +116,9 @@ func (c AdaptiveConfig) validate() error {
 	if c.Hysteresis < 0 || c.Hysteresis >= 1 {
 		return fmt.Errorf("%w: hysteresis %g is outside [0, 1)", ErrAdaptiveConfig, c.Hysteresis)
 	}
+	if !c.FullShadow && (c.OverheadBudget <= 0 || c.OverheadBudget > 1) {
+		return fmt.Errorf("%w: overhead_budget %g is outside (0, 1]", ErrAdaptiveConfig, c.OverheadBudget)
+	}
 	return nil
 }
 
@@ -131,6 +145,7 @@ type Adaptive struct {
 	matchers []Matcher
 	every    uint64
 	full     bool
+	budget   float64
 	now      func() time.Time
 
 	selected atomic.Int32
@@ -141,6 +156,7 @@ type Adaptive struct {
 	nextShadow int
 	scratch    []ID // receives shadow results, so they never touch dst
 	sampled    uint64
+	skipped    uint64 // sampled calls whose shadow the budget skipped
 	shadowTime time.Duration
 }
 
@@ -157,10 +173,11 @@ func CompileAdaptive(subscriptions []Subscription, cfg AdaptiveConfig) (*Adaptiv
 		cfg.Now = time.Now
 	}
 	a := &Adaptive{
-		every: uint64(cfg.SampleEvery),
-		full:  cfg.FullShadow,
-		now:   cfg.Now,
-		ctl:   newController(len(cfg.Candidates), cfg),
+		every:  uint64(cfg.SampleEvery),
+		full:   cfg.FullShadow,
+		budget: cfg.OverheadBudget,
+		now:    cfg.Now,
+		ctl:    newController(len(cfg.Candidates), cfg),
 		// Sized so that typical shadow runs never allocate in Match.
 		scratch: make([]ID, 0, 16),
 	}
@@ -182,7 +199,12 @@ func (a *Adaptive) Match(s Subject, dst []ID) []ID {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	sel := a.ctl.selected
-	shadow := a.pickShadow(sel)
+	shadow := -1
+	if a.full || !a.ctl.warm() || a.withinBudget(sel) {
+		shadow = a.pickShadow(sel)
+	} else {
+		a.skipped++
+	}
 	// Alternate which runs first, so neither side always gets the warm
 	// cache for the subject.
 	selectedFirst := a.sampled%2 == 0
@@ -215,6 +237,13 @@ func (a *Adaptive) timed(c int, s Subject, dst []ID, shadow bool) []ID {
 	return dst
 }
 
+// withinBudget reports whether shadow time so far is within the budget of
+// the selected candidate's estimated matching time.
+func (a *Adaptive) withinBudget(sel int) bool {
+	estimated := float64(a.ctl.mean(sel)) * float64(a.calls.Load())
+	return float64(a.shadowTime) <= a.budget*estimated
+}
+
 // pickShadow returns the next non-selected candidate, round-robin. Under
 // full shadow every non-selected candidate runs instead.
 func (a *Adaptive) pickShadow(sel int) int {
@@ -234,6 +263,9 @@ type AdaptiveStats struct {
 	Selected     string
 	Switches     uint64
 	SampledCalls uint64
+	// SkippedShadows counts sampled calls that timed only the selected
+	// candidate because a shadow would have exceeded the overhead budget.
+	SkippedShadows uint64
 	// ShadowTime is the matching time spent on shadow candidates, the cost
 	// of adaptivity beyond clock reads.
 	ShadowTime time.Duration
@@ -253,10 +285,11 @@ func (a *Adaptive) Stats() AdaptiveStats {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 	st := AdaptiveStats{
-		Selected:     a.names[a.ctl.selected],
-		Switches:     a.ctl.switches,
-		SampledCalls: a.sampled,
-		ShadowTime:   a.shadowTime,
+		Selected:       a.names[a.ctl.selected],
+		Switches:       a.ctl.switches,
+		SampledCalls:   a.sampled,
+		SkippedShadows: a.skipped,
+		ShadowTime:     a.shadowTime,
 	}
 	for c, name := range a.names {
 		st.Candidates = append(st.Candidates, CandidateStats{Name: name, Samples: a.ctl.counts[c], MeanCost: a.ctl.mean(c)})
@@ -305,6 +338,16 @@ func (c *controller) observe(candidate int, cost time.Duration) {
 	c.next[candidate] = (c.next[candidate] + 1) % len(ring)
 }
 
+// warm reports whether every candidate has finished warmup.
+func (c *controller) warm() bool {
+	for _, n := range c.counts {
+		if n < uint64(c.warmup) {
+			return false
+		}
+	}
+	return true
+}
+
 func (c *controller) mean(candidate int) time.Duration {
 	ring := c.rings[candidate]
 	if len(ring) == 0 {
@@ -322,10 +365,8 @@ func (c *controller) mean(candidate int) time.Duration {
 // and the cheapest beats the selected one by more than the hysteresis.
 func (c *controller) decide() (int, bool) {
 	c.sinceSwitch++
-	for _, n := range c.counts {
-		if n < uint64(c.warmup) {
-			return c.selected, false
-		}
+	if !c.warm() {
+		return c.selected, false
 	}
 	if c.switches > 0 && c.sinceSwitch <= c.cooldown {
 		return c.selected, false

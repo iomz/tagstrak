@@ -117,6 +117,9 @@ Every `Match` returns the selected candidate's result; candidates agree on every
 It starts no goroutines.
 Every `sample_every`-th call (default 100) also runs one other candidate, round-robin, and times both, alternating which runs first.
 Shadow results go to the matcher's own buffer and never reach the caller.
+Once every candidate has finished warmup, a sampled call runs its shadow only while total shadow time stays within `overhead_budget` of the selected candidate's mean cost times the calls so far; otherwise it times only the selected candidate.
+Without that budget, sampling a candidate 2,000 times slower at a 1% rate would cost 20 times the matching itself: at 10,000 subscriptions, an early version took 2.7 µs per tag against the index's 126 ns.
+With it, the slow candidate is still observed, only less often, so a workload change can still surface it.
 Unsampled calls read the selection atomically; only sampled calls take a lock.
 
 | Setting | Default | Bound | Effect |
@@ -127,13 +130,14 @@ Unsampled calls read the selection atomically; only sampled calls take a lock.
 | `window` | 50 | 1 to 1,000 | recent samples per candidate a decision averages |
 | `hysteresis` | 0.10 | [0, 1) | how much cheaper a challenger must be, as a fraction |
 | `cooldown` | 500 | at least 0 | sampled calls after a switch before the next |
+| `overhead_budget` | 0.05 | (0, 1] | once every candidate is warm, shadow time may not exceed this fraction of the selected candidate's estimated matching time |
 | `shadow` | `"sampled"` | | `"full"` runs every candidate on every call and needs `experimental = true` |
 
 Memory is bounded by the candidate count times one compiled matcher under the 10,000-subscription budget, plus a fixed window per candidate.
 A subscription replacement compiles a new adaptive matcher, so warmup and statistics start over.
 With today's two candidates and the workloads above, the controller is expected to settle on the index; the remaining #7 slice measures what adaptivity costs and how stable its choices are.
 
-Telemetry reports the decisions for the current snapshot: `gosstrak_filter_adaptive_{sampled,switches}_total`, `gosstrak_filter_adaptive_shadow_seconds_total`, and per `candidate` label `gosstrak_filter_adaptive_selected`, `gosstrak_filter_adaptive_samples_total`, and `gosstrak_filter_adaptive_mean_cost_seconds`.
+Telemetry reports the decisions for the current snapshot: `gosstrak_filter_adaptive_{sampled,shadows_skipped,switches}_total`, `gosstrak_filter_adaptive_shadow_seconds_total`, and per `candidate` label `gosstrak_filter_adaptive_selected`, `gosstrak_filter_adaptive_samples_total`, and `gosstrak_filter_adaptive_mean_cost_seconds`.
 `/healthz` and `/readyz` include the same under `filter`.
 
 ### Candidates not built
