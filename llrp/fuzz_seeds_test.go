@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-// frameOfLength returns an ROAccessReport frame whose header claims length
+// frameOfLength returns an rOAccessReport frame whose header claims length
 // and whose body is padded with zeros to actual bytes in total.
 func frameOfLength(length uint32, actual int) []byte {
 	frame := make([]byte, max(actual, 10))

@@ -66,7 +66,7 @@ func TestReadWriteMessage(t *testing.T) {
 }
 
 func TestDecodeParametersPreservesTLVAndKnownTV(t *testing.T) {
-	input := append([]byte{0, 240, 0, 6, 1, 2}, C1G2PC(0x3000)...)
+	input := append([]byte{0, 240, 0, 6, 1, 2}, c1G2PC(0x3000)...)
 	got, err := DecodeParameters(input, DefaultLimits())
 	if err != nil {
 		t.Fatal(err)
