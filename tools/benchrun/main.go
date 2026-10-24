@@ -32,6 +32,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"slices"
 	"strings"
@@ -99,6 +100,11 @@ func run(out string, s settings) error {
 	if err != nil {
 		return err
 	}
+	// The go command resolves symlinks in package directories (/var is
+	// /private/var on macOS), and overlay paths must match what it resolves.
+	if worktree, err = filepath.EvalSymlinks(worktree); err != nil {
+		return err
+	}
 	_ = os.Remove(worktree)
 	step("creating the " + v1Tag + " worktree")
 	if err := command("", nil, io.Discard, "git", "worktree", "add", "--detach", worktree, v1Tag); err != nil {
@@ -117,6 +123,9 @@ func run(out string, s settings) error {
 	}); err != nil {
 		return err
 	}
+	if err := requireBenchmarks(filepath.Join(out, "v2.txt")); err != nil {
+		return err
+	}
 
 	step("benchmarking " + v1Tag)
 	overlay, err := writeOverlay(out, worktree)
@@ -126,6 +135,9 @@ func run(out string, s settings) error {
 	if err := toFile(filepath.Join(out, "v1.txt"), func(w io.Writer) error {
 		return command(worktree, env, w, "go", append(append(bench, "-overlay", overlay), "./llrp", "./internal/gosstrak/tdt", "./internal/gosstrak/filtering")...)
 	}); err != nil {
+		return err
+	}
+	if err := requireBenchmarks(filepath.Join(out, "v1.txt")); err != nil {
 		return err
 	}
 
@@ -186,6 +198,22 @@ func toFile(path string, f func(io.Writer) error) error {
 	}
 	defer file.Close()
 	return f(file)
+}
+
+// requireBenchmarks fails unless every shared harness benchmark produced
+// results, so a harness that silently did not run cannot yield a one-sided
+// comparison.
+func requireBenchmarks(path string) error {
+	body, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	for _, name := range []string{"DecodeReport", "Translate", "TranslateAndMatch"} {
+		if !regexp.MustCompile(`(?m)^Benchmark` + name + `/`).Match(body) {
+			return fmt.Errorf("%s: no Benchmark%s results", path, name)
+		}
+	}
+	return nil
 }
 
 // metadata records what #11 requires to interpret a run.
