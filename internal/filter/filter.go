@@ -77,7 +77,9 @@ type Subject struct {
 }
 
 // Matcher reports which subscriptions a subject matches. Implementations are
-// immutable and safe for concurrent use.
+// safe for concurrent use, and their results depend only on the subscriptions
+// they were compiled from. Single matchers are immutable; an Adaptive changes
+// only which candidate computes the result.
 type Matcher interface {
 	// Match appends the IDs of matching subscriptions to dst, in
 	// subscription order, and returns the extended slice.
