@@ -32,13 +32,16 @@ func (a *App) control() http.Handler {
 		if err = r.Context().Err(); err != nil {
 			return
 		}
-		if err = a.server.Replace(scenario); err != nil {
+		after, err := a.server.ReplaceRevision(scenario)
+		if err != nil {
 			control.Audit(a.logger, r, "scenario.replace", "rejected", slog.String("error_code", "invalid_scenario"), slog.Uint64("revision_before", before))
 			control.WriteError(w, http.StatusBadRequest, "invalid_scenario", "invalid scenario", "")
 			return
 		}
+		// Both revisions come from the replacement itself, so overlapping
+		// requests cannot record each other's revisions.
 		control.Audit(a.logger, r, "scenario.replace", "ok",
-			slog.Uint64("revision_before", before), slog.Uint64("revision_after", a.Status().Revision), slog.Int("count", scenario.Cycles()))
+			slog.Uint64("revision_before", after-1), slog.Uint64("revision_after", after), slog.Int("count", scenario.Cycles()))
 		w.WriteHeader(http.StatusNoContent)
 	})
 	return mux

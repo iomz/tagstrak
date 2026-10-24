@@ -166,11 +166,12 @@ func (c *Catalog) snapshot() (*Scenario, uint64) {
 	defer c.mu.RUnlock()
 	return c.scenario, c.revision
 }
-func (c *Catalog) replace(s *Scenario) {
+func (c *Catalog) replace(s *Scenario) uint64 {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	c.scenario = s
 	c.revision++
+	return c.revision
 }
 
 // Cursor is owned by one connection. A new revision resets its cycle and RNG at
