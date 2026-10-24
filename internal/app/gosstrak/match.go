@@ -2,8 +2,10 @@ package gosstrak
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"log/slog"
+	"sync/atomic"
 
 	"github.com/iomz/tagstrak/v2/internal/filter"
 	"github.com/iomz/tagstrak/v2/internal/inventory"
@@ -26,26 +28,39 @@ func SubjectOf(translation tdt.Translation) filter.Subject {
 }
 
 // MatchingProcessor matches each translated observation against the current
-// subscriptions. Delivering matches is issue #9; until it exists, matches are
-// logged at debug level.
+// subscriptions, logs the result at debug level, and, when configured with
+// DeliverTo, enqueues one report event per destination its matches route to.
 type MatchingProcessor struct {
 	subscriptions *filter.Set
 	logger        *slog.Logger
+
+	delivery Delivery
+	routes   Routes
+	instance string
+	sequence atomic.Uint64
 }
 
 // NewMatchingProcessor builds a processor around a subscription set. A nil set
 // matches nothing, and a nil logger discards output.
-func NewMatchingProcessor(subscriptions *filter.Set, logger *slog.Logger) *MatchingProcessor {
+func NewMatchingProcessor(subscriptions *filter.Set, logger *slog.Logger, options ...ProcessorOption) (*MatchingProcessor, error) {
 	if subscriptions == nil {
 		subscriptions = &filter.Set{}
 	}
 	if logger == nil {
 		logger = slog.New(slog.NewTextHandler(io.Discard, nil))
 	}
-	return &MatchingProcessor{subscriptions: subscriptions, logger: logger}
+	p := &MatchingProcessor{subscriptions: subscriptions, logger: logger}
+	for _, option := range options {
+		if err := option(p); err != nil {
+			return nil, err
+		}
+	}
+	return p, nil
 }
 
-// Process matches one translation.
+// Process matches one translation and hands any routed matches to delivery.
+// Enqueueing never blocks; a full destination queue drops and counts the
+// event there, so a slow destination cannot stall ingestion.
 func (p *MatchingProcessor) Process(ctx context.Context, observation inventory.Observation, translation tdt.Translation) error {
 	if err := ctx.Err(); err != nil {
 		return err
@@ -57,6 +72,20 @@ func (p *MatchingProcessor) Process(ctx context.Context, observation inventory.O
 			"scheme", string(translation.Encoding.Scheme),
 			"identity", translation.Identity.Describe(),
 			"subscriptions", matched)
+	}
+	if p.delivery == nil || len(matched) == 0 {
+		return nil
+	}
+	order, byDestination := p.route(matched)
+	if len(order) == 0 {
+		return nil
+	}
+	// One ID per observation, shared by its events across destinations.
+	base := EventOf(fmt.Sprintf("%s:%d", p.instance, p.sequence.Add(1)), observation, translation)
+	for _, name := range order {
+		event := base
+		event.Subscriptions = byDestination[name]
+		p.delivery.Enqueue(name, event)
 	}
 	return nil
 }

@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/iomz/tagstrak/v2/internal/reader"
+	"github.com/iomz/tagstrak/v2/internal/report"
 )
 
 type Status struct {
@@ -20,6 +21,7 @@ type Status struct {
 	Abandoned        uint64          `json:"abandoned"`
 	Translated       uint64          `json:"translated"`
 	Untranslatable   uint64          `json:"untranslatable"`
+	Delivery         []report.Stats  `json:"delivery,omitempty"`
 }
 
 // translationCounter is implemented by consumers that translate observations,
@@ -40,6 +42,9 @@ func (a *App) Status() Status {
 		Draining: draining, Reader: s, QueueDepth: len(a.queue), QueueCapacity: cap(a.queue), Processed: a.processed.Load(), Abandoned: a.abandoned.Load()}
 	if counter, ok := a.consumer.(translationCounter); ok {
 		status.Translated, status.Untranslatable = counter.Counts()
+	}
+	if a.delivery != nil {
+		status.Delivery = a.delivery.Stats()
 	}
 	return status
 }
@@ -63,6 +68,13 @@ func (a *App) Handler() http.Handler {
 		w.Header().Set("Content-Type", "text/plain; version=0.0.4")
 		_, _ = fmt.Fprintf(w, "gosstrak_ready %d\ngosstrak_reader_attempts_total %d\ngosstrak_reader_reconnects_total %d\ngosstrak_reader_frames_total %d\ngosstrak_reader_reports_total %d\ngosstrak_reader_keepalives_total %d\ngosstrak_reader_failures_total %d\ngosstrak_queue_overflows_total %d\ngosstrak_observations_received_total %d\ngosstrak_observations_processed_total %d\ngosstrak_observations_abandoned_total %d\ngosstrak_observations_translated_total %d\ngosstrak_observations_untranslatable_total %d\ngosstrak_queue_depth %d\ngosstrak_queue_capacity %d\ngosstrak_reader_retry_delay_seconds %g\n",
 			boolInt(s.Ready), s.Reader.Attempts, s.Reader.Reconnects, s.Reader.Frames, s.Reader.Reports, s.Reader.Keepalives, s.Reader.Failures, s.Reader.QueueOverflows, s.Reader.Observations, s.Processed, s.Abandoned, s.Translated, s.Untranslatable, s.QueueDepth, s.QueueCapacity, s.Reader.RetryDelay.Seconds())
+		// Destination names are validated to a label-safe character set, and
+		// they stand in for addresses, which may carry credentials.
+		for _, d := range s.Delivery {
+			label := fmt.Sprintf("{destination=%q}", d.Destination)
+			_, _ = fmt.Fprintf(w, "gosstrak_report_enqueued_total%s %d\ngosstrak_report_delivered_total%s %d\ngosstrak_report_dropped_total%s %d\ngosstrak_report_failed_total%s %d\ngosstrak_report_undelivered_total%s %d\ngosstrak_report_retries_total%s %d\ngosstrak_report_queue_depth%s %d\ngosstrak_report_queue_capacity%s %d\n",
+				label, d.Enqueued, label, d.Delivered, label, d.Dropped, label, d.Failed, label, d.Undelivered, label, d.Retries, label, d.QueueDepth, label, d.QueueCapacity)
+		}
 	})
 	return mux
 }
