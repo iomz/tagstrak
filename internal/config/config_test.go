@@ -52,6 +52,9 @@ func TestFormatsDecodeIdentically(t *testing.T) {
 	if h := f.Destinations[0].Headers["Authorization"]; h.Env != "ERP_TOKEN" || h.Prefix != "Bearer " {
 		t.Fatalf("header source %+v", h)
 	}
+	if f.FilterMatcher() != MatcherLinear {
+		t.Fatalf("filter matcher %q", f.FilterMatcher())
+	}
 }
 
 func TestLoadRejectsMalformedFiles(t *testing.T) {
@@ -68,6 +71,7 @@ func TestLoadRejectsMalformedFiles(t *testing.T) {
 		{"inline secret", "c.toml", "version = 1\n[[destinations]]\nname = \"a\"\nurl = \"https://a\"\n[destinations.headers.Authorization]\nvalue = \"s3cret\"\n", "inline secret values are not allowed"},
 		{"two sources", "c.json", `{"version":1,"destinations":[{"name":"a","url":"https://a","headers":{"X":{"env":"A","file":"/b"}}}]}`, "not both"},
 		{"subscription without patterns", "c.toml", "version = 1\n[[subscriptions]]\nid = \"a\"\n", "subscriptions[0].patterns is required"},
+		{"unknown matcher", "c.toml", "version = 1\n[filter]\nmatcher = \"splay\"\n", `filter.matcher "splay" must be "index" or "linear"`},
 		{"destination without url", "c.json", `{"version":1,"destinations":[{"name":"a"}]}`, "destinations[0].url is required"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {

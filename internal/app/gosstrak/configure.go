@@ -11,6 +11,7 @@ import (
 
 	configfile "github.com/iomz/tagstrak/v2/internal/config"
 	"github.com/iomz/tagstrak/v2/internal/control"
+	"github.com/iomz/tagstrak/v2/internal/filter"
 	"github.com/iomz/tagstrak/v2/internal/report"
 	"github.com/iomz/tagstrak/v2/internal/report/httpreport"
 	"github.com/iomz/tagstrak/v2/internal/tdt"
@@ -87,7 +88,11 @@ func Pipeline(f configfile.File, c Config, lookup func(string) (string, bool), l
 	for i, d := range f.Destinations {
 		names[i] = d.Name
 	}
-	table := NewSubscriptionTable(names)
+	compile := filter.CompileIndex
+	if f.FilterMatcher() == configfile.MatcherLinear {
+		compile = filter.CompileLinear
+	}
+	table := NewSubscriptionTableWith(names, compile)
 	source := f.SubscriptionSource()
 	var store *StateStore
 	switch source {
