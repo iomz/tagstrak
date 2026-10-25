@@ -33,7 +33,7 @@ Tests also check that control and telemetry listeners stop accepting and that Un
 | --- | --- |
 | LLRP frames and parameters | `llrp.FuzzDecodeMessageNeverPanics`, `FuzzDecodeParametersNeverPanics`, `FuzzDecodeReadEventsNeverPanics` |
 | Configuration and state files | `config.FuzzDecodeTOML`, `FuzzDecodeJSON`, `FuzzDecodeState` |
-| Inventory files | `inventory.FuzzDecodeInventoryJSON`, `FuzzReadInventoryCSV` |
+| Inventory files | `inventory.FuzzDecodeInventoryJSON` |
 | golemu scenarios | `emulator.FuzzDecodeScenario` |
 | Control request bodies | `control.FuzzReadJSON` |
 | Patterns and identifiers | `tdt.FuzzCompilePattern`, `FuzzParseURI`, `FuzzTranslate` |

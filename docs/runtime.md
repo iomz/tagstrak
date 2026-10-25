@@ -143,7 +143,7 @@ Maintenance stays within standard-library runtime code and the existing domain/c
 ```sh
 go test -race ./...
 go vet ./...
-go build ./cmd/gosstrak ./cmd/golemu ./cmd/tagjson
+go build ./cmd/gosstrak ./cmd/golemu
 git diff --check
 ```
 
