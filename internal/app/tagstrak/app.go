@@ -19,6 +19,10 @@ import (
 
 var ErrDrainDeadline = errors.New("tagstrak: shutdown drain deadline exceeded")
 
+// ErrConfig reports an invalid application setting. Reader settings report
+// ErrConfig and control settings control.ErrConfig instead.
+var ErrConfig = errors.New("tagstrak: invalid configuration")
+
 // Consumer owns processing after reader ingestion. Consume must return when
 // ctx is canceled, must not retain mutable shared state without synchronization,
 // and must not start unowned goroutines. Errors are critical application failures.
@@ -45,16 +49,18 @@ func (c Config) Validate() error {
 	if err := c.Reader.Validate(); err != nil {
 		return err
 	}
-	if c.QueueCapacity < 1 || c.QueueCapacity > 100000 || c.ConsumeTimeout <= 0 || c.ShutdownTimeout <= 0 {
-		return fmt.Errorf("%w: invalid queue or application timeout", reader.ErrConfig)
+	switch {
+	case c.QueueCapacity < 1 || c.QueueCapacity > 100000:
+		return fmt.Errorf("%w: queue capacity %d outside 1-100000", ErrConfig, c.QueueCapacity)
+	case c.ConsumeTimeout <= 0:
+		return fmt.Errorf("%w: consume timeout must be positive", ErrConfig)
+	case c.ShutdownTimeout <= 0:
+		return fmt.Errorf("%w: shutdown timeout must be positive", ErrConfig)
 	}
 	if _, _, err := net.SplitHostPort(c.TelemetryAddress); err != nil {
-		return fmt.Errorf("%w: telemetry address: %v", reader.ErrConfig, err)
+		return fmt.Errorf("%w: telemetry address: %v", ErrConfig, err)
 	}
-	if err := c.Control.Validate(); err != nil {
-		return fmt.Errorf("%w: %w", reader.ErrConfig, err)
-	}
-	return nil
+	return c.Control.Validate()
 }
 
 type App struct {
@@ -94,7 +100,7 @@ func New(config Config, dialer reader.Dialer, consumer Consumer, logger *slog.Lo
 		return nil, err
 	}
 	if consumer == nil {
-		return nil, fmt.Errorf("%w: consumer is required", reader.ErrConfig)
+		return nil, fmt.Errorf("%w: consumer is required", ErrConfig)
 	}
 	session, err := reader.New(config.Reader, dialer, logger)
 	if err != nil {
@@ -109,14 +115,14 @@ func New(config Config, dialer reader.Dialer, consumer Consumer, logger *slog.Lo
 	}
 	if config.Control.Enabled() {
 		if a.control == nil {
-			return nil, fmt.Errorf("%w: control is configured, but the pipeline provides no control settings", reader.ErrConfig)
+			return nil, fmt.Errorf("%w: control is configured, but the pipeline provides no control settings", ErrConfig)
 		}
 		// Fail before any listener opens: TCP control is always authenticated.
 		if config.Control.Address != "" && len(a.control.Token) == 0 {
-			return nil, fmt.Errorf("%w: control address requires control.token", reader.ErrConfig)
+			return nil, fmt.Errorf("%w: control address requires control.token", ErrConfig)
 		}
 		if len(a.control.Token) > 0 && len(a.control.Token) < control.MinTokenBytes {
-			return nil, fmt.Errorf("%w: control token must be at least %d bytes", reader.ErrConfig, control.MinTokenBytes)
+			return nil, fmt.Errorf("%w: control token must be at least %d bytes", ErrConfig, control.MinTokenBytes)
 		}
 	}
 	return a, nil
