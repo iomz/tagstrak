@@ -53,3 +53,14 @@ jobs:
       # the end-to-end scenarios.
       - name: Test with race detector
         run: go test -race ./...
+
+  # The rig image copies the module at build time, so a broken Dockerfile
+  # shows up here rather than for the first person who builds it.
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build the tagstrak-rig image
+        run: docker build -f build/tagstrak-rig/Dockerfile -t tagstrak-rig .
+      - name: Run the image
+        run: docker run --rm tagstrak-rig uii epc --scheme sgtin-96 --company-prefix 0614141 --item-ref 812345 --serial 1

@@ -1,37 +1,29 @@
+# Builds the tagstrak-rig test rig. From the repository root:
+#
+#   docker build -f build/tagstrak-rig/Dockerfile -t tagstrak-rig .
+#   docker run --rm -p 5084:5084 tagstrak-rig simulator \
+#     --scenario /examples/scenario.json --listen 0.0.0.0:5084
 FROM golang:1.26.10-alpine AS build
+
+WORKDIR /src
+COPY go.mod go.sum ./
+RUN go mod download
+COPY . .
+RUN CGO_ENABLED=0 go build -trimpath -o /out/tagstrak-rig ./cmd/tagstrak-rig
+
+FROM alpine:3.24
 
 LABEL maintainer="Iori Mizutani <iori.mizutani@gmail.com>"
 
-# build the app
-RUN mkdir -p /build
-WORKDIR /build
-COPY go.mod .
-COPY go.sum .
-COPY cmd/tagstrak-rig cmd/tagstrak-rig
-COPY internal/app/rig internal/app/rig
-COPY internal/emulator internal/emulator
-COPY internal/inventory internal/inventory
-COPY internal/reader internal/reader
-COPY llrp llrp
-RUN go mod vendor
-RUN CGO_ENABLED=0 GOOS=linux go build -mod=vendor -o tagstrak-rig ./cmd/tagstrak-rig/...
-
-# export to a single layer image
-FROM alpine:3.24
-
-# install some required binaries; the ca-certificates floor excludes bundles
-# that still trust the compromised eMudhra intermediates (CVE-2026-111943)
+# The ca-certificates floor excludes bundles that still trust the compromised
+# eMudhra intermediates (CVE-2026-111943).
 RUN apk upgrade --no-cache && \
     apk add --no-cache 'ca-certificates>=20261020-r0' \
-    'ca-certificates-bundle>=20261020-r0' \
-    ffmpeg \
-    tzdata
+    'ca-certificates-bundle>=20261020-r0'
 
-WORKDIR /app
+COPY --from=build /out/tagstrak-rig /usr/local/bin/tagstrak-rig
+COPY examples/rig /examples
 
-COPY --from=build /build/tagstrak-rig /app/tagstrak-rig
-
-# set timezone
-ENV TZ "Asia/Tokyo"
-
-ENTRYPOINT ["/app/tagstrak-rig"]
+USER 65534:65534
+EXPOSE 5084
+ENTRYPOINT ["tagstrak-rig"]
