@@ -13,7 +13,7 @@ The architecture decision in #2 keeps tagstrak and tagstrak-rig as separate proc
 
 The runtime validates observations, translates them, matches them against subscriptions, delivers reports, and exposes accepted/processed/translated counts.
 The command's consumer is `internal/app/tagstrak.TranslatingConsumer`, which adapts each observation to the #8 translation boundary described in [tdt.md](tdt.md).
-Its processor, `MatchingProcessor`, matches each translation against the current `filter.Set` described in [filter.md](filter.md) and logs the identity and matched subscription IDs at debug level.
+Its processor, `MatchingProcessor`, matches each translation against the current subscriptions, compiled as described in [filter.md](filter.md), and logs the identity and matched subscription IDs at debug level.
 Configured with `DeliverTo`, it also enqueues one report event per routed destination; [report.md](report.md) describes delivery.
 Tags outside the supported standards are counted as untranslatable and dropped; any other translation error fails the consumer.
 Tags whose reader reports no protocol-control word are translated as GS1 EPC data by explicit configuration, never by guessing from the header.

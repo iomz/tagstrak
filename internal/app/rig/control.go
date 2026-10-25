@@ -32,7 +32,7 @@ func (a *App) control() http.Handler {
 		if err = r.Context().Err(); err != nil {
 			return
 		}
-		after, err := a.server.ReplaceRevision(scenario)
+		after, err := a.server.Replace(scenario)
 		if err != nil {
 			control.Audit(a.logger, r, "scenario.replace", "rejected", slog.String("error_code", "invalid_scenario"), slog.Uint64("revision_before", before))
 			control.WriteError(w, http.StatusBadRequest, "invalid_scenario", "invalid scenario", "")

@@ -65,17 +65,10 @@ func (s *Server) Status() Status {
 }
 func (s *Server) update(f func(*Status)) { s.mu.Lock(); defer s.mu.Unlock(); f(&s.status) }
 
-// Replace publishes a validated scenario. In-flight cycles finish their current
-// immutable snapshot; each client resets its cursor at its next cycle boundary.
-func (s *Server) Replace(scenario *Scenario) error {
-	_, err := s.ReplaceRevision(scenario)
-	return err
-}
-
-// ReplaceRevision is Replace that also returns the revision it published.
+// Replace publishes scenario and returns the revision it published.
 // Revisions increase by one per replacement under the catalog lock, so the
 // previous revision is the result minus one even when replacements overlap.
-func (s *Server) ReplaceRevision(scenario *Scenario) (uint64, error) {
+func (s *Server) Replace(scenario *Scenario) (uint64, error) {
 	if scenario == nil || len(scenario.cycles) == 0 {
 		return 0, ErrScenario
 	}

@@ -9,7 +9,6 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
-	"sync"
 	"testing"
 
 	"github.com/iomz/tagstrak/v2/internal/filter"
@@ -223,97 +222,6 @@ func TestCompileCopiesSubscriptions(t *testing.T) {
 			t.Fatalf("mutating the input changed the matcher: %v", got)
 		}
 	})
-}
-
-func TestSetZeroValueMatchesNothing(t *testing.T) {
-	var s filter.Set
-	if got := s.Match(subjectOf(translate(t, "urn:epc:tag:sgtin-96:3.0614141.812345.6789")), nil); got != nil {
-		t.Fatalf("got %v", got)
-	}
-	if s.Matcher().Len() != 0 {
-		t.Fatal("zero Set holds subscriptions")
-	}
-}
-
-func TestSetReplaceKeepsCurrentOnError(t *testing.T) {
-	p := compilePattern(t, "urn:epc:idpat:sgtin:*.*.*")
-	var s filter.Set
-	if err := s.Replace([]filter.Subscription{{ID: "a", Patterns: []identity.Pattern{p}}}); err != nil {
-		t.Fatal(err)
-	}
-	if err := s.Replace([]filter.Subscription{{ID: ""}}); !errors.Is(err, filter.ErrEmptyID) {
-		t.Fatalf("err = %v", err)
-	}
-	got := s.Match(subjectOf(translate(t, "urn:epc:tag:sgtin-96:3.0614141.812345.6789")), nil)
-	if !slices.Equal(got, []filter.ID{"a"}) {
-		t.Fatalf("failed replacement changed the set: %v", got)
-	}
-}
-
-// TestSetReplaceIsAtomic replaces between two subscription sets while readers
-// match. Every result must be exactly one set's result; a partial update would
-// show up as a mixture.
-func TestSetReplaceIsAtomic(t *testing.T) {
-	p := compilePattern(t, "urn:epc:idpat:sgtin:*.*.*")
-	build := func(prefix string, n int) []filter.Subscription {
-		subs := make([]filter.Subscription, n)
-		for i := range subs {
-			subs[i] = filter.Subscription{ID: filter.ID(fmt.Sprintf("%s%d", prefix, i)), Patterns: []identity.Pattern{p}}
-		}
-		return subs
-	}
-	a, b := build("a", 50), build("b", 70)
-	subject := subjectOf(translate(t, "urn:epc:tag:sgtin-96:3.0614141.812345.6789"))
-
-	var s filter.Set
-	if err := s.Replace(a); err != nil {
-		t.Fatal(err)
-	}
-	stop := make(chan struct{})
-	var readers sync.WaitGroup
-	errs := make(chan string, 4)
-	for range 4 {
-		readers.Add(1)
-		go func() {
-			defer readers.Done()
-			var buf []filter.ID
-			for {
-				select {
-				case <-stop:
-					return
-				default:
-				}
-				buf = s.Match(subject, buf[:0])
-				prefix := string(buf[0])[:1]
-				want := map[string]int{"a": 50, "b": 70}[prefix]
-				for _, id := range buf {
-					if !strings.HasPrefix(string(id), prefix) {
-						errs <- fmt.Sprintf("mixed result: %v", buf)
-						return
-					}
-				}
-				if len(buf) != want {
-					errs <- fmt.Sprintf("partial result: %d IDs from set %s", len(buf), prefix)
-					return
-				}
-			}
-		}()
-	}
-	for i := range 500 {
-		next := a
-		if i%2 == 0 {
-			next = b
-		}
-		if err := s.Replace(next); err != nil {
-			t.Fatal(err)
-		}
-	}
-	close(stop)
-	readers.Wait()
-	close(errs)
-	for e := range errs {
-		t.Error(e)
-	}
 }
 
 func TestMatchDoesNotAllocate(t *testing.T) {

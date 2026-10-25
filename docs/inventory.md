@@ -12,4 +12,3 @@ EPC is inventory identity; LLRP Protocol Control is derived only while encoding 
 
 Load limits cap total input at 16 MiB, records at 100,000, and EPCs at 62 bytes.
 Invalid versions, duplicate EPCs, unknown fields, malformed JSON, and malformed EPCs are rejected.
-Writes use same-directory temporary files, file sync, rename, and directory sync.
