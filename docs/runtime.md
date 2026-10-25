@@ -36,21 +36,21 @@ Use `--help` for all supported flags.
 Settings apply in order: defaults, the `--config` file, `TAGSTRAK_*` environment variables, then flags; see [configuration.md](configuration.md).
 V1 flags and behavior are not compatibility contracts.
 
-| Budget | Default | Behavior |
-| --- | --- | --- |
-| Connect timeout | 5 seconds | Bounds each dial, including DNS through `net.Dialer` |
-| Handshake timeout | 5 seconds | One absolute deadline for notification, config write, and response, including intervening keepalives |
-| Read timeout | 30 seconds | Bounds each complete frame, including a stalled partial payload |
-| Write timeout | 5 seconds | Bounds each complete config or keepalive ACK write |
-| Retry delays | 1–30 seconds | Deterministic exponential backoff capped at the maximum |
-| Reconnect budget | 5 | At most 6 connection attempts for the entire run; successful handshakes do not reset it |
-| Frame limit | 1 MiB | Rejects oversized advertised lengths before proportional allocation |
-| Parameter size/count | 32 KiB / 4,096 | Public codec limits per parameter/container, with total input bounded by frame size |
-| Observation queue | 128 | Full queue fails the run immediately; no hidden queue or retry |
-| Consumer timeout | 5 seconds | Context deadline for each observation |
-| Shutdown timeout | 10 seconds | Shared queue-drain and HTTP shutdown deadline |
-| Telemetry connections | 32 | Excess accepted connections close immediately |
-| HTTP headers | 8 KiB | Header budget plus 2-second header and 5-second request/write deadlines |
+| Budget | Default | Setting | Behavior |
+| --- | --- | --- | --- |
+| Connect timeout | 5 seconds | `--connect-timeout`, `[reader] connect_timeout` | Bounds each dial, including DNS through `net.Dialer` |
+| Handshake timeout | 5 seconds | `--handshake-timeout`, `[reader] handshake_timeout` | One absolute deadline for notification, config write, and response, including intervening keepalives |
+| Read timeout | 30 seconds | `--read-timeout`, `[reader] read_timeout` | Bounds each complete frame, including a stalled partial payload |
+| Write timeout | 5 seconds | `--write-timeout`, `[reader] write_timeout` | Bounds each complete config or keepalive ACK write |
+| Retry delays | 1–30 seconds | `--retry-min`, `--retry-max`, `[reader] retry_min`, `retry_max` | Deterministic exponential backoff capped at the maximum |
+| Reconnect budget | 5 | `--max-retries`, `[reader] max_retries` | At most 6 connection attempts for the entire run; successful handshakes do not reset it |
+| Frame limit | 1 MiB | `--max-frame-bytes`, `[reader] max_frame_bytes` | Rejects oversized advertised lengths before proportional allocation |
+| Parameter size/count | 32 KiB / 4,096 | `--max-parameter-bytes`, `--max-parameters`, `[reader] max_parameter_bytes`, `max_parameters` | Public codec limits per parameter/container, with total input bounded by frame size |
+| Observation queue | 128 | `--queue-capacity`, `[runtime] queue_capacity` (1–100,000) | Full queue fails the run immediately; no hidden queue or retry |
+| Consumer timeout | 5 seconds | `--consume-timeout`, `[runtime] consume_timeout` | Context deadline for each observation |
+| Shutdown timeout | 10 seconds | `--shutdown-timeout`, `[runtime] shutdown_timeout` | Shared queue-drain and HTTP shutdown deadline |
+| Telemetry connections | 32 | fixed | Excess accepted connections close immediately |
+| HTTP headers | 8 KiB | fixed | Header budget plus 2-second header and 5-second request/write deadlines |
 
 Queue capacity is bounded to 1–100,000 observations.
 Queue memory contains immutable EPC values of at most 62 bytes and bounded metadata; at most one decoded report batch is held alongside it.

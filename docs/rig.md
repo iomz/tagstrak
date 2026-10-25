@@ -77,7 +77,7 @@ go run ./cmd/tagstrak-rig uii epc --scheme sgtin-96 --company-prefix 0614141 --i
 
 `epc` takes `--scheme` (`sgtin-96`, `sscc-96`, `giai-96`, or `grai-96`), `--filter`, `--company-prefix`, and the scheme's fields: `--item-ref` and `--serial` for SGTIN, `--serial-ref` for SSCC, `--asset-type` and `--serial` for GRAI, and `--asset-ref` for GIAI.
 Fields left out are generated at random.
-`iso17360` generates an ISO/IEC 17360 transport unit from `--agency`, `--company`, `--serial`, and `--data-identifier`; `iso17363` validates a container code but refuses to write it, because its UII carriage is not established ([tdt.md](tdt.md)).
+`iso17360` generates an ISO/IEC 17360 transport unit from `--agency`, `--company`, `--serial`, and `--data-identifier`; `iso17363` takes an ISO 6346 container code as `--owner`, `--category`, and `--serial`, validates it and its check digit, but refuses to write it, because its UII carriage is not established ([tdt.md](tdt.md)).
 
 `--format bin` prints the EPC as bits.
 `--pattern` prints a subscription pattern and the bit prefix it pins instead; the first field left out and every field after it become stars:
@@ -155,24 +155,24 @@ Unsupported/reset configurations, invalid parameters, unexpected messages, wrong
 A peer-requested keepalive interval must fit below the configured read timeout minus ACK timeout.
 ROSpec management and physical RF propagation are outside this emulator subset.
 
-| Resource | Default | Bound or behavior |
-| --- | --- | --- |
-| LLRP clients | 8 | Configurable 1–128; excess clients close immediately |
-| Inbound queue | 1 frame per client | Reader blocks when full; no outbound queue |
-| Frame bytes | 1,500 | Configurable 128–1,048,576; shared codec rejects larger input before allocation |
-| Report interval | 1 second | Delay between completed cycles |
-| Keepalive interval | 10 seconds | Default if omitted by peer; next keepalive follows ACK |
-| ACK timeout | 5 seconds | Closes clients that do not acknowledge |
-| Handshake timeout | 5 seconds | Absolute deadline across notification, request, and response |
-| Read timeout | 30 seconds | Absolute deadline for each inbound frame, including partial input |
-| Write timeout | 5 seconds | Per control frame or entire report cycle, not per fragment |
-| Scenario input | 1 MiB | Applies to simulator files and control bodies |
-| Inventory input | 16 MiB | Existing inventory loader budget |
-| Scenario cycles | 1,024 | At least one cycle is required |
-| Total scenario tag records | 100,000 | Across all cycles; EPCs contain 2–62 even bytes |
-| Control connections | 4 | Excess connections close without a waiting queue |
-| HTTP deadlines | 2-second headers, 5-second read/write/idle | Header budget 8 KiB |
-| Control shutdown | 5 seconds | Configurable 10 ms–1 minute; force-close after deadline |
+| Resource | Default | Flag | Bound or behavior |
+| --- | --- | --- | --- |
+| LLRP clients | 8 | `--max-clients` | Configurable 1–128; excess clients close immediately |
+| Inbound queue | 1 frame per client | fixed | Reader blocks when full; no outbound queue |
+| Frame bytes | 1,500 | `--frame-bytes` | Configurable 128–1,048,576; shared codec rejects larger input before allocation |
+| Report interval | 1 second | `--report-interval` | Delay between completed cycles |
+| Keepalive interval | 10 seconds | `--keepalive-interval` | Default if omitted by peer; next keepalive follows ACK |
+| ACK timeout | 5 seconds | `--ack-timeout` | Closes clients that do not acknowledge |
+| Handshake timeout | 5 seconds | `--handshake-timeout` | Absolute deadline across notification, request, and response |
+| Read timeout | 30 seconds | `--read-timeout` | Absolute deadline for each inbound frame, including partial input |
+| Write timeout | 5 seconds | `--write-timeout` | Per control frame or entire report cycle, not per fragment |
+| Scenario input | 1 MiB | fixed | Applies to simulator files and control bodies |
+| Inventory input | 16 MiB | fixed | Existing inventory loader budget |
+| Scenario cycles | 1,024 | fixed | At least one cycle is required |
+| Total scenario tag records | 100,000 | fixed | Across all cycles; EPCs contain 2–62 even bytes |
+| Control connections | 4 | fixed | Excess connections close without a waiting queue |
+| HTTP deadlines | 2-second headers, 5-second read/write/idle | fixed | Header budget 8 KiB |
+| Control shutdown | 5 seconds | `--shutdown-timeout` | Configurable 10 ms–1 minute; force-close after deadline |
 
 All emulator durations must be 10 ms–1 hour.
 Read timeout must exceed the default keepalive interval plus ACK timeout.
