@@ -21,7 +21,7 @@ func env(vars map[string]string) func(string) (string, bool) {
 }
 
 func TestParseConfig(t *testing.T) {
-	c, file, err := parseConfig([]string{"start", "--reader", "localhost:5085", "--max-retries", "2", "--read-timeout", "4s"}, io.Discard, noEnv)
+	c, file, err := parseConfig([]string{"--reader", "localhost:5085", "--max-retries", "2", "--read-timeout", "4s"}, io.Discard, noEnv)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -31,7 +31,7 @@ func TestParseConfig(t *testing.T) {
 	if c.Reader.Address != "localhost:5085" || c.Reader.MaxRetries != 2 || c.Reader.ReadTimeout != 4*time.Second {
 		t.Fatalf("config: %+v", c)
 	}
-	for _, args := range [][]string{{"--queue-capacity", "0"}, {"--max-frame-bytes", "4294967296"}, {"--max-parameter-bytes", "65536"}, {"--max-parameters", "-1"}, {"--handshake-timeout", "0"}, {"--reader", "invalid"}, {"--max-retries", "-1"}, {"unexpected"}} {
+	for _, args := range [][]string{{"--queue-capacity", "0"}, {"--max-frame-bytes", "4294967296"}, {"--max-parameter-bytes", "65536"}, {"--max-parameters", "-1"}, {"--handshake-timeout", "0"}, {"--reader", "invalid"}, {"--max-retries", "-1"}, {"unexpected"}, {"start"}} {
 		if _, _, err := parseConfig(args, io.Discard, noEnv); err == nil {
 			t.Errorf("accepted %v", args)
 		}

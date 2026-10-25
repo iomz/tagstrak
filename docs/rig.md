@@ -1,6 +1,7 @@
-# Deterministic tagstrak-rig
+# tagstrak-rig
 
-Issue #6 replaces the legacy tagstrak-rig implementation with deterministic scenarios and one context-owned runtime for both workflows.
+tagstrak-rig is the test rig that comes with tagstrak: an LLRP reader emulator that plays deterministic scenarios, and a tag data generator.
+Issue #6 replaced the legacy golemu emulator with deterministic scenarios and one context-owned runtime for both workflows.
 `internal/emulator` owns scenario progression and LLRP serving.
 `internal/app/rig` composes the data plane with optional local control.
 The public `llrp` codec handles every frame, while `internal/inventory` owns EPC validation and inventory snapshots.
@@ -19,13 +20,12 @@ go run ./cmd/tagstrak-rig server \
 Connect the reader runtime in another terminal:
 
 ```sh
-go run ./cmd/tagstrak start \
+go run ./cmd/tagstrak \
   --reader 127.0.0.1:5084 \
   --telemetry 127.0.0.1:8080
 ```
 
-The reader exposes ingestion counts at `/metrics` and capability at `/readyz`.
-Tagstrak's current ingestion-only scope remains as documented in [runtime.md](runtime.md).
+tagstrak exposes its counts at `/metrics` and its reader state at `/readyz`; without a configuration file it matches and delivers nothing, so the counts show tags arriving and being translated ([runtime.md](runtime.md)).
 
 `server` loads an existing version-1 [inventory file](inventory.md) and turns it into one repeating cycle.
 Missing or invalid files fail startup.

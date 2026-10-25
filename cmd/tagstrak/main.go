@@ -1,4 +1,6 @@
-// Command tagstrak runs the v2 reader ingestion runtime.
+// Command tagstrak is the tagstrak RFID middleware: it reads tags from one LLRP
+// reader, translates them, matches them against subscriptions, and delivers
+// reports to HTTP destinations.
 package main
 
 import (
@@ -68,7 +70,7 @@ func newFlagSet(output io.Writer, s *settings) *flag.FlagSet {
 	fs.SetOutput(output)
 	bind(fs, s)
 	fs.Usage = func() {
-		fmt.Fprintf(output, "Usage: tagstrak [start] [flags]\n\nSettings apply in order: defaults, --config file, %s<FLAG> environment variables, flags.\n\n", envPrefix)
+		fmt.Fprintf(output, "Usage: tagstrak [flags]\n\nSettings apply in order: defaults, --config file, %s<FLAG> environment variables, flags.\n\n", envPrefix)
 		fs.PrintDefaults()
 	}
 	return fs
@@ -82,13 +84,10 @@ type loadedFile struct {
 }
 
 // parseConfig builds one immutable configuration from defaults, the optional
-// configuration file, the environment, and flags, in that order (#2). An
-// optional "start" subcommand is accepted and ignored. It returns the decoded
-// file, or nil without --config, for the pipeline's structured settings.
+// configuration file, the environment, and flags, in that order (#2). It
+// returns the decoded file, or nil without --config, for the pipeline's
+// structured settings.
 func parseConfig(args []string, output io.Writer, lookup func(string) (string, bool)) (app.Config, *loadedFile, error) {
-	if len(args) > 0 && args[0] == "start" {
-		args = args[1:]
-	}
 	// First pass: learn which flags were given explicitly, and the file.
 	first := settings{config: app.DefaultConfig()}
 	fs := newFlagSet(output, &first)
@@ -174,7 +173,7 @@ func run(ctx context.Context, args []string, stderr io.Writer, lookup func(strin
 		defer stop()
 	}
 	source := tdt.SourceInfo()
-	logger.Info("starting tagstrak", "mode", "ingestion", "reader", config.Reader.Address, "telemetry", config.TelemetryAddress,
+	logger.Info("starting tagstrak", "reader", config.Reader.Address, "telemetry", config.TelemetryAddress,
 		"subscriptions", len(file.Subscriptions), "subscription_source", assembly.Source, "destinations", len(file.Destinations),
 		"control", config.Control.Enabled(),
 		"tds_version", source.TDSVersion, "tdt_artefacts", source.Commit, "schemes", tdt.SupportedSchemes())

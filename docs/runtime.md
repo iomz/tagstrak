@@ -11,7 +11,7 @@ The architecture decision in #2 keeps tagstrak and tagstrak-rig as separate proc
 - `llrp` owns all wire framing and parameter decoding; it does not dial, retry, log, or close connections.
 - `internal/inventory.Observation` is the immutable domain handoff already established by #4.
 
-This milestone slice runs in **ingestion mode**: it validates observations, translates them, matches them against subscriptions, and exposes accepted/processed/translated counts.
+The runtime validates observations, translates them, matches them against subscriptions, delivers reports, and exposes accepted/processed/translated counts.
 The command's consumer is `internal/app/tagstrak.TranslatingConsumer`, which adapts each observation to the #8 translation boundary described in [tdt.md](tdt.md).
 Its processor, `MatchingProcessor`, matches each translation against the current `filter.Set` described in [filter.md](filter.md) and logs the identity and matched subscription IDs at debug level.
 Configured with `DeliverTo`, it also enqueues one report event per routed destination; [report.md](report.md) describes delivery.
@@ -25,14 +25,13 @@ The emulator lifecycle and scenarios implemented by #6 are documented in [rig.md
 ## Run
 
 ```sh
-go run ./cmd/tagstrak start \
+go run ./cmd/tagstrak \
   --reader 127.0.0.1:5084 \
   --source reader-1 \
   --telemetry 127.0.0.1:8080 \
   --max-retries 5
 ```
 
-`start` is optional.
 Use `--help` for all supported flags.
 Settings apply in order: defaults, the `--config` file, `TAGSTRAK_*` environment variables, then flags; see [configuration.md](configuration.md).
 V1 flags and behavior are not compatibility contracts.
@@ -119,7 +118,7 @@ A supervisor may restart a failed process, but that external restart policy is s
 - `GET /metrics`: Prometheus text counters and gauges for attempts, reconnects, frames, reports, keepalives, failures, queue overflow, accepted/processed/abandoned/translated/untranslatable observations, queue depth/capacity, readiness, current retry delay, and, per report destination, enqueued/delivered/dropped/failed/undelivered/retried events and queue depth/capacity.
 
 Status includes reader state, last connection error, and the actual bound telemetry address.
-Health remains live during reconnect and drain; readiness represents ingestion capability only in this milestone slice.
+Health remains live during reconnect and drain; readiness describes the reader session only, and delivery state does not affect it ([report.md](report.md)).
 State and connection-failure logs use structured `slog` fields.
 Per-frame state changes are debug-level to avoid turning tag throughput into an info-log flood.
 The telemetry server defaults to loopback and has no mutation endpoints or authentication.
