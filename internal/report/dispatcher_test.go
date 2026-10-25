@@ -273,6 +273,32 @@ func TestRetriesWithBoundedBackoff(t *testing.T) {
 	}
 }
 
+// TestDefaultRetriesSpanTheBudget checks the documented default schedule: the
+// retry budget, not the attempt count, ends retries, after 8 attempts over
+// 22.6 seconds of backoff.
+func TestDefaultRetriesSpanTheBudget(t *testing.T) {
+	c := DefaultConfig()
+	c.QueueCapacity, c.BatchEvents, c.FlushInterval = 100, 10, time.Hour
+	fail := errors.New("connection refused")
+	r := &recorder{errs: []error{fail, fail, fail, fail, fail, fail, fail, fail, fail, fail}}
+	d, logs := newDispatcher(t, c, Destination{Name: "a", Reporter: r})
+	now := time.Unix(0, 0)
+	var waited time.Duration
+	d.now = func() time.Time { return now }
+	d.sleep = func(_ context.Context, w time.Duration) error { now = now.Add(w); waited += w; return nil }
+	d.Start()
+	d.Enqueue("a", event(1))
+	if err := d.Close(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if r.calls != 8 || waited != 22600*time.Millisecond {
+		t.Fatalf("%d attempts over %v, want 8 over 22.6s", r.calls, waited)
+	}
+	if !strings.Contains(logs.String(), "retry budget exhausted") {
+		t.Fatalf("logs: %s", logs)
+	}
+}
+
 func TestRetryAfterIsHonouredUpToCap(t *testing.T) {
 	c := testConfig()
 	c.BackoffBase = 100 * time.Millisecond

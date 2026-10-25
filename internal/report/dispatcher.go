@@ -35,7 +35,10 @@ type Config struct {
 	RetryBudget time.Duration
 }
 
-// DefaultConfig returns the defaults from the #9 design record.
+// DefaultConfig returns the defaults from the #9 design record, with
+// MaxAttempts raised from 5 to 10 by #11 so that RetryBudget, not the attempt
+// count, ends retries: a destination that refuses connections for about 20
+// seconds then loses no batches.
 func DefaultConfig() Config {
 	return Config{
 		QueueCapacity:  10000,
@@ -43,7 +46,7 @@ func DefaultConfig() Config {
 		BatchBytes:     1 << 20,
 		FlushInterval:  time.Second,
 		RequestTimeout: 5 * time.Second,
-		MaxAttempts:    5,
+		MaxAttempts:    10,
 		BackoffBase:    200 * time.Millisecond,
 		BackoffMax:     10 * time.Second,
 		RetryBudget:    30 * time.Second,

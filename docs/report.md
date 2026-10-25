@@ -35,7 +35,7 @@ per destination: bounded queue → batch → Reporter.Deliver → bounded retry
 | Batch | 500 events or 1 MiB encoded | Whichever is reached first closes the batch; a single larger event goes alone |
 | Flush interval | 1 s | A partial batch is sent once its first event is this old |
 | Request timeout | 5 s | Per attempt |
-| Retry | 5 attempts, backoff 200 ms doubling to 10 s | Deterministic; `Retry-After` is honoured up to the cap |
+| Retry | up to 10 attempts, backoff 200 ms doubling to 10 s | Deterministic; `Retry-After` is honoured up to the cap. The retry budget ends retries first, after 8 attempts over about 23 s, so a destination restart shorter than that loses nothing |
 | Retry budget | 30 s per batch | After that the batch is a final failure |
 | Drain | the app's `ShutdownTimeout` | Shared with the consumer drain |
 
