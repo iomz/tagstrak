@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
-	"path/filepath"
 	"sync/atomic"
 	"time"
 
@@ -37,12 +36,7 @@ func (c Config) Validate() error {
 	if c.ShutdownTimeout < 10*time.Millisecond || c.ShutdownTimeout > time.Minute {
 		return fmt.Errorf("%w: shutdown timeout must be 10ms-1m", emulator.ErrConfig)
 	}
-	if c.ControlSocket != "" {
-		if !filepath.IsAbs(c.ControlSocket) {
-			return fmt.Errorf("%w: control socket must be absolute", emulator.ErrConfig)
-		}
-	}
-	return nil
+	return control.ListenConfig{Socket: c.ControlSocket}.Validate()
 }
 
 type App struct {

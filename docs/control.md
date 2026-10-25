@@ -18,7 +18,7 @@ The [#10 design record](https://github.com/iomz/tagstrak/issues/10#issuecomment-
 
 Control is off unless configured, so default startup exposes no mutation endpoint.
 
-- **Unix socket** (`--control-socket` or `[control] socket`): absolute path, private parent directory (0700), created with mode 0600, never replacing an existing path, removed on shutdown. It trusts the same local user and needs no token.
+- **Unix socket** (`--control-socket` or `[control] socket`): absolute path of at most 103 bytes on macOS or 107 on Linux, private parent directory (0700), created with mode 0600, never replacing an existing path, removed on shutdown. It trusts the same local user and needs no token.
 - **Loopback TCP** (`--control-address` or `[control] address`): `127.0.0.0/8`, `::1`, or `localhost` only, and always with a bearer token of at least 32 bytes from `[control] token`. Loopback is reachable by every local user and process and by browsers through DNS rebinding, so it is never trusted on its own.
 - **Non-loopback addresses are refused.** TLS terminates outside the process: use an SSH tunnel, a reverse proxy on the same host, `kubectl port-forward`, or a sidecar, each reaching loopback with the token.
 

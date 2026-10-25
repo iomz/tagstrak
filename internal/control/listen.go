@@ -24,10 +24,16 @@ import (
 	"net/netip"
 	"os"
 	"path/filepath"
+	"syscall"
 )
 
 // ErrConfig reports an invalid control configuration.
 var ErrConfig = errors.New("control: invalid configuration")
+
+// maxSocketPath is the longest Unix socket path this platform can bind:
+// sockaddr_un's path array less its terminating NUL, 103 bytes on macOS and
+// 107 on Linux.
+var maxSocketPath = len(syscall.RawSockaddrUnix{}.Path) - 1
 
 // Transport says how a listener authenticates its peers.
 type Transport uint8
@@ -59,6 +65,8 @@ func (c ListenConfig) Validate() error {
 		return fmt.Errorf("%w: set a control socket or a control address, not both", ErrConfig)
 	case c.Socket != "" && !filepath.IsAbs(c.Socket):
 		return fmt.Errorf("%w: control socket path must be absolute", ErrConfig)
+	case len(c.Socket) > maxSocketPath:
+		return fmt.Errorf("%w: control socket path is %d bytes; this platform allows at most %d", ErrConfig, len(c.Socket), maxSocketPath)
 	case c.Address != "":
 		_, err := loopback(c.Address)
 		return err
