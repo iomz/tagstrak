@@ -55,6 +55,14 @@ func TestListenConfigRefusesRemoteAddresses(t *testing.T) {
 	if err := (ListenConfig{Socket: "relative.sock"}).Validate(); !errors.Is(err, ErrConfig) {
 		t.Errorf("relative socket accepted: %v", err)
 	}
+	// A path the platform cannot bind fails validation, not bind(2).
+	longest := "/" + strings.Repeat("s", maxSocketPath-1)
+	if err := (ListenConfig{Socket: longest}).Validate(); err != nil {
+		t.Errorf("%d-byte socket path rejected: %v", len(longest), err)
+	}
+	if err := (ListenConfig{Socket: longest + "s"}).Validate(); !errors.Is(err, ErrConfig) {
+		t.Errorf("%d-byte socket path accepted: %v", len(longest)+1, err)
+	}
 }
 
 func TestUnixSocketRules(t *testing.T) {
