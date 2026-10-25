@@ -4,6 +4,9 @@ Issue #11 compares `v1.0.0` with the current tree on identical inputs.
 The [#11 design record](https://github.com/iomz/tagstrak/issues/11#issuecomment-6379991213) is the decision source.
 This page records the procedure, the final results for v2.0.0 with their budget check, and the superseded interim run.
 
+The v2 middleware was named gosstrak when these results were measured and was renamed tagstrak before v2.0.0 (#11).
+Neither the rename nor the other fixes made before the tag touch a measured path, so the results stand.
+
 ## Procedure
 
 ```sh
@@ -16,7 +19,7 @@ go run ./tools/benchrun -out results/2026-10-24-final -count 10 -e2e-runs 10
 2. `v1.0.0` is checked out into a temporary worktree.
 3. `benchmarks/v2bench` runs against the current tree.
 4. `benchmarks/v1harness` runs inside the `v1.0.0` worktree through `go test -overlay`, with the same benchmark names and inputs.
-5. Both `cmd/gosstrak` binaries are built and driven end to end over a real LLRP socket.
+5. v1's `cmd/gosstrak` and v2's `cmd/tagstrak` are built and driven end to end over a real LLRP socket.
 6. `benchstat` compares the raw results, and `meta.json` records the run.
 
 Name the output directory by date and purpose; benchrun refuses to overwrite one.
@@ -42,7 +45,7 @@ Each TagReportData holds EPCData followed directly by C1G2-PC, because v1's deco
 | `DecodeReport/tags=N` | `llrp.UnmarshalROAccessReportBody` | `llrp.DecodeReadEvents` |
 | `Translate/tags=1000` | `tdt.Core.Translate` | `tdt.Translate` and `PureIdentityURI` |
 | `TranslateAndMatch/subs=N` | translate, then `Search` on each v1 engine | translate, then the prefix index (the default) and the linear matcher |
-| `Ingest` (end to end) | `gosstrak start` with an ECSpec file | `gosstrak` with subscriptions only, and with an HTTP destination |
+| `Ingest` (end to end) | `gosstrak start` with an ECSpec file | `tagstrak` with subscriptions only, and with an HTTP destination |
 
 Every matcher reports `matches/op`.
 All four v1 engines and v2 find 23, 244, and 1,000 matches per 1,000 tags at 100, 1,000, and 10,000 subscriptions, so the matching workloads are equivalent.
@@ -51,7 +54,7 @@ The end-to-end feeder plays the reader: it completes the LLRP handshake, sends 9
 v1 processes reports synchronously, so the acknowledgement marks completion.
 v2 is complete when its telemetry counts every observation as processed, and the run fails if any observation overflowed or was abandoned.
 CPU time and peak resident memory come from the process's rusage.
-Latency runs from the moment gosstrak decodes a report, which stamps each observation, to the event's arrival at an HTTP sink.
+Latency runs from the moment v2 decodes a report, which stamps each observation, to the event's arrival at an HTTP sink.
 v1 discards its matches, so only v2 with a destination reports latency.
 
 ### Statistics
