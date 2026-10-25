@@ -180,7 +180,7 @@ No new third-party dependency is introduced; obsolete Gin/logrus dependencies ar
 ```sh
 go test -race ./...
 go vet ./...
-go build ./cmd/golemu ./cmd/gosstrak ./cmd/tagjson
+go build ./cmd/golemu ./cmd/gosstrak
 ```
 
 Tests cover deterministic wire reports, seed isolation, strict configuration, shared reader interoperability, frame splitting, cycle-boundary replacement, real socket deadlines, keepalives/ACK failure, client limits, control access, startup failure, disconnects, and cancellation cleanup.
