@@ -187,6 +187,7 @@ type middlewareOptions struct {
 	shutdown      time.Duration
 	backoffBase   time.Duration
 	flushInterval time.Duration
+	env           map[string]string
 }
 
 // startMiddleware builds tagstrak through the production configuration path:
@@ -220,7 +221,8 @@ func startMiddleware(t *testing.T, o middlewareOptions) (*tagstrak.App, tagstrak
 		c.ShutdownTimeout = o.shutdown
 	}
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-	assembly, err := tagstrak.Pipeline(f, c, func(string) (string, bool) { return "", false }, logger)
+	lookup := func(name string) (string, bool) { v, ok := o.env[name]; return v, ok }
+	assembly, err := tagstrak.Pipeline(f, c, lookup, logger)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -279,6 +281,47 @@ func TestRigToHTTPDestination(t *testing.T) {
 	// Everything accepted was delivered by the time shutdown returned.
 	if stats[0].Delivered != stats[0].Enqueued || int(stats[0].Delivered) != len(events) {
 		t.Fatalf("delivered %d of %d enqueued; destination saw %d", stats[0].Delivered, stats[0].Enqueued, len(events))
+	}
+}
+
+// TestShippedExamplesWorkTogether runs the example scenario against the
+// example configuration, so the two cannot drift apart: every example
+// subscription receives reports, and the unrelated product never arrives.
+func TestShippedExamplesWorkTogether(t *testing.T) {
+	scenario, err := os.ReadFile("../../examples/rig/scenario.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	f, err := configfile.Load("../../examples/tagstrak/tagstrak.toml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	sink := &receiver{}
+	f.Destinations[0].URL = newDestination(t, sink)
+	emu, emuRun := startEmulator(t, emulatorOptions{scenario: string(scenario)})
+	_, _, appRun := startMiddleware(t, middlewareOptions{
+		reader: emu.Status().Address, file: f, env: map[string]string{"ERP_TOKEN": "example"},
+	})
+	matched := func() map[string]bool {
+		seen := map[string]bool{}
+		for _, e := range sink.snapshot() {
+			subs, _ := e["subscriptions"].([]any)
+			for _, s := range subs {
+				seen[s.(string)] = true
+			}
+		}
+		return seen
+	}
+	waitFor(t, "reports for every example subscription", func() bool {
+		seen := matched()
+		return len(seen) == len(f.Subscriptions)
+	})
+	cleanShutdown(t, appRun.wait(t))
+	cleanShutdown(t, emuRun.wait(t))
+	for _, e := range sink.snapshot() {
+		if uri, _ := e["pureIdentityURI"].(string); strings.Contains(uri, ".900001.") {
+			t.Fatalf("unsubscribed product delivered: %v", e)
+		}
 	}
 }
 

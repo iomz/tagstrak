@@ -40,7 +40,8 @@ go run ./cmd/tagstrak-rig simulator \
   --report-interval 1s
 ```
 
-The copyable example represents arrivals, departures, and an empty inventory:
+The example represents arrivals, departures, and an empty inventory: SGTIN products 0614141.812345.1 to 3, an SSCC pallet, and one unrelated product, 0614141.900001.7.
+It pairs with `examples/tagstrak/tagstrak.toml`, whose subscriptions match the products and the pallet but not the unrelated product.
 
 ```json
 {
@@ -49,8 +50,8 @@ The copyable example represents arrivals, departures, and an empty inventory:
   "repeat": true,
   "shuffle": true,
   "cycles": [
-    ["303400000000000000000001", "303400000000000000000002"],
-    ["303400000000000000000002", "303400000000000000000003"],
+    ["3074257bf7194e4000000001", "3074257bf7194e4000000002", "3174257bf4499602d2000000"],
+    ["3074257bf7194e4000000002", "3074257bf7194e4000000003", "3074257bf76ee84000000007"],
     []
   ]
 }

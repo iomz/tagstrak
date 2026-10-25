@@ -1,6 +1,11 @@
-# Example tagstrak configuration. Run against the tagstrak-rig example scenario:
+# Example tagstrak configuration, a working pair with the tagstrak-rig example
+# scenario, whose tags match both subscriptions below. From the repository root:
 #
+#   go run ./cmd/tagstrak-rig simulator --scenario examples/rig/scenario.json
 #   ERP_TOKEN=... go run ./cmd/tagstrak --config examples/tagstrak/tagstrak.toml
+#
+# Reports go to http://127.0.0.1:9000/rfid; any HTTP endpoint that answers a
+# POST with 2xx can receive them (see docs/report.md for the JSON schema).
 #
 # Settings apply in order: defaults, this file, TAGSTRAK_* environment
 # variables, flags. Secrets come only from env or file sources, never from
@@ -27,7 +32,7 @@ flush_interval = "1s"
 
 [[destinations]]
 name = "erp"
-url = "https://erp.example/hooks/rfid"
+url = "http://127.0.0.1:9000/rfid"
 
 # The header value is "Bearer " followed by the ERP_TOKEN environment
 # variable. Use file = "/run/secrets/erp-token" for a file source instead;
@@ -41,7 +46,10 @@ id = "product"
 patterns = ["urn:epc:idpat:sgtin:0614141.812345.*"]
 destinations = ["erp"]
 
-# A subscription without destinations is matched and logged at debug level.
 [[subscriptions]]
 id = "pallets"
 patterns = ["urn:epc:idpat:sscc:0614141.*"]
+destinations = ["erp"]
+
+# A subscription may omit destinations; its matches are then only logged at
+# debug level.
