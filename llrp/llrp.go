@@ -36,7 +36,6 @@ const (
 )
 
 // pack the data into (partial) LLRP packet payload.
-// TODO: count the data size and return resulting length ?
 func pack(data []interface{}) []byte {
 	buf := new(bytes.Buffer)
 	for _, v := range data {
