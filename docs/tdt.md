@@ -18,7 +18,7 @@ Supported standards and limitations are stated in the `internal/tdt` package doc
 
 None of these packages imports `llrp`, `internal/reader`, `internal/inventory`, the emulator, or an app package; `internal/tdt/boundary_test.go` enforces that.
 They have no third-party dependencies, so #12 can lift them out with a path rewrite.
-`internal/app/gosstrak.TranslatingConsumer` adapts `inventory.Observation` to `tdt.Input` at the application boundary.
+`internal/app/tagstrak.TranslatingConsumer` adapts `inventory.Observation` to `tdt.Input` at the application boundary.
 
 Supported: SGTIN-96, SSCC-96, GIAI-96, and GRAI-96 from GS1 TDS 2.2, plus ISO/IEC 17360 transport units (AFI `0xA2`, `0xA7`).
 ISO 17363 (AFI `0xA9`, `0xAA`) is recognised and refused, because its Gen2 carriage is not established.

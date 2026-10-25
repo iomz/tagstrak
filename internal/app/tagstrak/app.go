@@ -1,5 +1,5 @@
-// Package gosstrak composes the reader, observation consumer, and telemetry.
-package gosstrak
+// Package tagstrak composes the reader, observation consumer, and telemetry.
+package tagstrak
 
 import (
 	"context"
@@ -17,7 +17,7 @@ import (
 	"github.com/iomz/tagstrak/v2/internal/reader"
 )
 
-var ErrDrainDeadline = errors.New("gosstrak: shutdown drain deadline exceeded")
+var ErrDrainDeadline = errors.New("tagstrak: shutdown drain deadline exceeded")
 
 // Consumer owns processing after reader ingestion. Consume must return when
 // ctx is canceled, must not retain mutable shared state without synchronization,

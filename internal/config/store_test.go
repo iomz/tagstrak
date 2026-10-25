@@ -27,7 +27,7 @@ func TestControlAndStoreValidation(t *testing.T) {
 			}
 		})
 	}
-	f, err := Load(write(t, "c.toml", "version = 1\n[control]\naddress = \"127.0.0.1:9000\"\n[control.token]\nfile = \"/run/secrets/control\"\n[subscription_store]\nsource = \"api\"\nstate_file = \"/var/lib/gosstrak/subscriptions.json\"\n"))
+	f, err := Load(write(t, "c.toml", "version = 1\n[control]\naddress = \"127.0.0.1:9000\"\n[control.token]\nfile = \"/run/secrets/control\"\n[subscription_store]\nsource = \"api\"\nstate_file = \"/var/lib/tagstrak/subscriptions.json\"\n"))
 	if err != nil {
 		t.Fatal(err)
 	}

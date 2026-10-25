@@ -1,4 +1,4 @@
-// Command gosstrak runs the v2 reader ingestion runtime.
+// Command tagstrak runs the v2 reader ingestion runtime.
 package main
 
 import (
@@ -14,13 +14,13 @@ import (
 	"strings"
 	"syscall"
 
-	app "github.com/iomz/tagstrak/v2/internal/app/gosstrak"
+	app "github.com/iomz/tagstrak/v2/internal/app/tagstrak"
 	configfile "github.com/iomz/tagstrak/v2/internal/config"
 	"github.com/iomz/tagstrak/v2/internal/tdt"
 )
 
-// envPrefix names the environment layer: flag --x-y is GOSSTRAK_X_Y.
-const envPrefix = "GOSSTRAK_"
+// envPrefix names the environment layer: flag --x-y is TAGSTRAK_X_Y.
+const envPrefix = "TAGSTRAK_"
 
 // envName derives a flag's environment variable, so the flag set is the one
 // list of scalar settings and the two layers cannot drift.
@@ -64,11 +64,11 @@ func bind(fs *flag.FlagSet, s *settings) {
 }
 
 func newFlagSet(output io.Writer, s *settings) *flag.FlagSet {
-	fs := flag.NewFlagSet("gosstrak", flag.ContinueOnError)
+	fs := flag.NewFlagSet("tagstrak", flag.ContinueOnError)
 	fs.SetOutput(output)
 	bind(fs, s)
 	fs.Usage = func() {
-		fmt.Fprintf(output, "Usage: gosstrak [start] [flags]\n\nSettings apply in order: defaults, --config file, %s<FLAG> environment variables, flags.\n\n", envPrefix)
+		fmt.Fprintf(output, "Usage: tagstrak [start] [flags]\n\nSettings apply in order: defaults, --config file, %s<FLAG> environment variables, flags.\n\n", envPrefix)
 		fs.PrintDefaults()
 	}
 	return fs
@@ -174,7 +174,7 @@ func run(ctx context.Context, args []string, stderr io.Writer, lookup func(strin
 		defer stop()
 	}
 	source := tdt.SourceInfo()
-	logger.Info("starting gosstrak", "mode", "ingestion", "reader", config.Reader.Address, "telemetry", config.TelemetryAddress,
+	logger.Info("starting tagstrak", "mode", "ingestion", "reader", config.Reader.Address, "telemetry", config.TelemetryAddress,
 		"subscriptions", len(file.Subscriptions), "subscription_source", assembly.Source, "destinations", len(file.Destinations),
 		"control", config.Control.Enabled(),
 		"tds_version", source.TDSVersion, "tdt_artefacts", source.Commit, "schemes", tdt.SupportedSchemes())

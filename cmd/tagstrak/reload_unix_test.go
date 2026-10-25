@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	app "github.com/iomz/tagstrak/v2/internal/app/gosstrak"
+	app "github.com/iomz/tagstrak/v2/internal/app/tagstrak"
 	configfile "github.com/iomz/tagstrak/v2/internal/config"
 )
 
@@ -20,7 +20,7 @@ import (
 // registers the handler before returning, so the signal cannot terminate the
 // test process.
 func TestHangupReloadsSubscriptions(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "gosstrak.toml")
+	path := filepath.Join(t.TempDir(), "tagstrak.toml")
 	if err := os.WriteFile(path, []byte("version = 1\n[[subscriptions]]\nid = \"a\"\npatterns = [\"urn:epc:idpat:sgtin:*.*.*\"]\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}

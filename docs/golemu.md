@@ -19,13 +19,13 @@ go run ./cmd/golemu server \
 Connect the reader runtime in another terminal:
 
 ```sh
-go run ./cmd/gosstrak start \
+go run ./cmd/tagstrak start \
   --reader 127.0.0.1:5084 \
   --telemetry 127.0.0.1:8080
 ```
 
 The reader exposes ingestion counts at `/metrics` and capability at `/readyz`.
-Gosstrak's current ingestion-only scope remains as documented in [runtime.md](runtime.md).
+Tagstrak's current ingestion-only scope remains as documented in [runtime.md](runtime.md).
 
 `server` loads an existing version-1 [inventory file](inventory.md) and turns it into one repeating cycle.
 Missing or invalid files fail startup.
@@ -63,7 +63,7 @@ EPCs may recur in different cycles.
 
 Both commands use the same listener, handshake, timers, report encoder, cancellation, and client limits.
 The `client` mode, old CLI flags, gob scenarios, directory-based simulator, and unauthenticated TCP mutation API have been removed.
-Use gosstrak to consume reports.
+Use tagstrak to consume reports.
 
 ## Reproducibility and updates
 
@@ -123,7 +123,7 @@ curl --unix-socket /tmp/golemu-control.EXAMPLE/control.sock \
 Each replacement attempt is audited with the scenario revision and cycle count, never the scenario.
 A one-cycle repeating scenario updates a server inventory through the same operation.
 All control I/O runs on the separate Unix socket; LLRP sockets cannot mutate scenarios.
-The transport is shared with gosstrak's management API; see [control.md](control.md).
+The transport is shared with tagstrak's management API; see [control.md](control.md).
 
 ## Protocol and resource budgets
 
@@ -180,7 +180,7 @@ No new third-party dependency is introduced; obsolete Gin/logrus dependencies ar
 ```sh
 go test -race ./...
 go vet ./...
-go build ./cmd/golemu ./cmd/gosstrak
+go build ./cmd/golemu ./cmd/tagstrak
 ```
 
 Tests cover deterministic wire reports, seed isolation, strict configuration, shared reader interoperability, frame splitting, cycle-boundary replacement, real socket deadlines, keepalives/ACK failure, client limits, control access, startup failure, disconnects, and cancellation cleanup.

@@ -1,4 +1,4 @@
-package gosstrak
+package tagstrak
 
 import (
 	"bytes"

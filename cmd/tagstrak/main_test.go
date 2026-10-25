@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	app "github.com/iomz/tagstrak/v2/internal/app/gosstrak"
+	app "github.com/iomz/tagstrak/v2/internal/app/tagstrak"
 	configfile "github.com/iomz/tagstrak/v2/internal/config"
 )
 
@@ -40,7 +40,7 @@ func TestParseConfig(t *testing.T) {
 
 func writeConfig(t *testing.T, body string) string {
 	t.Helper()
-	path := filepath.Join(t.TempDir(), "gosstrak.toml")
+	path := filepath.Join(t.TempDir(), "tagstrak.toml")
 	if err := os.WriteFile(path, []byte(body), 0o600); err != nil {
 		t.Fatal(err)
 	}
@@ -57,8 +57,8 @@ read_timeout = "7s"
 max_retries = 3
 `)
 	c, file, err := parseConfig([]string{"--config", path, "--max-retries", "9"}, io.Discard, env(map[string]string{
-		"GOSSTRAK_SOURCE":      "from-env",
-		"GOSSTRAK_MAX_RETRIES": "5",
+		"TAGSTRAK_SOURCE":      "from-env",
+		"TAGSTRAK_MAX_RETRIES": "5",
 	}))
 	if err != nil {
 		t.Fatal(err)
@@ -80,21 +80,21 @@ max_retries = 3
 
 func TestConfigPathFromEnvironment(t *testing.T) {
 	path := writeConfig(t, "version = 1\n[reader]\nsource = \"env-file\"\n")
-	c, file, err := parseConfig(nil, io.Discard, env(map[string]string{"GOSSTRAK_CONFIG": path}))
+	c, file, err := parseConfig(nil, io.Discard, env(map[string]string{"TAGSTRAK_CONFIG": path}))
 	if err != nil || file == nil || c.Reader.Source != "env-file" {
 		t.Fatalf("config %+v, file %v, err %v", c, file, err)
 	}
 	// An explicit --config wins over the environment.
 	other := writeConfig(t, "version = 1\n[reader]\nsource = \"flag-file\"\n")
-	c, _, err = parseConfig([]string{"--config", other}, io.Discard, env(map[string]string{"GOSSTRAK_CONFIG": path}))
+	c, _, err = parseConfig([]string{"--config", other}, io.Discard, env(map[string]string{"TAGSTRAK_CONFIG": path}))
 	if err != nil || c.Reader.Source != "flag-file" {
 		t.Fatalf("config %+v, err %v", c, err)
 	}
 }
 
 func TestInvalidEnvironmentValueNamesTheVariable(t *testing.T) {
-	_, _, err := parseConfig(nil, io.Discard, env(map[string]string{"GOSSTRAK_READ_TIMEOUT": "soon"}))
-	if err == nil || !strings.Contains(err.Error(), "GOSSTRAK_READ_TIMEOUT") {
+	_, _, err := parseConfig(nil, io.Discard, env(map[string]string{"TAGSTRAK_READ_TIMEOUT": "soon"}))
+	if err == nil || !strings.Contains(err.Error(), "TAGSTRAK_READ_TIMEOUT") {
 		t.Fatalf("err = %v", err)
 	}
 }
@@ -170,7 +170,7 @@ destinations = ["erp"]
 // TestExampleConfigurationIsValid keeps the shipped example loadable and
 // buildable, so documentation cannot drift from the schema.
 func TestExampleConfigurationIsValid(t *testing.T) {
-	path := filepath.Join("..", "..", "examples", "gosstrak", "gosstrak.toml")
+	path := filepath.Join("..", "..", "examples", "tagstrak", "tagstrak.toml")
 	c, file, err := parseConfig([]string{"--config", path}, io.Discard, noEnv)
 	if err != nil {
 		t.Fatal(err)

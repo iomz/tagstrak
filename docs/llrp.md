@@ -2,7 +2,7 @@
 
 `github.com/iomz/tagstrak/v2/llrp` is the reusable, public part of tagstrak.
 It encodes and decodes LLRP messages and parameters with explicit bounds, and does nothing else: dialing, deadlines, retries, logging, and connection ownership stay with the caller.
-gosstrak's reader session and golemu's emulator are both built on it.
+tagstrak's reader session and golemu's emulator are both built on it.
 
 ## API
 

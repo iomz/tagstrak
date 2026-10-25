@@ -1,6 +1,6 @@
 # Configuration
 
-Issue #10 slice 10a adds file and environment configuration to gosstrak in the v2 milestone tracked by #1.
+Issue #10 slice 10a adds file and environment configuration to tagstrak in the v2 milestone tracked by #1.
 The [#10 design record](https://github.com/iomz/tagstrak/issues/10#issuecomment-6378251881) is the decision source; the management API is described in [control.md](control.md).
 
 ## Layers
@@ -8,22 +8,22 @@ The [#10 design record](https://github.com/iomz/tagstrak/issues/10#issuecomment-
 Settings apply in this order, later layers winning (#2):
 
 1. built-in defaults;
-2. the configuration file named by `--config` or `GOSSTRAK_CONFIG`;
-3. `GOSSTRAK_*` environment variables;
+2. the configuration file named by `--config` or `TAGSTRAK_CONFIG`;
+3. `TAGSTRAK_*` environment variables;
 4. flags.
 
-Every flag `--x-y` has the environment variable `GOSSTRAK_X_Y`, derived from the flag set, so `--read-timeout` is `GOSSTRAK_READ_TIMEOUT`.
+Every flag `--x-y` has the environment variable `TAGSTRAK_X_Y`, derived from the flag set, so `--read-timeout` is `TAGSTRAK_READ_TIMEOUT`.
 The environment and flags cover scalar settings only.
 Subscriptions, destinations, and header secrets come only from the file.
 The command builds one validated configuration before opening any listener or connection; any error stops startup.
 
 ```sh
-ERP_TOKEN=... go run ./cmd/gosstrak --config examples/gosstrak/gosstrak.toml
+ERP_TOKEN=... go run ./cmd/tagstrak --config examples/tagstrak/tagstrak.toml
 ```
 
 ## File
 
-The file is TOML (`.toml`) or JSON (`.json`) with one schema; see [examples/gosstrak/gosstrak.toml](../examples/gosstrak/gosstrak.toml).
+The file is TOML (`.toml`) or JSON (`.json`) with one schema; see [examples/tagstrak/tagstrak.toml](../examples/tagstrak/tagstrak.toml).
 Decoding is strict: unknown keys, trailing JSON data, a `version` other than `1`, or a file over 1 MiB is an error.
 Durations are Go duration strings such as `"5s"`.
 A setting the file omits keeps its default; an explicit zero, such as `max_retries = 0`, is kept.
@@ -55,7 +55,7 @@ A destination URL must not carry user information; credentials go in header secr
 ## Subscription source and reload
 
 With `[subscription_store] source = "file"`, the default, the file's `[[subscriptions]]` are the truth and `SIGHUP` re-reads them; destinations, secrets, the matcher, and other settings change only on restart.
-With `source = "api"`, the file must list no subscriptions; gosstrak loads and writes `state_file` and the management API replaces them.
+With `source = "api"`, the file must list no subscriptions; tagstrak loads and writes `state_file` and the management API replaces them.
 The design record names this setting `subscriptions.source`; it lives in `[subscription_store]` because `subscriptions` is already the array of subscription tables.
 See [control.md](control.md) for both modes.
 
@@ -78,14 +78,14 @@ prefix = "Bearer "       # optional, prepended literally, not secret
 ## Design evaluation
 
 Assumptions: the operator owns the file through configuration management, and secrets are injected by the platform as environment variables or files.
-`internal/config` owns the versioned file schema and strict decoding; `internal/app/gosstrak` maps it onto its own types, so the operator-facing schema and internal configuration change independently, at the cost of declaring settings twice.
+`internal/config` owns the versioned file schema and strict decoding; `internal/app/tagstrak` maps it onto its own types, so the operator-facing schema and internal configuration change independently, at the cost of declaring settings twice.
 `TestFixtureSetsEverySetting` and `TestApplyFileMapsEverySetting` fail when a schema field is added without being mapped, and the TOML and JSON fixtures must decode identically.
 TOML adds one dependency, `github.com/BurntSushi/toml`, which itself depends only on the standard library and is confined to `internal/config`.
 
 ## Verification
 
 ```sh
-go test -race ./internal/config/... ./internal/app/... ./cmd/gosstrak/...
+go test -race ./internal/config/... ./internal/app/... ./cmd/tagstrak/...
 go vet ./...
 ```
 
