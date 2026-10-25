@@ -115,7 +115,43 @@ A supervisor may restart a failed process, but that external restart policy is s
 
 - `GET /healthz`: JSON process liveness, with HTTP 503 before running or after shutdown.
 - `GET /readyz`: JSON serving capability, with HTTP 503 during connection, handshake, reconnect, failure, or drain.
-- `GET /metrics`: Prometheus text counters and gauges for attempts, reconnects, frames, reports, keepalives, failures, queue overflow, accepted/processed/abandoned/translated/untranslatable observations, queue depth/capacity, readiness, current retry delay, and, per report destination, enqueued/delivered/dropped/failed/undelivered/retried events and queue depth/capacity.
+- `GET /metrics`: Prometheus text exposition, with `# HELP` and `# TYPE` for every family, as listed below.
+
+Report families appear once destinations are configured, and `tagstrak_filter_adaptive_*` families only in adaptive filter mode, where they restart from zero when subscriptions are replaced.
+
+| Metric | Type | Label | Meaning |
+| --- | --- | --- | --- |
+| `tagstrak_ready` | gauge |  | 1 when the reader session is serving, else 0. |
+| `tagstrak_reader_attempts_total` | counter |  | Reader connection attempts. |
+| `tagstrak_reader_reconnects_total` | counter |  | Reader reconnections after a lost session. |
+| `tagstrak_reader_frames_total` | counter |  | LLRP frames read from the reader. |
+| `tagstrak_reader_reports_total` | counter |  | RO_ACCESS_REPORT messages read from the reader. |
+| `tagstrak_reader_keepalives_total` | counter |  | Keepalives acknowledged. |
+| `tagstrak_reader_failures_total` | counter |  | Reader connection or session failures. |
+| `tagstrak_reader_retry_delay_seconds` | gauge |  | Current reconnect delay, 0 while connected. |
+| `tagstrak_queue_overflows_total` | counter |  | Observations refused by a full queue; any overflow fails the run. |
+| `tagstrak_queue_depth` | gauge |  | Observations waiting for processing. |
+| `tagstrak_queue_capacity` | gauge |  | Observation queue capacity. |
+| `tagstrak_observations_received_total` | counter |  | Tag observations decoded from reader reports. |
+| `tagstrak_observations_processed_total` | counter |  | Observations translated and matched. |
+| `tagstrak_observations_abandoned_total` | counter |  | Observations not processed: still queued at the shutdown deadline, or failed in processing. |
+| `tagstrak_observations_translated_total` | counter |  | Observations translated to an identity. |
+| `tagstrak_observations_untranslatable_total` | counter |  | Observations in schemes tagstrak does not support. |
+| `tagstrak_report_enqueued_total` | counter | `destination` | Report events accepted into a destination queue. |
+| `tagstrak_report_delivered_total` | counter | `destination` | Report events delivered. |
+| `tagstrak_report_dropped_total` | counter | `destination` | Report events dropped by a full destination queue. |
+| `tagstrak_report_failed_total` | counter | `destination` | Report events in batches that finally failed. |
+| `tagstrak_report_undelivered_total` | counter | `destination` | Report events still queued at the shutdown deadline. |
+| `tagstrak_report_retries_total` | counter | `destination` | Delivery retries. |
+| `tagstrak_report_queue_depth` | gauge | `destination` | Report events waiting for delivery. |
+| `tagstrak_report_queue_capacity` | gauge | `destination` | Destination queue capacity. |
+| `tagstrak_filter_adaptive_sampled_total` | counter |  | Adaptive matcher calls sampled for measurement. |
+| `tagstrak_filter_adaptive_shadows_skipped_total` | counter |  | Shadow evaluations skipped by the overhead budget. |
+| `tagstrak_filter_adaptive_switches_total` | counter |  | Adaptive matcher switches. |
+| `tagstrak_filter_adaptive_shadow_seconds_total` | counter |  | Time spent in shadow evaluations. |
+| `tagstrak_filter_adaptive_selected` | gauge | `candidate` | 1 for the candidate matcher currently selected. |
+| `tagstrak_filter_adaptive_samples_total` | counter | `candidate` | Measurements per candidate matcher. |
+| `tagstrak_filter_adaptive_mean_cost_seconds` | gauge | `candidate` | Mean measured cost per candidate matcher. |
 
 Status includes reader state, last connection error, and the actual bound telemetry address.
 Health remains live during reconnect and drain; readiness describes the reader session only, and delivery state does not affect it ([report.md](report.md)).
