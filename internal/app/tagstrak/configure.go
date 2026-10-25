@@ -2,6 +2,7 @@ package tagstrak
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -97,6 +98,11 @@ func Pipeline(f configfile.File, c Config, lookup func(string) (string, bool), l
 	var store *StateStore
 	switch source {
 	case configfile.SourceAPI:
+		// The file layer cannot see control flags, so the pairing is checked
+		// here: without the API, nothing could ever change the subscriptions.
+		if !c.Control.Enabled() {
+			return Assembly{}, errors.New(`subscription_store.source "api" requires a control socket or address`)
+		}
 		store = &StateStore{Path: *f.Store.StateFile}
 		state, err := configfile.LoadState(store.Path)
 		if err != nil {
