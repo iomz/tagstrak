@@ -23,7 +23,7 @@ Bump either pin deliberately, after the new release has been out for a while.
 
 ## Leak checks
 
-Every package that runs servers, workers, or applications has a `TestMain` with `goleak.VerifyTestMain`: `internal/app/tagstrak`, `internal/app/golemu`, `internal/control`, `internal/report`, `internal/report/httpreport`, `internal/reader`, `internal/emulator`, `internal/e2e`, `cmd/tagstrak`, and `cmd/golemu`.
+Every package that runs servers, workers, or applications has a `TestMain` with `goleak.VerifyTestMain`: `internal/app/tagstrak`, `internal/app/rig`, `internal/control`, `internal/report`, `internal/report/httpreport`, `internal/reader`, `internal/emulator`, `internal/e2e`, `cmd/tagstrak`, and `cmd/tagstrak-rig`.
 A goroutine that outlives the package's tests fails them.
 Tests also check that control and telemetry listeners stop accepting and that Unix sockets are removed after `Run`.
 
@@ -34,7 +34,7 @@ Tests also check that control and telemetry listeners stop accepting and that Un
 | LLRP frames and parameters | `llrp.FuzzDecodeMessageNeverPanics`, `FuzzDecodeParametersNeverPanics`, `FuzzDecodeReadEventsNeverPanics` |
 | Configuration and state files | `config.FuzzDecodeTOML`, `FuzzDecodeJSON`, `FuzzDecodeState` |
 | Inventory files | `inventory.FuzzDecodeInventoryJSON` |
-| golemu scenarios | `emulator.FuzzDecodeScenario` |
+| tagstrak-rig scenarios | `emulator.FuzzDecodeScenario` |
 | Control request bodies | `control.FuzzReadJSON` |
 | Patterns and identifiers | `tdt.FuzzCompilePattern`, `FuzzParseURI`, `FuzzTranslate` |
 | Matcher equivalence | `filter.FuzzIndexAgreesWithLinear` |
@@ -51,13 +51,13 @@ Commit any input that finds a bug under the package's `testdata/fuzz/` so it bec
 
 ## End-to-end scenarios
 
-`internal/e2e` runs golemu and tagstrak in-process over real sockets, building tagstrak through the production configuration path:
+`internal/e2e` runs tagstrak-rig and tagstrak in-process over real sockets, building tagstrak through the production configuration path:
 
 | Test | Proves |
 | --- | --- |
-| `TestGolemuToHTTPDestination` | handshake, translation, matching, and delivery, then a clean drain |
+| `TestRigToHTTPDestination` | handshake, translation, matching, and delivery, then a clean drain |
 | `TestDestinationOutageThenRecovery` | retries carry deliveries through an outage without loss |
 | `TestReaderReconnect` | tagstrak reconnects to a replaced reader and delivers no event twice |
-| `TestScenarioReplacedThroughGolemuControl` | a scenario replaced over golemu's control socket reaches the destination |
+| `TestScenarioReplacedThroughRigControl` | a scenario replaced over tagstrak-rig's control socket reaches the destination |
 | `TestSubscriptionsReplacedThroughAPI` | subscriptions replaced over the management API route live and persist |
 | `TestShutdownWithBatchesInFlight` | shutdown meets its deadline and reports undelivered events |

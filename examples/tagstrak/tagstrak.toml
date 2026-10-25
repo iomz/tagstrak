@@ -1,4 +1,4 @@
-# Example tagstrak configuration. Run against the golemu example scenario:
+# Example tagstrak configuration. Run against the tagstrak-rig example scenario:
 #
 #   ERP_TOKEN=... go run ./cmd/tagstrak --config examples/tagstrak/tagstrak.toml
 #

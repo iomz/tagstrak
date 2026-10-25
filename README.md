@@ -1,23 +1,23 @@
 # tagstrak
 
-Modern Go stack for LLRP-based RFID, combining reusable protocol tooling, tagstrak middleware, and golemu reader emulation.
+Modern Go stack for LLRP-based RFID, combining reusable protocol tooling, tagstrak middleware, and tagstrak-rig reader emulation.
 
 ## Commands
 
 - `tagstrak`: RFID event filtering and collection middleware
-- `golemu`: LLRP reader emulator
+- `tagstrak-rig`: LLRP reader emulator
 
 ## Packages
 
 - `llrp`: reusable public LLRP package
 - `internal/emulator`: deterministic scenarios and LLRP emulation
-- `internal/app/golemu`: golemu composition and local control
+- `internal/app/rig`: tagstrak-rig composition and local control
 - `internal/identity`, `internal/tdt`: canonical identities and tag data translation
 - `internal/filter`: subscription matching over translated tags
 - `internal/report`: bounded report delivery and destination adapters
 - `internal/config`: versioned configuration file and redacted secret sources
 - `internal/control`: hardened management transport shared by both commands
-- `internal/app/tagstrak`, `internal/app/golemu`: application composition for each command
+- `internal/app/tagstrak`, `internal/app/rig`: application composition for each command
 
 ## LLRP package
 
@@ -36,8 +36,8 @@ See [docs/runtime.md](docs/runtime.md) for configuration, lifecycle, and the cur
 
 ## Reader emulation
 
-Golemu runs repeating inventories and seeded scenarios through one bounded runtime, with optional private Unix-socket control.
-See [docs/golemu.md](docs/golemu.md) for runnable examples and cycle semantics.
+tagstrak-rig runs repeating inventories and seeded scenarios through one bounded runtime, with optional private Unix-socket control.
+See [docs/rig.md](docs/rig.md) for runnable examples and cycle semantics.
 
 ## Tag data translation
 

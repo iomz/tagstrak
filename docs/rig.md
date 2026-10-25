@@ -1,8 +1,8 @@
-# Deterministic golemu
+# Deterministic tagstrak-rig
 
-Issue #6 replaces the legacy golemu implementation with deterministic scenarios and one context-owned runtime for both workflows.
+Issue #6 replaces the legacy tagstrak-rig implementation with deterministic scenarios and one context-owned runtime for both workflows.
 `internal/emulator` owns scenario progression and LLRP serving.
-`internal/app/golemu` composes the data plane with optional local control.
+`internal/app/rig` composes the data plane with optional local control.
 The public `llrp` codec handles every frame, while `internal/inventory` owns EPC validation and inventory snapshots.
 
 ## Run a repeating inventory
@@ -10,8 +10,8 @@ The public `llrp` codec handles every frame, while `internal/inventory` owns EPC
 From the repository root:
 
 ```sh
-go run ./cmd/golemu server \
-  --inventory examples/golemu/inventory.json \
+go run ./cmd/tagstrak-rig server \
+  --inventory examples/rig/inventory.json \
   --listen 127.0.0.1:5084 \
   --report-interval 1s
 ```
@@ -34,8 +34,8 @@ Missing or invalid files fail startup.
 ## Run a scenario
 
 ```sh
-go run ./cmd/golemu simulator \
-  --scenario examples/golemu/scenario.json \
+go run ./cmd/tagstrak-rig simulator \
+  --scenario examples/rig/scenario.json \
   --listen 127.0.0.1:5084 \
   --report-interval 1s
 ```
@@ -100,21 +100,21 @@ The application removes only its own Unix socket on normal shutdown.
 This boundary trusts processes running as the same local user; it is not a remote management or multi-user authorization API.
 
 ```sh
-control_dir=$(mktemp -d /tmp/golemu-control.XXXXXX)
-go run ./cmd/golemu simulator \
-  --scenario examples/golemu/scenario.json \
+control_dir=$(mktemp -d /tmp/tagstrak-rig.XXXXXX)
+go run ./cmd/tagstrak-rig simulator \
+  --scenario examples/rig/scenario.json \
   --control-socket "$control_dir/control.sock"
 ```
 
 From another terminal, substitute the created directory:
 
 ```sh
-curl --unix-socket /tmp/golemu-control.EXAMPLE/control.sock \
+curl --unix-socket /tmp/tagstrak-rig.EXAMPLE/control.sock \
   http://localhost/status
 
-curl --unix-socket /tmp/golemu-control.EXAMPLE/control.sock \
+curl --unix-socket /tmp/tagstrak-rig.EXAMPLE/control.sock \
   -X PUT -H 'Content-Type: application/json' \
-  --data-binary @examples/golemu/scenario.json \
+  --data-binary @examples/rig/scenario.json \
   http://localhost/scenario
 ```
 
@@ -180,7 +180,7 @@ No new third-party dependency is introduced; obsolete Gin/logrus dependencies ar
 ```sh
 go test -race ./...
 go vet ./...
-go build ./cmd/golemu ./cmd/tagstrak
+go build ./cmd/tagstrak-rig ./cmd/tagstrak
 ```
 
 Tests cover deterministic wire reports, seed isolation, strict configuration, shared reader interoperability, frame splitting, cycle-boundary replacement, real socket deadlines, keepalives/ACK failure, client limits, control access, startup failure, disconnects, and cancellation cleanup.
