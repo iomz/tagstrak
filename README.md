@@ -5,7 +5,7 @@ Modern Go stack for LLRP-based RFID, combining reusable protocol tooling, tagstr
 ## Commands
 
 - `tagstrak`: RFID event filtering and collection middleware
-- `tagstrak-rig`: LLRP reader emulator
+- `tagstrak-rig`: test rig with an LLRP reader emulator and a tag data generator
 
 ## Packages
 

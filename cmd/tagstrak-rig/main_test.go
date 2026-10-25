@@ -17,7 +17,7 @@ func TestParseWorkflows(t *testing.T) {
 		}
 		ctx, cancel := context.WithCancel(context.Background())
 		cancel()
-		if err = run(ctx, args, io.Discard); !errors.Is(err, context.Canceled) {
+		if err = run(ctx, args, io.Discard, io.Discard); !errors.Is(err, context.Canceled) {
 			t.Fatal(err)
 		}
 	}
