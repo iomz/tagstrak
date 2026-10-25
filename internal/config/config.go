@@ -1,4 +1,4 @@
-// Package config decodes the versioned gosstrak configuration file and
+// Package config decodes the versioned tagstrak configuration file and
 // resolves secrets from their sources.
 //
 // The file is TOML (.toml) or JSON (.json) with one schema. Decoding is
@@ -69,7 +69,7 @@ const (
 
 // Store selects the one source of truth for subscriptions. With "file", the
 // default, this file holds them and SIGHUP reloads it. With "api", a state
-// file owned by gosstrak holds them and the management API replaces them; this
+// file owned by tagstrak holds them and the management API replaces them; this
 // file must then list none.
 type Store struct {
 	Source    *string `toml:"source" json:"source"`

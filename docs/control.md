@@ -1,6 +1,6 @@
 # Management API
 
-Issue #10 slice 10b adds an authenticated management API to gosstrak and moves golemu's local control onto the same transport.
+Issue #10 slice 10b adds an authenticated management API to tagstrak and moves golemu's local control onto the same transport.
 The [#10 design record](https://github.com/iomz/tagstrak/issues/10#issuecomment-6378251881) is the decision source; [security.md](security.md) holds the threat model.
 
 ## Transport
@@ -12,8 +12,8 @@ The [#10 design record](https://github.com/iomz/tagstrak/issues/10#issuecomment-
 | Read-header / read / write / idle timeout | 2 s / 5 s / 5 s / 30 s |
 | Shutdown | the command's shutdown timeout |
 | Header bytes | 8 KiB |
-| Request body | 1 MiB for gosstrak subscription documents; golemu's scenario limit for scenarios |
-| Concurrent connections | 16 for gosstrak, 4 for golemu; excess connections are closed, not queued |
+| Request body | 1 MiB for tagstrak subscription documents; golemu's scenario limit for scenarios |
+| Concurrent connections | 16 for tagstrak, 4 for golemu; excess connections are closed, not queued |
 | Mutating requests | `Content-Type: application/json`, otherwise 415 |
 
 Control is off unless configured, so default startup exposes no mutation endpoint.
@@ -31,7 +31,7 @@ Errors are structured and never echo headers or secrets:
 {"error": {"code": "invalid_subscriptions", "message": "…", "field": "subscriptions[0].patterns[0]"}}
 ```
 
-## gosstrak routes
+## tagstrak routes
 
 | Route | Behaviour |
 | --- | --- |
@@ -56,9 +56,9 @@ Replacement validates and compiles the whole set, writes the state file, and onl
 Destinations are fixed at startup: the API cannot add destinations, change URLs or headers, or read credentials.
 
 ```sh
-curl --unix-socket /run/gosstrak/control.sock http://localhost/v1/subscriptions
+curl --unix-socket /run/tagstrak/control.sock http://localhost/v1/subscriptions
 
-curl -H "Authorization: Bearer $GOSSTRAK_CONTROL_TOKEN" \
+curl -H "Authorization: Bearer $TAGSTRAK_CONTROL_TOKEN" \
   -H 'Content-Type: application/json' -H 'If-Match: "3"' \
   -X PUT --data '{"subscriptions":[{"id":"product","patterns":["urn:epc:idpat:sgtin:0614141.812345.*"],"destinations":["erp"]}]}' \
   http://127.0.0.1:9090/v1/subscriptions
@@ -69,7 +69,7 @@ curl -H "Authorization: Bearer $GOSSTRAK_CONTROL_TOKEN" \
 Exactly one source holds subscriptions, chosen with `[subscription_store] source` ([configuration.md](configuration.md)):
 
 - **`file`** (default): the configuration file. `SIGHUP` re-reads it and replaces the subscriptions atomically; destinations, secrets, and other settings change only on restart. An invalid file or a source change is rejected and the current subscriptions stay. `PUT` returns 409.
-- **`api`**: a state file gosstrak owns at `state_file`, written atomically (temporary file, sync, rename, directory sync) with mode 0600. Startup loads it, or starts empty when it does not exist; a damaged state file stops startup. The configuration file must not list subscriptions.
+- **`api`**: a state file tagstrak owns at `state_file`, written atomically (temporary file, sync, rename, directory sync) with mode 0600. Startup loads it, or starts empty when it does not exist; a damaged state file stops startup. The configuration file must not list subscriptions.
 
 Writing API changes back into the configuration file is not supported: it would destroy comments, race with operators, and fight configuration management.
 

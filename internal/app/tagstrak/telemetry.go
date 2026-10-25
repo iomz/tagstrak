@@ -1,4 +1,4 @@
-package gosstrak
+package tagstrak
 
 import (
 	"encoding/json"
@@ -81,24 +81,24 @@ func (a *App) Handler() http.Handler {
 	mux.HandleFunc("GET /metrics", func(w http.ResponseWriter, r *http.Request) {
 		s := a.Status()
 		w.Header().Set("Content-Type", "text/plain; version=0.0.4")
-		_, _ = fmt.Fprintf(w, "gosstrak_ready %d\ngosstrak_reader_attempts_total %d\ngosstrak_reader_reconnects_total %d\ngosstrak_reader_frames_total %d\ngosstrak_reader_reports_total %d\ngosstrak_reader_keepalives_total %d\ngosstrak_reader_failures_total %d\ngosstrak_queue_overflows_total %d\ngosstrak_observations_received_total %d\ngosstrak_observations_processed_total %d\ngosstrak_observations_abandoned_total %d\ngosstrak_observations_translated_total %d\ngosstrak_observations_untranslatable_total %d\ngosstrak_queue_depth %d\ngosstrak_queue_capacity %d\ngosstrak_reader_retry_delay_seconds %g\n",
+		_, _ = fmt.Fprintf(w, "tagstrak_ready %d\ntagstrak_reader_attempts_total %d\ntagstrak_reader_reconnects_total %d\ntagstrak_reader_frames_total %d\ntagstrak_reader_reports_total %d\ntagstrak_reader_keepalives_total %d\ntagstrak_reader_failures_total %d\ntagstrak_queue_overflows_total %d\ntagstrak_observations_received_total %d\ntagstrak_observations_processed_total %d\ntagstrak_observations_abandoned_total %d\ntagstrak_observations_translated_total %d\ntagstrak_observations_untranslatable_total %d\ntagstrak_queue_depth %d\ntagstrak_queue_capacity %d\ntagstrak_reader_retry_delay_seconds %g\n",
 			boolInt(s.Ready), s.Reader.Attempts, s.Reader.Reconnects, s.Reader.Frames, s.Reader.Reports, s.Reader.Keepalives, s.Reader.Failures, s.Reader.QueueOverflows, s.Reader.Observations, s.Processed, s.Abandoned, s.Translated, s.Untranslatable, s.QueueDepth, s.QueueCapacity, s.Reader.RetryDelay.Seconds())
 		// Destination names are validated to a label-safe character set, and
 		// they stand in for addresses, which may carry credentials.
 		for _, d := range s.Delivery {
 			label := fmt.Sprintf("{destination=%q}", d.Destination)
-			_, _ = fmt.Fprintf(w, "gosstrak_report_enqueued_total%s %d\ngosstrak_report_delivered_total%s %d\ngosstrak_report_dropped_total%s %d\ngosstrak_report_failed_total%s %d\ngosstrak_report_undelivered_total%s %d\ngosstrak_report_retries_total%s %d\ngosstrak_report_queue_depth%s %d\ngosstrak_report_queue_capacity%s %d\n",
+			_, _ = fmt.Fprintf(w, "tagstrak_report_enqueued_total%s %d\ntagstrak_report_delivered_total%s %d\ntagstrak_report_dropped_total%s %d\ntagstrak_report_failed_total%s %d\ntagstrak_report_undelivered_total%s %d\ntagstrak_report_retries_total%s %d\ntagstrak_report_queue_depth%s %d\ntagstrak_report_queue_capacity%s %d\n",
 				label, d.Enqueued, label, d.Delivered, label, d.Dropped, label, d.Failed, label, d.Undelivered, label, d.Retries, label, d.QueueDepth, label, d.QueueCapacity)
 		}
 		// Candidate names come from the configuration's fixed vocabulary.
 		// Counters cover the current subscription snapshot and restart from
 		// zero when subscriptions are replaced.
 		if f := s.Filter; f != nil {
-			_, _ = fmt.Fprintf(w, "gosstrak_filter_adaptive_sampled_total %d\ngosstrak_filter_adaptive_shadows_skipped_total %d\ngosstrak_filter_adaptive_switches_total %d\ngosstrak_filter_adaptive_shadow_seconds_total %g\n",
+			_, _ = fmt.Fprintf(w, "tagstrak_filter_adaptive_sampled_total %d\ntagstrak_filter_adaptive_shadows_skipped_total %d\ntagstrak_filter_adaptive_switches_total %d\ntagstrak_filter_adaptive_shadow_seconds_total %g\n",
 				f.SampledCalls, f.SkippedShadows, f.Switches, f.ShadowTime.Seconds())
 			for _, c := range f.Candidates {
 				label := fmt.Sprintf("{candidate=%q}", c.Name)
-				_, _ = fmt.Fprintf(w, "gosstrak_filter_adaptive_selected%s %d\ngosstrak_filter_adaptive_samples_total%s %d\ngosstrak_filter_adaptive_mean_cost_seconds%s %g\n",
+				_, _ = fmt.Fprintf(w, "tagstrak_filter_adaptive_selected%s %d\ntagstrak_filter_adaptive_samples_total%s %d\ntagstrak_filter_adaptive_mean_cost_seconds%s %g\n",
 					label, boolInt(c.Name == f.Selected), label, c.Samples, label, c.MeanCost.Seconds())
 			}
 		}

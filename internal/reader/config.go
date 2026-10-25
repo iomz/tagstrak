@@ -1,4 +1,4 @@
-// Package reader owns gosstrak-side LLRP sessions and their retry policy.
+// Package reader owns tagstrak-side LLRP sessions and their retry policy.
 package reader
 
 import (

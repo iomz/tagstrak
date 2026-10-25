@@ -1,4 +1,4 @@
-package gosstrak
+package tagstrak
 
 import (
 	"context"
@@ -145,7 +145,7 @@ func TestReadinessAndGracefulDrain(t *testing.T) {
 	}
 	r := httptest.NewRecorder()
 	a.Handler().ServeHTTP(r, httptest.NewRequest(http.MethodGet, "/metrics", nil))
-	if !strings.Contains(r.Body.String(), "gosstrak_observations_processed_total 2\n") {
+	if !strings.Contains(r.Body.String(), "tagstrak_observations_processed_total 2\n") {
 		t.Fatal(r.Body.String())
 	}
 }

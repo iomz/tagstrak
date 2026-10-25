@@ -1,8 +1,8 @@
-# Example gosstrak configuration. Run against the golemu example scenario:
+# Example tagstrak configuration. Run against the golemu example scenario:
 #
-#   ERP_TOKEN=... go run ./cmd/gosstrak --config examples/gosstrak/gosstrak.toml
+#   ERP_TOKEN=... go run ./cmd/tagstrak --config examples/tagstrak/tagstrak.toml
 #
-# Settings apply in order: defaults, this file, GOSSTRAK_* environment
+# Settings apply in order: defaults, this file, TAGSTRAK_* environment
 # variables, flags. Secrets come only from env or file sources, never from
 # this file, so it is safe to commit.
 version = 1
@@ -20,10 +20,10 @@ flush_interval = "1s"
 # Optional management API. A Unix socket trusts the same user; a loopback
 # address requires a token of at least 32 bytes. Remote addresses are refused.
 # [control]
-# socket = "/run/gosstrak/control.sock"
+# socket = "/run/tagstrak/control.sock"
 # address = "127.0.0.1:9090"
 # [control.token]
-# file = "/run/secrets/gosstrak-control"
+# file = "/run/secrets/tagstrak-control"
 
 [[destinations]]
 name = "erp"

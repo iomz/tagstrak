@@ -1,4 +1,4 @@
-package gosstrak
+package tagstrak
 
 import (
 	"errors"
@@ -15,7 +15,7 @@ import (
 
 // ErrRevisionMismatch reports a replacement whose expected revision is not
 // the current one.
-var ErrRevisionMismatch = errors.New("gosstrak: subscription revision mismatch")
+var ErrRevisionMismatch = errors.New("tagstrak: subscription revision mismatch")
 
 // FieldError locates a subscription error, such as "subscriptions[1].patterns[0]".
 type FieldError struct {

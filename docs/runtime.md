@@ -1,18 +1,18 @@
 # Reader runtime
 
-Issue #5 implements the gosstrak ingestion lifecycle in the v2 milestone tracked by #1.
-The architecture decision in #2 keeps gosstrak and golemu as separate processes with direct calls inside each process and bounded queues at ownership boundaries.
+Issue #5 implements the tagstrak ingestion lifecycle in the v2 milestone tracked by #1.
+The architecture decision in #2 keeps tagstrak and golemu as separate processes with direct calls inside each process and bounded queues at ownership boundaries.
 
 ## Packages and scope
 
 - `internal/reader` owns one reader connection at a time, handshake validation, frame deadlines, observation decoding, and reconnect policy.
-- `internal/app/gosstrak` owns the reader, observation consumer, queue, and read-only HTTP telemetry server.
-- `cmd/gosstrak` parses inputs, supplies dependencies, creates the signal context, and selects the final process exit status.
+- `internal/app/tagstrak` owns the reader, observation consumer, queue, and read-only HTTP telemetry server.
+- `cmd/tagstrak` parses inputs, supplies dependencies, creates the signal context, and selects the final process exit status.
 - `llrp` owns all wire framing and parameter decoding; it does not dial, retry, log, or close connections.
 - `internal/inventory.Observation` is the immutable domain handoff already established by #4.
 
 This milestone slice runs in **ingestion mode**: it validates observations, translates them, matches them against subscriptions, and exposes accepted/processed/translated counts.
-The command's consumer is `internal/app/gosstrak.TranslatingConsumer`, which adapts each observation to the #8 translation boundary described in [tdt.md](tdt.md).
+The command's consumer is `internal/app/tagstrak.TranslatingConsumer`, which adapts each observation to the #8 translation boundary described in [tdt.md](tdt.md).
 Its processor, `MatchingProcessor`, matches each translation against the current `filter.Set` described in [filter.md](filter.md) and logs the identity and matched subscription IDs at debug level.
 Configured with `DeliverTo`, it also enqueues one report event per routed destination; [report.md](report.md) describes delivery.
 Tags outside the supported standards are counted as untranslatable and dropped; any other translation error fails the consumer.
@@ -25,7 +25,7 @@ The emulator lifecycle and scenarios implemented by #6 are documented in [golemu
 ## Run
 
 ```sh
-go run ./cmd/gosstrak start \
+go run ./cmd/tagstrak start \
   --reader 127.0.0.1:5084 \
   --source reader-1 \
   --telemetry 127.0.0.1:8080 \
@@ -34,7 +34,7 @@ go run ./cmd/gosstrak start \
 
 `start` is optional.
 Use `--help` for all supported flags.
-Settings apply in order: defaults, the `--config` file, `GOSSTRAK_*` environment variables, then flags; see [configuration.md](configuration.md).
+Settings apply in order: defaults, the `--config` file, `TAGSTRAK_*` environment variables, then flags; see [configuration.md](configuration.md).
 V1 flags and behavior are not compatibility contracts.
 
 | Budget | Default | Behavior |
@@ -73,7 +73,7 @@ Any terminal failure -> stopping -> failed
 ```
 
 The reader must first send a successful connection-attempt notification.
-Gosstrak sends `SET_READER_CONFIG` and accepts exactly one successful LLRP status in the response with the matching request ID.
+Tagstrak sends `SET_READER_CONFIG` and accepts exactly one successful LLRP status in the response with the matching request ID.
 The supported config helper requests a 10-second keepalive interval.
 Keepalive ACKs echo the incoming keepalive ID and can be exchanged during handshake without extending its deadline.
 Once serving, valid notifications, keepalives, and reports are accepted; unsupported message types terminate the run.
@@ -143,7 +143,7 @@ Maintenance stays within standard-library runtime code and the existing domain/c
 ```sh
 go test -race ./...
 go vet ./...
-go build ./cmd/gosstrak ./cmd/golemu
+go build ./cmd/tagstrak ./cmd/golemu
 git diff --check
 ```
 

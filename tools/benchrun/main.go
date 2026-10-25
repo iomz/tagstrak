@@ -152,7 +152,7 @@ func run(ctx context.Context, out string, s settings) error {
 
 	step("building binaries for the end-to-end runs")
 	bin := filepath.Join(out, "bin")
-	if err := command(ctx, "", nil, io.Discard, "go", "build", "-o", filepath.Join(bin, "gosstrak-v2"), "./cmd/gosstrak"); err != nil {
+	if err := command(ctx, "", nil, io.Discard, "go", "build", "-o", filepath.Join(bin, "tagstrak-v2"), "./cmd/tagstrak"); err != nil {
 		return err
 	}
 	if err := command(ctx, worktree, nil, io.Discard, "go", "build", "-o", filepath.Join(bin, "gosstrak-v1"), "./cmd/gosstrak"); err != nil {
@@ -304,7 +304,7 @@ func compare(ctx context.Context, out string) error {
 	return nil
 }
 
-// endToEnd runs each gosstrak binary as a black box: one feeder plays the
+// endToEnd runs each middleware binary, v1 gosstrak and v2 tagstrak, as a black box: one feeder plays the
 // reader, streams the same reports as fast as they are accepted, and the
 // process's CPU time and peak memory are read from rusage. v1 discards its
 // matches, so only v2 can report delivery latency, measured at an HTTP sink.
@@ -337,10 +337,10 @@ func endToEnd(ctx context.Context, out, data, bin string, s settings) error {
 			return []string{filepath.Join(bin, "gosstrak-v1"), "--ecspecfile", filepath.Join(data, fmt.Sprintf("subs-%d.v1.csv", s.E2ESubs)), "--ip", reader, "--managementAddr", "127.0.0.1:0", "start"}
 		}, false, nil},
 		{"v2-e2e.txt", "v2", func(reader, telemetry string) []string {
-			return []string{filepath.Join(bin, "gosstrak-v2"), "--config", v2Config, "--reader", reader, "--telemetry", telemetry}
+			return []string{filepath.Join(bin, "tagstrak-v2"), "--config", v2Config, "--reader", reader, "--telemetry", telemetry}
 		}, true, nil},
 		{"v2-deliver-e2e.txt", "v2+delivery", func(reader, telemetry string) []string {
-			return []string{filepath.Join(bin, "gosstrak-v2"), "--config", v2DeliverConfig, "--reader", reader, "--telemetry", telemetry}
+			return []string{filepath.Join(bin, "tagstrak-v2"), "--config", v2DeliverConfig, "--reader", reader, "--telemetry", telemetry}
 		}, true, deliverySink},
 	}
 	for _, r := range runs {
@@ -513,10 +513,10 @@ func awaitProcessed(ctx context.Context, telemetry string, want int) error {
 					metrics[name] = value
 				}
 			}
-			if metrics["gosstrak_queue_overflows_total"] > 0 || metrics["gosstrak_observations_abandoned_total"] > 0 {
+			if metrics["tagstrak_queue_overflows_total"] > 0 || metrics["tagstrak_observations_abandoned_total"] > 0 {
 				return errors.New("v2 overflowed its queue or abandoned observations; reduce -e2e-reports")
 			}
-			if metrics["gosstrak_observations_processed_total"] >= float64(want) {
+			if metrics["tagstrak_observations_processed_total"] >= float64(want) {
 				return nil
 			}
 		}

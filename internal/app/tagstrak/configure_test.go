@@ -1,4 +1,4 @@
-package gosstrak
+package tagstrak
 
 import (
 	"context"
@@ -304,7 +304,7 @@ func TestPipelineAdaptiveMode(t *testing.T) {
 	}
 	metrics := httptest.NewRecorder()
 	a.Handler().ServeHTTP(metrics, httptest.NewRequest(http.MethodGet, "/metrics", nil))
-	for _, want := range []string{"gosstrak_filter_adaptive_sampled_total 2\n", `gosstrak_filter_adaptive_selected{candidate="index"} `, `gosstrak_filter_adaptive_samples_total{candidate="linear"} `} {
+	for _, want := range []string{"tagstrak_filter_adaptive_sampled_total 2\n", `tagstrak_filter_adaptive_selected{candidate="index"} `, `tagstrak_filter_adaptive_samples_total{candidate="linear"} `} {
 		if !strings.Contains(metrics.Body.String(), want) {
 			t.Fatalf("metrics lack %q:\n%s", want, metrics.Body.String())
 		}

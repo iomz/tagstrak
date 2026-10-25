@@ -1,4 +1,4 @@
-package gosstrak
+package tagstrak
 
 import (
 	"context"
@@ -168,7 +168,7 @@ func TestAppOwnsDeliveryLifecycle(t *testing.T) {
 	}
 	metrics := httptest.NewRecorder()
 	a.Handler().ServeHTTP(metrics, httptest.NewRequest(http.MethodGet, "/metrics", nil))
-	for _, want := range []string{`gosstrak_report_delivered_total{destination="hook"} 3`, `gosstrak_report_queue_capacity{destination="hook"} 10`} {
+	for _, want := range []string{`tagstrak_report_delivered_total{destination="hook"} 3`, `tagstrak_report_queue_capacity{destination="hook"} 10`} {
 		if !strings.Contains(metrics.Body.String(), want) {
 			t.Fatalf("metrics lack %q:\n%s", want, metrics.Body.String())
 		}

@@ -1,10 +1,10 @@
 # tagstrak
 
-Modern Go stack for LLRP-based RFID, combining reusable protocol tooling, gosstrak middleware, and golemu reader emulation.
+Modern Go stack for LLRP-based RFID, combining reusable protocol tooling, tagstrak middleware, and golemu reader emulation.
 
 ## Commands
 
-- `gosstrak`: RFID event filtering and collection middleware
+- `tagstrak`: RFID event filtering and collection middleware
 - `golemu`: LLRP reader emulator
 
 ## Packages
@@ -17,7 +17,7 @@ Modern Go stack for LLRP-based RFID, combining reusable protocol tooling, gosstr
 - `internal/report`: bounded report delivery and destination adapters
 - `internal/config`: versioned configuration file and redacted secret sources
 - `internal/control`: hardened management transport shared by both commands
-- `internal/app/gosstrak`, `internal/app/golemu`: application composition for each command
+- `internal/app/tagstrak`, `internal/app/golemu`: application composition for each command
 
 ## LLRP package
 
@@ -31,7 +31,7 @@ See [docs/legacy-import.md](docs/legacy-import.md) for source revisions and path
 
 ## Reader runtime
 
-The v2 gosstrak ingestion runtime provides bounded reader sessions, finite reconnects, and health/readiness/metrics endpoints.
+The v2 tagstrak ingestion runtime provides bounded reader sessions, finite reconnects, and health/readiness/metrics endpoints.
 See [docs/runtime.md](docs/runtime.md) for configuration, lifecycle, and the current milestone scope.
 
 ## Reader emulation
@@ -41,7 +41,7 @@ See [docs/golemu.md](docs/golemu.md) for runnable examples and cycle semantics.
 
 ## Tag data translation
 
-Gosstrak translates tag data into canonical GS1 EPC and ISO/IEC 17360 identities from pinned GS1 TDT artefacts and cited ISO evidence, and compiles GS1 patterns for filtering.
+Tagstrak translates tag data into canonical GS1 EPC and ISO/IEC 17360 identities from pinned GS1 TDT artefacts and cited ISO evidence, and compiles GS1 patterns for filtering.
 See [docs/tdt.md](docs/tdt.md) for supported schemes, artefact maintenance, golden vectors, and the benchmark baseline.
 
 ## Subscription matching
@@ -71,10 +71,10 @@ See [docs/benchmarks.md](docs/benchmarks.md) for the procedure, the final result
 
 ## Deployment
 
-Run gosstrak under a supervisor that restarts it, since it exits on exhausted reconnects or overflow rather than degrading silently.
+Run tagstrak under a supervisor that restarts it, since it exits on exhausted reconnects or overflow rather than degrading silently.
 See [docs/deployment.md](docs/deployment.md) for a systemd unit, the settings to decide, monitoring, and migrating from v1.
 
 ## Configuration
 
-Gosstrak reads an optional TOML or JSON configuration file for its settings, subscriptions, and destinations, with secrets from environment or file sources only.
-See [docs/configuration.md](docs/configuration.md) and [examples/gosstrak/gosstrak.toml](examples/gosstrak/gosstrak.toml).
+Tagstrak reads an optional TOML or JSON configuration file for its settings, subscriptions, and destinations, with secrets from environment or file sources only.
+See [docs/configuration.md](docs/configuration.md) and [examples/tagstrak/tagstrak.toml](examples/tagstrak/tagstrak.toml).

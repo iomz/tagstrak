@@ -1,4 +1,4 @@
-package gosstrak
+package tagstrak
 
 import (
 	"bytes"
@@ -273,7 +273,7 @@ func TestNewRefusesUnauthenticatedTCPControl(t *testing.T) {
 }
 
 func TestReloadFile(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "gosstrak.toml")
+	path := filepath.Join(t.TempDir(), "tagstrak.toml")
 	write := func(body string) {
 		if err := os.WriteFile(path, []byte(body), 0o600); err != nil {
 			t.Fatal(err)

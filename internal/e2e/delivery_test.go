@@ -21,7 +21,7 @@ import (
 	"time"
 
 	golemu "github.com/iomz/tagstrak/v2/internal/app/golemu"
-	gosstrak "github.com/iomz/tagstrak/v2/internal/app/gosstrak"
+	tagstrak "github.com/iomz/tagstrak/v2/internal/app/tagstrak"
 	configfile "github.com/iomz/tagstrak/v2/internal/config"
 	"github.com/iomz/tagstrak/v2/internal/control"
 	"github.com/iomz/tagstrak/v2/internal/emulator"
@@ -189,9 +189,9 @@ type middlewareOptions struct {
 	flushInterval time.Duration
 }
 
-// startMiddleware builds gosstrak through the production configuration path:
+// startMiddleware builds tagstrak through the production configuration path:
 // a configuration file value, Pipeline, then New.
-func startMiddleware(t *testing.T, o middlewareOptions) (*gosstrak.App, gosstrak.Assembly, running) {
+func startMiddleware(t *testing.T, o middlewareOptions) (*tagstrak.App, tagstrak.Assembly, running) {
 	t.Helper()
 	f := o.file
 	f.Version = configfile.Version
@@ -208,7 +208,7 @@ func startMiddleware(t *testing.T, o middlewareOptions) (*gosstrak.App, gosstrak
 	}
 	f.Report.FlushInterval, f.Report.BackoffBase = &flush, &base
 
-	c := gosstrak.DefaultConfig()
+	c := tagstrak.DefaultConfig()
 	c.Reader.Address = o.reader
 	c.Reader.Source = "dock-1"
 	c.Reader.MaxRetries = o.retries
@@ -220,11 +220,11 @@ func startMiddleware(t *testing.T, o middlewareOptions) (*gosstrak.App, gosstrak
 		c.ShutdownTimeout = o.shutdown
 	}
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
-	assembly, err := gosstrak.Pipeline(f, c, func(string) (string, bool) { return "", false }, logger)
+	assembly, err := tagstrak.Pipeline(f, c, func(string) (string, bool) { return "", false }, logger)
 	if err != nil {
 		t.Fatal(err)
 	}
-	app, err := gosstrak.New(c, &net.Dialer{}, assembly.Consumer, logger, assembly.Options...)
+	app, err := tagstrak.New(c, &net.Dialer{}, assembly.Consumer, logger, assembly.Options...)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -257,7 +257,7 @@ func cleanShutdown(t *testing.T, err error) {
 }
 
 // TestGolemuToHTTPDestination is the #9 end-to-end flow: golemu reports tags
-// over LLRP, gosstrak translates and matches them, and the HTTP adapter
+// over LLRP, tagstrak translates and matches them, and the HTTP adapter
 // delivers matching reports to a destination. Shutdown drains cleanly.
 func TestGolemuToHTTPDestination(t *testing.T) {
 	sink := &receiver{}
@@ -303,7 +303,7 @@ func TestDestinationOutageThenRecovery(t *testing.T) {
 	}
 }
 
-// TestReaderReconnect replaces the reader on the same address: gosstrak
+// TestReaderReconnect replaces the reader on the same address: tagstrak
 // reconnects within its retry budget, ingestion resumes, and no event is
 // delivered twice.
 func TestReaderReconnect(t *testing.T) {
@@ -361,13 +361,13 @@ func TestScenarioReplacedThroughGolemuControl(t *testing.T) {
 	checkProductEvents(t, sink.snapshot())
 }
 
-// TestSubscriptionsReplacedThroughAPI starts gosstrak with API-managed,
+// TestSubscriptionsReplacedThroughAPI starts tagstrak with API-managed,
 // empty subscriptions and adds one over the management socket: routing
 // changes live and the state file records it.
 func TestSubscriptionsReplacedThroughAPI(t *testing.T) {
 	sink := &receiver{}
 	dir := privateDir(t)
-	socket, state := filepath.Join(dir, "gosstrak.sock"), filepath.Join(dir, "subscriptions.json")
+	socket, state := filepath.Join(dir, "tagstrak.sock"), filepath.Join(dir, "subscriptions.json")
 	source := configfile.SourceAPI
 	emu, emuRun := startEmulator(t, emulatorOptions{scenario: scenarioOf(productEPC)})
 	_, assembly, appRun := startMiddleware(t, middlewareOptions{
@@ -382,7 +382,7 @@ func TestSubscriptionsReplacedThroughAPI(t *testing.T) {
 
 	client := unixClient(socket)
 	body := `{"subscriptions":[{"id":"product","patterns":["urn:epc:idpat:sgtin:0614141.812345.*"],"destinations":["hook"]}]}`
-	req, _ := http.NewRequest(http.MethodPut, "http://gosstrak/v1/subscriptions", strings.NewReader(body))
+	req, _ := http.NewRequest(http.MethodPut, "http://tagstrak/v1/subscriptions", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("If-Match", `"0"`)
 	resp, err := client.Do(req)
@@ -407,7 +407,7 @@ func TestSubscriptionsReplacedThroughAPI(t *testing.T) {
 	}
 }
 
-// TestShutdownWithBatchesInFlight stops gosstrak while the destination never
+// TestShutdownWithBatchesInFlight stops tagstrak while the destination never
 // answers: Run returns by the shutdown deadline and reports the undelivered
 // events instead of losing them silently.
 func TestShutdownWithBatchesInFlight(t *testing.T) {

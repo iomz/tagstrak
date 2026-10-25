@@ -1,7 +1,7 @@
 # Threat model
 
 This is the v2 threat model required by #10.
-It covers gosstrak and golemu as deployed from this repository; the decisions behind it are in the #9 and #10 design records.
+It covers tagstrak and golemu as deployed from this repository; the decisions behind it are in the #9 and #10 design records.
 
 ## Trust boundaries
 

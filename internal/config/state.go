@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 )
 
-// State is the subscription state file gosstrak owns when subscriptions come
+// State is the subscription state file tagstrak owns when subscriptions come
 // from the management API. It is JSON so it can be inspected and backed up,
 // and it shares the configuration file's subscription schema.
 type State struct {

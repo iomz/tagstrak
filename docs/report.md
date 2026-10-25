@@ -9,7 +9,7 @@ The [#9 design record](https://github.com/iomz/tagstrak/issues/9#issuecomment-63
 | --- | --- | --- |
 | `internal/report` | standard library | `Event`, `Batch`, `Reporter`, error classes, `Dispatcher`, the JSON wire schema, stats |
 | `internal/report/httpreport` | `report` | HTTP POST adapter |
-| `internal/app/gosstrak` | `report`, `filter`, `tdt` | `EventOf`, `Routes`, `DeliverTo`, and the `WithDelivery` lifecycle |
+| `internal/app/tagstrak` | `report`, `filter`, `tdt` | `EventOf`, `Routes`, `DeliverTo`, and the `WithDelivery` lifecycle |
 
 `report` imports no identity or translator types; `EventOf` renders events at the application boundary, as `TranslationInput` and `SubjectOf` do for translation and matching.
 This amends #2, which had `report` import `tag` and `identity`.
@@ -49,7 +49,7 @@ A permanent error, exhausted attempts, or an exhausted retry budget is a final f
 - One batch per `POST`, `Content-Type: application/json`, body `Batch.JSON()`, `Idempotency-Key` set to the batch ID.
 - 2xx is success. 408, 425, 429, 5xx, and transport errors are retryable. Every other status is permanent.
 - Redirects are never followed, so request credentials cannot reach another host; a redirect is a permanent failure.
-- TLS certificates are always verified against the system roots, with no option to skip verification. This is gosstrak's first outbound TLS path, so the patched Go toolchain and CA bundle from #20 apply to it.
+- TLS certificates are always verified against the system roots, with no option to skip verification. This is tagstrak's first outbound TLS path, so the patched Go toolchain and CA bundle from #20 apply to it.
 - Destination URLs never appear in errors, logs, or metrics, because their user information, path, or query may carry credentials. Destinations are named, and the name is the label; transport errors may name the host and port.
 - Credentials belong in `WithHeader`, never in the URL. The configuration file supplies them as redacted header secrets from environment or file sources ([configuration.md](configuration.md)).
 
@@ -86,12 +86,12 @@ A permanent error, exhausted attempts, or an exhausted retry budget is a final f
 ## Routing and configuration
 
 `Routes` maps subscription IDs to destination names, and `DeliverTo` rejects routes to unknown destinations.
-Subscriptions, destinations, and routes come from the configuration file ([configuration.md](configuration.md)); without one, `cmd/gosstrak` delivers nothing.
+Subscriptions, destinations, and routes come from the configuration file ([configuration.md](configuration.md)); without one, `cmd/tagstrak` delivers nothing.
 The end-to-end path is exercised in-process by `internal/e2e`.
 
 ## Telemetry
 
-`/metrics` exposes, per destination, `gosstrak_report_{enqueued,delivered,dropped,failed,undelivered,retries}_total` and `gosstrak_report_queue_{depth,capacity}` with a `destination` label.
+`/metrics` exposes, per destination, `tagstrak_report_{enqueued,delivered,dropped,failed,undelivered,retries}_total` and `tagstrak_report_queue_{depth,capacity}` with a `destination` label.
 The same counters appear under `delivery` in `/healthz` and `/readyz`.
 Delivery state does not affect readiness, because readiness describes ingestion.
 
@@ -109,4 +109,4 @@ go test -race ./internal/report/... ./internal/app/... ./internal/e2e/...
 go vet ./...
 ```
 
-Tests cover batching by count, bytes, and age; FIFO order; drop-newest overflow and its logging; deterministic backoff and `Retry-After`; permanent, attempts-exhausted, and budget-exhausted final failures; shutdown at the deadline with undelivered counts; per-destination isolation; concurrent enqueue and close under the race detector; the wire schema; HTTP status classification, redirects, slow and unavailable destinations, URL validation, and credential-free errors; event rendering, routing, and the app lifecycle; and the end-to-end flow from golemu over LLRP through gosstrak to an HTTP destination.
+Tests cover batching by count, bytes, and age; FIFO order; drop-newest overflow and its logging; deterministic backoff and `Retry-After`; permanent, attempts-exhausted, and budget-exhausted final failures; shutdown at the deadline with undelivered counts; per-destination isolation; concurrent enqueue and close under the race detector; the wire schema; HTTP status classification, redirects, slow and unavailable destinations, URL validation, and credential-free errors; event rendering, routing, and the app lifecycle; and the end-to-end flow from golemu over LLRP through tagstrak to an HTTP destination.

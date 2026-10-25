@@ -1,4 +1,4 @@
-package gosstrak
+package tagstrak
 
 import (
 	"context"
@@ -37,7 +37,7 @@ type ProcessorOption func(*MatchingProcessor) error
 func DeliverTo(delivery Delivery) ProcessorOption {
 	return func(p *MatchingProcessor) error {
 		if delivery == nil {
-			return fmt.Errorf("gosstrak: delivery is required")
+			return fmt.Errorf("tagstrak: delivery is required")
 		}
 		known := make(map[string]bool)
 		for _, name := range delivery.Destinations() {
@@ -45,7 +45,7 @@ func DeliverTo(delivery Delivery) ProcessorOption {
 		}
 		for _, name := range p.subscriptions.Destinations() {
 			if !known[name] {
-				return fmt.Errorf("gosstrak: subscriptions may route to %q, which delivery does not have", name)
+				return fmt.Errorf("tagstrak: subscriptions may route to %q, which delivery does not have", name)
 			}
 		}
 		p.delivery = delivery

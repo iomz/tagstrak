@@ -9,7 +9,7 @@ Slice 4 measures adaptive overhead, convergence, switch stability, and selection
 | Package | Imports | Owns |
 | --- | --- | --- |
 | `internal/filter` | `identity` | `Subject`, `Subscription`, `Matcher`, `Compiler`, `Compile`, `CompileIndex`, `CompileLinear`, `CompileAdaptive`, `Set` |
-| `internal/app/gosstrak` | `filter`, `tdt`, `report` | `SubjectOf` adapter, `MatchingProcessor`, routing to delivery |
+| `internal/app/tagstrak` | `filter`, `tdt`, `report` | `SubjectOf` adapter, `MatchingProcessor`, routing to delivery |
 
 `internal/filter` never parses pattern text and never imports the translator; `TestFilterDependsOnlyOnIdentity` enforces that.
 Patterns are compiled by `tdt.CompilePattern` ([tdt.md](tdt.md)), so malformed text is rejected before filtering sees it.
@@ -33,7 +33,7 @@ ids := m.Match(subject, buf[:0])
 - `Set` holds the current matcher behind `atomic.Pointer`. `Replace` compiles first and publishes the whole matcher, so readers see the old set or the new one, never a mix; on error the current matcher stays.
 
 Matched IDs are the hand-off to delivery: `MatchingProcessor` routes them to destinations, described in [report.md](report.md).
-Subscriptions come from the configuration file ([configuration.md](configuration.md)); without one, `cmd/gosstrak` starts with an empty set.
+Subscriptions come from the configuration file ([configuration.md](configuration.md)); without one, `cmd/tagstrak` starts with an empty set.
 
 ## Matchers
 
@@ -137,7 +137,7 @@ Memory is bounded by the candidate count times one compiled matcher under the 10
 A subscription replacement compiles a new adaptive matcher, so warmup and statistics start over.
 With today's two candidates, the controller settles on the index; the results below measure what that costs.
 
-Telemetry reports the decisions for the current snapshot: `gosstrak_filter_adaptive_{sampled,shadows_skipped,switches}_total`, `gosstrak_filter_adaptive_shadow_seconds_total`, and per `candidate` label `gosstrak_filter_adaptive_selected`, `gosstrak_filter_adaptive_samples_total`, and `gosstrak_filter_adaptive_mean_cost_seconds`.
+Telemetry reports the decisions for the current snapshot: `tagstrak_filter_adaptive_{sampled,shadows_skipped,switches}_total`, `tagstrak_filter_adaptive_shadow_seconds_total`, and per `candidate` label `tagstrak_filter_adaptive_selected`, `tagstrak_filter_adaptive_samples_total`, and `tagstrak_filter_adaptive_mean_cost_seconds`.
 `/healthz` and `/readyz` include the same under `filter`.
 
 ### Adaptive results

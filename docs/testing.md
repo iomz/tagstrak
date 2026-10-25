@@ -23,7 +23,7 @@ Bump either pin deliberately, after the new release has been out for a while.
 
 ## Leak checks
 
-Every package that runs servers, workers, or applications has a `TestMain` with `goleak.VerifyTestMain`: `internal/app/gosstrak`, `internal/app/golemu`, `internal/control`, `internal/report`, `internal/report/httpreport`, `internal/reader`, `internal/emulator`, `internal/e2e`, `cmd/gosstrak`, and `cmd/golemu`.
+Every package that runs servers, workers, or applications has a `TestMain` with `goleak.VerifyTestMain`: `internal/app/tagstrak`, `internal/app/golemu`, `internal/control`, `internal/report`, `internal/report/httpreport`, `internal/reader`, `internal/emulator`, `internal/e2e`, `cmd/tagstrak`, and `cmd/golemu`.
 A goroutine that outlives the package's tests fails them.
 Tests also check that control and telemetry listeners stop accepting and that Unix sockets are removed after `Run`.
 
@@ -51,13 +51,13 @@ Commit any input that finds a bug under the package's `testdata/fuzz/` so it bec
 
 ## End-to-end scenarios
 
-`internal/e2e` runs golemu and gosstrak in-process over real sockets, building gosstrak through the production configuration path:
+`internal/e2e` runs golemu and tagstrak in-process over real sockets, building tagstrak through the production configuration path:
 
 | Test | Proves |
 | --- | --- |
 | `TestGolemuToHTTPDestination` | handshake, translation, matching, and delivery, then a clean drain |
 | `TestDestinationOutageThenRecovery` | retries carry deliveries through an outage without loss |
-| `TestReaderReconnect` | gosstrak reconnects to a replaced reader and delivers no event twice |
+| `TestReaderReconnect` | tagstrak reconnects to a replaced reader and delivers no event twice |
 | `TestScenarioReplacedThroughGolemuControl` | a scenario replaced over golemu's control socket reaches the destination |
 | `TestSubscriptionsReplacedThroughAPI` | subscriptions replaced over the management API route live and persist |
 | `TestShutdownWithBatchesInFlight` | shutdown meets its deadline and reports undelivered events |
