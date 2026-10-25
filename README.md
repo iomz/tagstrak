@@ -31,8 +31,8 @@ See [docs/legacy-import.md](docs/legacy-import.md) for source revisions and path
 
 ## Reader runtime
 
-The v2 tagstrak ingestion runtime provides bounded reader sessions, finite reconnects, and health/readiness/metrics endpoints.
-See [docs/runtime.md](docs/runtime.md) for configuration, lifecycle, and the current milestone scope.
+tagstrak runs bounded reader sessions with finite reconnects, and exposes health, readiness, and metrics endpoints.
+See [docs/runtime.md](docs/runtime.md) for its lifecycle, budgets, and telemetry.
 
 ## Reader emulation
 
