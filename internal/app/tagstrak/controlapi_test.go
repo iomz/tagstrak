@@ -322,16 +322,22 @@ func TestPipelineLoadsAPIState(t *testing.T) {
 	}
 	source, path := configfile.SourceAPI, state
 	f := configfile.File{Version: configfile.Version, Store: configfile.Store{Source: &source, StateFile: &path}}
-	assembly, err := Pipeline(f, DefaultConfig(), noLookup, nil)
+	withControl := DefaultConfig()
+	withControl.Control.Socket = filepath.Join(dir, "control.sock")
+	assembly, err := Pipeline(f, withControl, noLookup, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if assembly.Source != "api" || assembly.Subscriptions.Revision() != 5 {
 		t.Fatalf("assembly source %s revision %d", assembly.Source, assembly.Subscriptions.Revision())
 	}
+	// API-managed subscriptions without the API could never change.
+	if _, err := Pipeline(f, DefaultConfig(), noLookup, nil); err == nil || !strings.Contains(err.Error(), "requires a control socket or address") {
+		t.Fatalf("api source without control: err = %v", err)
+	}
 	// A control token without a control listener is a configuration error.
-	f.Control.Token = &configfile.SecretSource{Env: "T"}
-	if _, err := Pipeline(f, DefaultConfig(), noLookup, nil); err == nil || !strings.Contains(err.Error(), "control.token is set") {
+	tokenOnly := configfile.File{Version: configfile.Version, Control: configfile.Control{Token: &configfile.SecretSource{Env: "T"}}}
+	if _, err := Pipeline(tokenOnly, DefaultConfig(), noLookup, nil); err == nil || !strings.Contains(err.Error(), "control.token is set") {
 		t.Fatalf("err = %v", err)
 	}
 }

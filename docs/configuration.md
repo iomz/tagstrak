@@ -55,7 +55,7 @@ A destination URL must not carry user information; credentials go in header secr
 ## Subscription source and reload
 
 With `[subscription_store] source = "file"`, the default, the file's `[[subscriptions]]` are the truth and `SIGHUP` re-reads them; destinations, secrets, the matcher, and other settings change only on restart.
-With `source = "api"`, the file must list no subscriptions; tagstrak loads and writes `state_file` and the management API replaces them.
+With `source = "api"`, the file must list no subscriptions, and a control socket or address is required; tagstrak loads and writes `state_file` and the management API replaces them.
 The design record names this setting `subscriptions.source`; it lives in `[subscription_store]` because `subscriptions` is already the array of subscription tables.
 See [control.md](control.md) for both modes.
 
