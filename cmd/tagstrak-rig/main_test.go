@@ -1,11 +1,13 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"testing"
 )
 
@@ -36,6 +38,27 @@ func TestInvalidInputsBeforeRuntime(t *testing.T) {
 	} {
 		if _, _, err := parse(args, io.Discard); err == nil {
 			t.Errorf("accepted %v", args)
+		}
+	}
+}
+
+// TestFlagsAreDocumented checks that every emulator and uii flag appears in
+// docs/rig.md.
+func TestFlagsAreDocumented(t *testing.T) {
+	doc, err := os.ReadFile("../../docs/rig.md")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var help bytes.Buffer
+	for _, args := range [][]string{{"server", "--help"}, {"simulator", "--help"}} {
+		_, _, _ = parse(args, &help)
+	}
+	for _, kind := range []string{"epc", "iso17360", "iso17363"} {
+		_ = uii([]string{kind, "--help"}, io.Discard, &help)
+	}
+	for _, name := range regexp.MustCompile(`(?m)^  -([a-z-]+)`).FindAllStringSubmatch(help.String(), -1) {
+		if !regexp.MustCompile(`--` + name[1] + `([^a-z-]|$)`).Match(doc) {
+			t.Errorf("--%s is not documented in docs/rig.md", name[1])
 		}
 	}
 }
