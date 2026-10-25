@@ -115,5 +115,12 @@ The public `llrp` package also changed: v1 builder functions were removed, and t
 
 ## Container image
 
-`build/tagstrak-rig/Dockerfile` builds the tagstrak-rig reader emulator, which is useful for staging and tests.
+`build/tagstrak-rig/Dockerfile` builds tagstrak-rig, which stands in for a reader in staging and tests.
+The image runs as an unprivileged user and carries the example scenario and inventory under `/examples`; inside a container the emulator must listen on all interfaces:
+
+```sh
+docker build -f build/tagstrak-rig/Dockerfile -t tagstrak-rig .
+docker run --rm -p 5084:5084 tagstrak-rig simulator --scenario /examples/scenario.json --listen 0.0.0.0:5084
+```
+
 No image is published for tagstrak; build the binary as above.
