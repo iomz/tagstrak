@@ -18,5 +18,7 @@ Initialization made only structural changes required by the monorepo:
 - combined existing dependency manifests while retaining legacy versions
 
 Functional refactoring starts after this import baseline.
+
+Before v2.0.0, `cmd/gosstrak` became `cmd/tagstrak`, `cmd/golemu` became `cmd/tagstrak-rig`, and the remaining supporting commands were removed or folded into `tagstrak-rig` (#11).
 The `v1.0.0` tag marks it, and the v1 benchmark baseline (#11) is measured from that tag.
 The imported legacy packages that v2 superseded (`internal/gosstrak`, `cmd/ale-ec`, and the `deploy` compose file) and the dependencies only they used were removed in #11.
