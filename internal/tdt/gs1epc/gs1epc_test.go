@@ -157,3 +157,25 @@ func TestSchemeRegistryIsComplete(t *testing.T) {
 		}
 	}
 }
+
+// TestPatternCompanyPrefixErrors checks that a company prefix selecting no
+// partition is explained by its real fault, under the label the pattern uses.
+func TestPatternCompanyPrefixErrors(t *testing.T) {
+	for _, tc := range []struct {
+		pattern, scheme, rule string
+	}{
+		{"urn:epc:idpat:sgtin:not-a-prefix.*.*", "sgtin", "charset"},
+		{"urn:epc:idpat:sgtin:06141.*.*", "sgtin", "length"},
+		{"urn:epc:pat:sgtin-96:3.06141X1.*.*", "sgtin-96", "charset"},
+		{"urn:epc:pat:sgtin-96:3.0614141061414106.*.*", "sgtin-96", "length"},
+	} {
+		_, err := CompilePattern(tc.pattern)
+		var fe *tdtcore.FieldError
+		if !errors.As(err, &fe) {
+			t.Fatalf("%s: error = %v, want a field error", tc.pattern, err)
+		}
+		if fe.Scheme != tc.scheme || fe.Field != "gs1companyprefix" || fe.Rule != tc.rule {
+			t.Errorf("%s: got %s %s %s, want %s gs1companyprefix %s", tc.pattern, fe.Scheme, fe.Field, fe.Rule, tc.scheme, tc.rule)
+		}
+	}
+}

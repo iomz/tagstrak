@@ -43,8 +43,7 @@ func compileIDPattern(text string) (identity.Pattern, error) {
 	}
 	opt, ok := optionForPattern(s, parts, 0)
 	if !ok && !allAny(parts) {
-		return identity.Pattern{}, tdtcore.Field(string(s.id), "gs1companyprefix", "length", parts[0],
-			"TDS 2.2 company prefix lengths 6-12")
+		return identity.Pattern{}, companyPrefixError(s.key, parts[0])
 	}
 	uriFields := s.def.Options[0].PureFields
 	if ok {
@@ -54,7 +53,7 @@ func compileIDPattern(text string) (identity.Pattern, error) {
 		return identity.Pattern{}, fmt.Errorf("%w: %s takes %d fields, got %d",
 			tdtcore.ErrMalformedPattern, s.key, len(uriFields), len(parts))
 	}
-	fields, err := patternFields(s, uriFields, parts, false)
+	fields, err := patternFields(s, s.key, uriFields, parts, false)
 	if err != nil {
 		return identity.Pattern{}, err
 	}
@@ -82,10 +81,9 @@ func compileTagPattern(text string) (identity.Pattern, error) {
 			tdtcore.ErrMalformedPattern, s.id, len(uriFields), len(parts))
 	}
 	if !known && !allAnyFrom(parts, 1) {
-		return identity.Pattern{}, tdtcore.Field(string(s.id), "gs1companyprefix", "length", parts[1],
-			"TDS 2.2 company prefix lengths 6-12")
+		return identity.Pattern{}, companyPrefixError(string(s.id), parts[1])
 	}
-	fields, err := patternFields(s, uriFields, parts, true)
+	fields, err := patternFields(s, string(s.id), uriFields, parts, true)
 	if err != nil {
 		return identity.Pattern{}, err
 	}
@@ -94,6 +92,16 @@ func compileTagPattern(text string) (identity.Pattern, error) {
 		return identity.Pattern{}, err
 	}
 	return identity.NewPattern(identity.LevelEncoding, identity.AuthorityGS1, s.keyType, s.id, fields, bits, text)
+}
+
+// companyPrefixError explains why a pattern's company prefix selects no
+// partition option. scheme is the label the pattern itself uses: the identity
+// key in an ID pattern, the encoding in a tag pattern.
+func companyPrefixError(scheme, value string) error {
+	if strings.Trim(value, "0123456789") != "" {
+		return tdtcore.Field(scheme, "gs1companyprefix", "charset", value, "a GS1 company prefix is 6-12 digits")
+	}
+	return tdtcore.Field(scheme, "gs1companyprefix", "length", value, "TDS 2.2 company prefix lengths 6-12")
 }
 
 func splitPattern(text, prefix string) (string, []string, error) {
@@ -134,8 +142,9 @@ func allAnyFrom(parts []string, from int) bool {
 
 // patternFields validates each pattern field against the level's metadata.
 // Ranges are accepted only at the encoding level, which is where TDS defines
-// them; an ID pattern field is either an exact value or a star.
-func patternFields(s *Scheme, uriFields []tdtdef.URIField, parts []string, allowRange bool) ([]identity.FieldPattern, error) {
+// them; an ID pattern field is either an exact value or a star. Errors name
+// label, the scheme as the pattern spells it.
+func patternFields(s *Scheme, label string, uriFields []tdtdef.URIField, parts []string, allowRange bool) ([]identity.FieldPattern, error) {
 	out := make([]identity.FieldPattern, len(uriFields))
 	for i, f := range uriFields {
 		text := parts[i]
@@ -145,16 +154,16 @@ func patternFields(s *Scheme, uriFields []tdtdef.URIField, parts []string, allow
 			out[i] = identity.FieldPattern{Name: name, Kind: identity.FieldAny}
 		case isRange(text):
 			if !allowRange {
-				return nil, tdtcore.Field(string(s.id), f.Name, "range-not-allowed", text,
+				return nil, tdtcore.Field(label, f.Name, "range-not-allowed", text,
 					"TDS 2.2 ID patterns take values or *")
 			}
-			lo, hi, err := parseRange(s, f, text)
+			lo, hi, err := parseRange(s, label, f, text)
 			if err != nil {
 				return nil, err
 			}
 			out[i] = identity.FieldPattern{Name: name, Kind: identity.FieldRange, Lo: lo, Hi: hi}
 		default:
-			if _, err := parseField(string(s.id), f, text); err != nil {
+			if _, err := parseField(label, f, text); err != nil {
 				return nil, err
 			}
 			out[i] = identity.FieldPattern{Name: name, Kind: identity.FieldExact, Text: text}
@@ -163,25 +172,25 @@ func patternFields(s *Scheme, uriFields []tdtdef.URIField, parts []string, allow
 	return out, nil
 }
 
-func parseRange(s *Scheme, f tdtdef.URIField, text string) (uint64, uint64, error) {
+func parseRange(s *Scheme, label string, f tdtdef.URIField, text string) (uint64, uint64, error) {
 	body := strings.TrimSuffix(strings.TrimPrefix(text, "["), "]")
 	loText, hiText, ok := strings.Cut(body, "-")
 	if !ok {
-		return 0, 0, tdtcore.Field(string(s.id), f.Name, "range-syntax", text, "TDS 2.2 pattern range")
+		return 0, 0, tdtcore.Field(label, f.Name, "range-syntax", text, "TDS 2.2 pattern range")
 	}
 	lo, err := strconv.ParseUint(loText, 10, 64)
 	if err != nil {
-		return 0, 0, tdtcore.Field(string(s.id), f.Name, "range-syntax", text, "TDS 2.2 pattern range")
+		return 0, 0, tdtcore.Field(label, f.Name, "range-syntax", text, "TDS 2.2 pattern range")
 	}
 	hi, err := strconv.ParseUint(hiText, 10, 64)
 	if err != nil {
-		return 0, 0, tdtcore.Field(string(s.id), f.Name, "range-syntax", text, "TDS 2.2 pattern range")
+		return 0, 0, tdtcore.Field(label, f.Name, "range-syntax", text, "TDS 2.2 pattern range")
 	}
 	if lo > hi {
-		return 0, 0, tdtcore.Field(string(s.id), f.Name, "range-order", text, "TDS 2.2 pattern range")
+		return 0, 0, tdtcore.Field(label, f.Name, "range-order", text, "TDS 2.2 pattern range")
 	}
 	if hi > f.DecimalMax {
-		return 0, 0, tdtcore.Field(string(s.id), f.Name, "range", text, "TDS 2.2 maximum "+
+		return 0, 0, tdtcore.Field(label, f.Name, "range", text, "TDS 2.2 maximum "+
 			strconv.FormatUint(f.DecimalMax, 10))
 	}
 	return lo, hi, nil
