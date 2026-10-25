@@ -1,4 +1,4 @@
-// Command golemu serves deterministic v2 LLRP inventory scenarios.
+// Command tagstrak-rig serves deterministic v2 LLRP inventory scenarios.
 package main
 
 import (
@@ -12,7 +12,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	app "github.com/iomz/tagstrak/v2/internal/app/golemu"
+	app "github.com/iomz/tagstrak/v2/internal/app/rig"
 	"github.com/iomz/tagstrak/v2/internal/emulator"
 	"github.com/iomz/tagstrak/v2/internal/inventory"
 )
@@ -23,14 +23,14 @@ import (
 func parse(args []string, output io.Writer) (app.Config, *emulator.Scenario, error) {
 	config := app.DefaultConfig()
 	if len(args) == 0 || args[0] == "--help" || args[0] == "-h" {
-		fmt.Fprintln(output, "Usage: golemu server --inventory FILE [flags]\n       golemu simulator --scenario FILE [flags]")
+		fmt.Fprintln(output, "Usage: tagstrak-rig server --inventory FILE [flags]\n       tagstrak-rig simulator --scenario FILE [flags]")
 		return config, nil, flag.ErrHelp
 	}
 	mode := args[0]
 	if mode != "server" && mode != "simulator" {
 		return config, nil, fmt.Errorf("unknown mode %q", mode)
 	}
-	flags := flag.NewFlagSet("golemu "+mode, flag.ContinueOnError)
+	flags := flag.NewFlagSet("tagstrak-rig "+mode, flag.ContinueOnError)
 	flags.SetOutput(output)
 	var input string
 	var seed int64

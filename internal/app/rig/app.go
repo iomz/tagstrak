@@ -1,5 +1,5 @@
-// Package golemu composes emulator serving and opt-in local control.
-package golemu
+// Package rig composes emulator serving and opt-in local control.
+package rig
 
 import (
 	"context"
@@ -90,7 +90,7 @@ func (a *App) Run(ctx context.Context) error {
 		}
 		return err
 	}
-	// Four connections preserve golemu's original local-control budget.
+	// Four connections preserve tagstrak-rig's original local-control budget.
 	controlServer, err := control.New(listener, transport, a.control(), control.ServerConfig{MaxConns: 4, Logger: a.logger})
 	if err != nil {
 		_ = listener.Close()

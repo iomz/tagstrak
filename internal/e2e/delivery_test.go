@@ -20,7 +20,7 @@ import (
 	"testing"
 	"time"
 
-	golemu "github.com/iomz/tagstrak/v2/internal/app/golemu"
+	rig "github.com/iomz/tagstrak/v2/internal/app/rig"
 	tagstrak "github.com/iomz/tagstrak/v2/internal/app/tagstrak"
 	configfile "github.com/iomz/tagstrak/v2/internal/config"
 	"github.com/iomz/tagstrak/v2/internal/control"
@@ -156,25 +156,25 @@ type emulatorOptions struct {
 	controlSocket string
 }
 
-func startEmulator(t *testing.T, o emulatorOptions) (*golemu.App, running) {
+func startEmulator(t *testing.T, o emulatorOptions) (*rig.App, running) {
 	t.Helper()
 	parsed, err := emulator.DecodeScenario(strings.NewReader(o.scenario))
 	if err != nil {
 		t.Fatal(err)
 	}
-	c := golemu.DefaultConfig()
+	c := rig.DefaultConfig()
 	c.Emulator.Address = o.address
 	if c.Emulator.Address == "" {
 		c.Emulator.Address = "127.0.0.1:0"
 	}
 	c.Emulator.ReportInterval = 20 * time.Millisecond
 	c.ControlSocket = o.controlSocket
-	emu, err := golemu.New(c, parsed, emulator.SystemClock{}, emulator.SeededRandom, nil)
+	emu, err := rig.New(c, parsed, emulator.SystemClock{}, emulator.SeededRandom, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
 	r := run(t, emu.Run)
-	waitFor(t, "golemu to listen", func() bool { return emu.Status().Running && emu.Status().Address != "" })
+	waitFor(t, "tagstrak-rig to listen", func() bool { return emu.Status().Running && emu.Status().Address != "" })
 	return emu, r
 }
 
@@ -256,10 +256,10 @@ func cleanShutdown(t *testing.T, err error) {
 	}
 }
 
-// TestGolemuToHTTPDestination is the #9 end-to-end flow: golemu reports tags
+// TestRigToHTTPDestination is the #9 end-to-end flow: tagstrak-rig reports tags
 // over LLRP, tagstrak translates and matches them, and the HTTP adapter
 // delivers matching reports to a destination. Shutdown drains cleanly.
-func TestGolemuToHTTPDestination(t *testing.T) {
+func TestRigToHTTPDestination(t *testing.T) {
 	sink := &receiver{}
 	emu, emuRun := startEmulator(t, emulatorOptions{scenario: scenarioOf(productEPC, unmatchedEPC)})
 	app, _, appRun := startMiddleware(t, middlewareOptions{
@@ -329,11 +329,11 @@ func TestReaderReconnect(t *testing.T) {
 	}
 }
 
-// TestScenarioReplacedThroughGolemuControl replaces golemu's scenario over its
+// TestScenarioReplacedThroughRigControl replaces tagstrak-rig's scenario over its
 // control socket; the newly reported tag reaches the destination.
-func TestScenarioReplacedThroughGolemuControl(t *testing.T) {
+func TestScenarioReplacedThroughRigControl(t *testing.T) {
 	sink := &receiver{}
-	socket := filepath.Join(privateDir(t), "golemu.sock")
+	socket := filepath.Join(privateDir(t), "rig.sock")
 	emu, emuRun := startEmulator(t, emulatorOptions{scenario: scenarioOf(unmatchedEPC), controlSocket: socket})
 	_, _, appRun := startMiddleware(t, middlewareOptions{
 		reader: emu.Status().Address, destination: newDestination(t, sink),
@@ -345,7 +345,7 @@ func TestScenarioReplacedThroughGolemuControl(t *testing.T) {
 	}
 
 	client := unixClient(socket)
-	req, _ := http.NewRequest(http.MethodPut, "http://golemu/scenario", strings.NewReader(scenarioOf(productEPC)))
+	req, _ := http.NewRequest(http.MethodPut, "http://rig/scenario", strings.NewReader(scenarioOf(productEPC)))
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := client.Do(req)
 	if err != nil {

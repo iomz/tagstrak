@@ -1,7 +1,7 @@
 # Reader runtime
 
 Issue #5 implements the tagstrak ingestion lifecycle in the v2 milestone tracked by #1.
-The architecture decision in #2 keeps tagstrak and golemu as separate processes with direct calls inside each process and bounded queues at ownership boundaries.
+The architecture decision in #2 keeps tagstrak and tagstrak-rig as separate processes with direct calls inside each process and bounded queues at ownership boundaries.
 
 ## Packages and scope
 
@@ -20,7 +20,7 @@ Tags whose reader reports no protocol-control word are translated as GS1 EPC dat
 Subscriptions, destinations, and routes come from the `--config` file described in [configuration.md](configuration.md); without one the command matches nothing and delivers nothing.
 It does not retain observations.
 The old global command runtime, SPDY listener, adaptive engine workers, and InfluxDB worker wiring are removed, together with their legacy packages (#11); they remain readable at the `v1.0.0` tag.
-The emulator lifecycle and scenarios implemented by #6 are documented in [golemu.md](golemu.md).
+The emulator lifecycle and scenarios implemented by #6 are documented in [rig.md](rig.md).
 
 ## Run
 
@@ -143,7 +143,7 @@ Maintenance stays within standard-library runtime code and the existing domain/c
 ```sh
 go test -race ./...
 go vet ./...
-go build ./cmd/tagstrak ./cmd/golemu
+go build ./cmd/tagstrak ./cmd/tagstrak-rig
 git diff --check
 ```
 

@@ -1,6 +1,6 @@
 # Management API
 
-Issue #10 slice 10b adds an authenticated management API to tagstrak and moves golemu's local control onto the same transport.
+Issue #10 slice 10b adds an authenticated management API to tagstrak and moves tagstrak-rig's local control onto the same transport.
 The [#10 design record](https://github.com/iomz/tagstrak/issues/10#issuecomment-6378251881) is the decision source; [security.md](security.md) holds the threat model.
 
 ## Transport
@@ -12,8 +12,8 @@ The [#10 design record](https://github.com/iomz/tagstrak/issues/10#issuecomment-
 | Read-header / read / write / idle timeout | 2 s / 5 s / 5 s / 30 s |
 | Shutdown | the command's shutdown timeout |
 | Header bytes | 8 KiB |
-| Request body | 1 MiB for tagstrak subscription documents; golemu's scenario limit for scenarios |
-| Concurrent connections | 16 for tagstrak, 4 for golemu; excess connections are closed, not queued |
+| Request body | 1 MiB for tagstrak subscription documents; tagstrak-rig's scenario limit for scenarios |
+| Concurrent connections | 16 for tagstrak, 4 for tagstrak-rig; excess connections are closed, not queued |
 | Mutating requests | `Content-Type: application/json`, otherwise 415 |
 
 Control is off unless configured, so default startup exposes no mutation endpoint.
@@ -88,9 +88,9 @@ Every mutation, reload, and authentication failure emits one `slog` record at in
 
 Payloads, patterns, headers, and tokens are never recorded.
 
-## golemu
+## tagstrak-rig
 
-golemu keeps `GET /status` and `PUT /scenario` on its Unix socket only; it is a test tool with no remote use case.
+tagstrak-rig keeps `GET /status` and `PUT /scenario` on its Unix socket only; it is a test tool with no remote use case.
 `PUT /scenario` now requires `Content-Type: application/json`, returns structured errors, and audits each replacement with the scenario revision and cycle count.
 
 ## Verification
@@ -99,4 +99,4 @@ golemu keeps `GET /status` and `PUT /scenario` on its Unix socket only; it is a 
 go test -race ./internal/control/... ./internal/app/... ./cmd/...
 ```
 
-Tests cover listener rules for sockets and loopback, refusal of non-loopback and hostname addresses, token strength, fail-closed authentication that never reaches handlers or reads bodies, ignored forwarded headers, the connection cap, server deadlines, strict JSON bodies, audit shapes without secrets or payloads, every API status, persistence before publication, failed state writes, `If-Match`, a live loopback listener with and without the token, `SIGHUP` reload with a real signal, and golemu's content-type check.
+Tests cover listener rules for sockets and loopback, refusal of non-loopback and hostname addresses, token strength, fail-closed authentication that never reaches handlers or reads bodies, ignored forwarded headers, the connection cap, server deadlines, strict JSON bodies, audit shapes without secrets or payloads, every API status, persistence before publication, failed state writes, `If-Match`, a live loopback listener with and without the token, `SIGHUP` reload with a real signal, and tagstrak-rig's content-type check.

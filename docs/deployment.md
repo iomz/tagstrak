@@ -115,5 +115,5 @@ The public `llrp` package also changed: v1 builder functions were removed, and t
 
 ## Container image
 
-`build/golemu/Dockerfile` builds the golemu reader emulator, which is useful for staging and tests.
+`build/tagstrak-rig/Dockerfile` builds the tagstrak-rig reader emulator, which is useful for staging and tests.
 No image is published for tagstrak; build the binary as above.

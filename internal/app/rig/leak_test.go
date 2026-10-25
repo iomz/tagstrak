@@ -1,4 +1,4 @@
-package golemu
+package rig
 
 import (
 	"testing"
