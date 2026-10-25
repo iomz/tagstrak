@@ -24,7 +24,7 @@ Supported: SGTIN-96, SSCC-96, GIAI-96, and GRAI-96 from GS1 TDS 2.2, plus ISO/IE
 ISO 17363 (AFI `0xA9`, `0xAA`) is recognised and refused, because its Gen2 carriage is not established.
 Every other scheme returns `ErrUnsupportedScheme`; the remaining evidence gates are listed in #8 Amendment 2.
 
-`cmd/uiigen` now uses these packages instead of its own EPC/ISO helpers.
+`tagstrak-rig uii` generates tags and patterns through these packages, with no EPC or ISO helpers of its own.
 The duplicate v1 generators and the legacy `internal/gosstrak` translation and filtering packages are removed (#8, #11); they remain readable at the `v1.0.0` tag.
 
 ## Vendored artefacts and generation

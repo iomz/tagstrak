@@ -8,7 +8,6 @@ WORKDIR /build
 COPY go.mod .
 COPY go.sum .
 COPY cmd/tagstrak-rig cmd/tagstrak-rig
-COPY internal/binutil internal/binutil
 COPY internal/app/rig internal/app/rig
 COPY internal/emulator internal/emulator
 COPY internal/inventory internal/inventory

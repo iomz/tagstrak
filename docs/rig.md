@@ -65,6 +65,27 @@ Both commands use the same listener, handshake, timers, report encoder, cancella
 The `client` mode, old CLI flags, gob scenarios, directory-based simulator, and unauthenticated TCP mutation API have been removed.
 Use tagstrak to consume reports.
 
+## Generate tag data
+
+`tagstrak-rig uii` prints one generated tag as `PC,EPC` in hex, ready for an inventory or scenario file:
+
+```sh
+go run ./cmd/tagstrak-rig uii epc --scheme sgtin-96 --company-prefix 0614141 --item-ref 812345 --serial 6789
+# 3000,3074257bf7194e4000001a85
+```
+
+`epc` takes `--scheme` (`sgtin-96`, `sscc-96`, `giai-96`, or `grai-96`), `--filter`, `--company-prefix`, and the scheme's fields: `--item-ref` and `--serial` for SGTIN, `--serial-ref` for SSCC, `--asset-type` and `--serial` for GRAI, and `--asset-ref` for GIAI.
+Fields left out are generated at random.
+`iso17360` generates an ISO/IEC 17360 transport unit from `--agency`, `--company`, `--serial`, and `--data-identifier`; `iso17363` validates a container code but refuses to write it, because its UII carriage is not established ([tdt.md](tdt.md)).
+
+`--format bin` prints the EPC as bits.
+`--pattern` prints a subscription pattern and the bit prefix it pins instead; the first field left out and every field after it become stars:
+
+```sh
+go run ./cmd/tagstrak-rig uii epc --scheme sscc-96 --company-prefix 0614141 --pattern
+# urn:epc:pat:sscc-96:3.0614141.*,00110001011101000010010101111011111101
+```
+
 ## Reproducibility and updates
 
 Each connection starts at cycle zero with its own seeded random generator.

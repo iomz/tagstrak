@@ -1,4 +1,6 @@
-// Command tagstrak-rig serves deterministic v2 LLRP inventory scenarios.
+// Command tagstrak-rig is the test rig that comes with tagstrak: it emulates an
+// LLRP reader that serves deterministic inventory scenarios, and generates tag
+// data.
 package main
 
 import (
@@ -23,7 +25,7 @@ import (
 func parse(args []string, output io.Writer) (app.Config, *emulator.Scenario, error) {
 	config := app.DefaultConfig()
 	if len(args) == 0 || args[0] == "--help" || args[0] == "-h" {
-		fmt.Fprintln(output, "Usage: tagstrak-rig server --inventory FILE [flags]\n       tagstrak-rig simulator --scenario FILE [flags]")
+		fmt.Fprintln(output, "Usage: tagstrak-rig server --inventory FILE [flags]\n       tagstrak-rig simulator --scenario FILE [flags]\n       tagstrak-rig uii epc|iso17360|iso17363 [flags]")
 		return config, nil, flag.ErrHelp
 	}
 	mode := args[0]
@@ -91,9 +93,13 @@ func parse(args []string, output io.Writer) (app.Config, *emulator.Scenario, err
 	return config, scenario, err
 }
 
-// run parses the command line, initializes the emulator, and runs it with ctx.
-// Flag output and structured application logs are written to stderr.
-func run(ctx context.Context, args []string, stderr io.Writer) error {
+// run parses the command line, initializes the emulator, and runs it with ctx,
+// or runs the uii subcommand. Generated tags are written to stdout; flag output
+// and structured application logs to stderr.
+func run(ctx context.Context, args []string, stdout, stderr io.Writer) error {
+	if len(args) > 0 && args[0] == "uii" {
+		return uii(args[1:], stdout, stderr)
+	}
 	config, scenario, err := parse(args, stderr)
 	if err != nil {
 		return err
@@ -108,7 +114,7 @@ func run(ctx context.Context, args []string, stderr io.Writer) error {
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	if err := run(ctx, os.Args[1:], os.Stderr); err != nil && !errors.Is(err, flag.ErrHelp) {
+	if err := run(ctx, os.Args[1:], os.Stdout, os.Stderr); err != nil && !errors.Is(err, flag.ErrHelp) {
 		if ctx.Err() != nil && err == ctx.Err() {
 			return
 		}
