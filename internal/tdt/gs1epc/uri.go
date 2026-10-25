@@ -2,7 +2,6 @@ package gs1epc
 
 import (
 	"fmt"
-	"strconv"
 	"strings"
 
 	"github.com/iomz/tagstrak/v2/internal/identity"
@@ -166,13 +165,4 @@ func ParseTagURI(uri string) (tdtcore.Translation, error) {
 		return out, err
 	}
 	return Encode(value, EncodeParams{Scheme: s.id, FilterValue: uint8(filter)})
-}
-
-// FilterValueOf parses a filter value from its URI text.
-func FilterValueOf(text string) (uint8, error) {
-	v, err := strconv.ParseUint(text, 10, 8)
-	if err != nil {
-		return 0, fmt.Errorf("%w: filter %q", tdtcore.ErrMalformedURI, text)
-	}
-	return uint8(v), nil
 }

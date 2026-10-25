@@ -13,11 +13,13 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 
 	configfile "github.com/iomz/tagstrak/v2/internal/config"
 	"github.com/iomz/tagstrak/v2/internal/control"
 	"github.com/iomz/tagstrak/v2/internal/inventory"
+	"github.com/iomz/tagstrak/v2/internal/tdt"
 )
 
 var controlToken = []byte("0123456789abcdef0123456789abcdef")
@@ -370,5 +372,78 @@ func TestControlAPIStateTooLarge(t *testing.T) {
 	}
 	if f.table.Revision() != 1 {
 		t.Fatal("oversized state changed subscriptions")
+	}
+}
+
+// TestSubscriptionTableReplacementIsAtomic matches continuously while the
+// table alternates between two sets with different routes: every match must
+// come wholly from one set, with that set's routes.
+func TestSubscriptionTableReplacementIsAtomic(t *testing.T) {
+	build := func(prefix, destination string, n int) []configfile.Subscription {
+		subs := make([]configfile.Subscription, n)
+		for i := range subs {
+			subs[i] = spec(fmt.Sprintf("%s%d", prefix, i), "urn:epc:idpat:sgtin:*.*.*", destination)
+		}
+		return subs
+	}
+	a, b := build("a", "x", 50), build("b", "y", 70)
+	want := map[string]struct {
+		n           int
+		destination string
+	}{"a": {50, "x"}, "b": {70, "y"}}
+	tr, err := tdt.New().Translate(TranslationInput(observation(t, "3074257bf7194e4000001a85", 0x3000, true)))
+	if err != nil {
+		t.Fatal(err)
+	}
+	subject := SubjectOf(tr)
+
+	tbl := NewSubscriptionTable([]string{"x", "y"})
+	if err := tbl.Load(a, 1); err != nil {
+		t.Fatal(err)
+	}
+	stop := make(chan struct{})
+	errs := make(chan string, 4)
+	var readers sync.WaitGroup
+	for range 4 {
+		readers.Add(1)
+		go func() {
+			defer readers.Done()
+			for {
+				select {
+				case <-stop:
+					return
+				default:
+				}
+				snapshot := tbl.current.Load()
+				matched := snapshot.matcher.Match(subject, nil)
+				set := string(matched[0])[:1]
+				for _, id := range matched {
+					routes := snapshot.routes[id]
+					if !strings.HasPrefix(string(id), set) || len(routes) != 1 || routes[0] != want[set].destination {
+						errs <- fmt.Sprintf("mixed snapshot: %s routed to %v in set %s", id, routes, set)
+						return
+					}
+				}
+				if len(matched) != want[set].n {
+					errs <- fmt.Sprintf("partial snapshot: %d IDs from set %s", len(matched), set)
+					return
+				}
+			}
+		}()
+	}
+	for i := range 500 {
+		next := a
+		if i%2 == 0 {
+			next = b
+		}
+		if _, err := tbl.Replace(next, nil, nil); err != nil {
+			t.Fatal(err)
+		}
+	}
+	close(stop)
+	readers.Wait()
+	close(errs)
+	for e := range errs {
+		t.Error(e)
 	}
 }

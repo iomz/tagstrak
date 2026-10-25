@@ -60,7 +60,7 @@ func TestServerReaderContract(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err = s.Replace(replacement); err != nil {
+	if _, err = s.Replace(replacement); err != nil {
 		t.Fatal(err)
 	}
 	clock.advance(time.Hour)
@@ -124,7 +124,7 @@ func TestInvalidConfig(t *testing.T) {
 	}
 }
 
-func TestReplaceRevisionCountsUpByOne(t *testing.T) {
+func TestReplaceCountsRevisionsUpByOne(t *testing.T) {
 	scenario, err := DecodeScenario(strings.NewReader(`{"version":1,"seed":1,"repeat":true,"cycles":[["0001"]]}`))
 	if err != nil {
 		t.Fatal(err)
@@ -134,12 +134,12 @@ func TestReplaceRevisionCountsUpByOne(t *testing.T) {
 		t.Fatal(err)
 	}
 	for want := uint64(2); want <= 4; want++ {
-		got, err := s.ReplaceRevision(scenario)
+		got, err := s.Replace(scenario)
 		if err != nil || got != want || s.Status().Revision != want {
 			t.Fatalf("revision %d (status %d), want %d: %v", got, s.Status().Revision, want, err)
 		}
 	}
-	if _, err := s.ReplaceRevision(nil); !errors.Is(err, ErrScenario) {
+	if _, err := s.Replace(nil); !errors.Is(err, ErrScenario) {
 		t.Fatalf("nil scenario: %v", err)
 	}
 }

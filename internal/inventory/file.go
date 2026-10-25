@@ -1,13 +1,11 @@
 package inventory
 
 import (
-	"bufio"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
 	"os"
-	"path/filepath"
 )
 
 const fileVersion = 1
@@ -147,88 +145,4 @@ func decodeTags(decoder *json.Decoder, limits Limits) ([]Tag, error) {
 		return nil, err
 	}
 	return tags, nil
-}
-
-// SaveFile atomically replaces path with a validated, versioned snapshot.
-func SaveFile(path string, tags []Tag, limits Limits) error {
-	if err := limits.validate(); err != nil {
-		return err
-	}
-	if len(tags) > limits.MaxRecords {
-		return ErrTooManyTags
-	}
-	if _, err := tagMap(tags); err != nil {
-		return err
-	}
-	tags = append([]Tag(nil), tags...)
-	sortTags(tags)
-	for _, tag := range tags {
-		if len(tag.EPC()) > limits.MaxEPCBytes {
-			return fmt.Errorf("%w: %d bytes", ErrInputTooLarge, len(tag.EPC()))
-		}
-	}
-
-	dir := filepath.Dir(path)
-	temp, err := os.CreateTemp(dir, ".inventory-*.tmp")
-	if err != nil {
-		return err
-	}
-	tempName := temp.Name()
-	defer func() { _ = os.Remove(tempName) }()
-	if err := temp.Chmod(0o600); err != nil {
-		_ = temp.Close()
-		return err
-	}
-
-	writer := bufio.NewWriter(&limitedWriter{writer: temp, remaining: limits.MaxInputBytes})
-	if err := writeDocument(writer, tags); err != nil {
-		_ = temp.Close()
-		return err
-	}
-	if err := writer.Flush(); err != nil {
-		_ = temp.Close()
-		return err
-	}
-	if err := temp.Sync(); err != nil {
-		_ = temp.Close()
-		return err
-	}
-	if err := temp.Close(); err != nil {
-		return err
-	}
-	if err := os.Rename(tempName, path); err != nil {
-		return err
-	}
-	directory, err := os.Open(dir)
-	if err != nil {
-		return err
-	}
-	defer func() { _ = directory.Close() }()
-	return directory.Sync()
-}
-
-type limitedWriter struct {
-	writer    io.Writer
-	remaining int64
-}
-
-func (w *limitedWriter) Write(data []byte) (int, error) {
-	if int64(len(data)) > w.remaining {
-		return 0, ErrInputTooLarge
-	}
-	n, err := w.writer.Write(data)
-	w.remaining -= int64(n)
-	return n, err
-}
-
-func writeDocument(writer io.Writer, tags []Tag) error {
-	values := make([]string, len(tags))
-	for i, tag := range tags {
-		values[i] = tag.Hex()
-	}
-	encoder := json.NewEncoder(writer)
-	return encoder.Encode(struct {
-		Version int      `json:"version"`
-		Tags    []string `json:"tags"`
-	}{Version: fileVersion, Tags: values})
 }

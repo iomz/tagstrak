@@ -45,12 +45,6 @@ type Reporter struct {
 // Option configures a Reporter.
 type Option func(*Reporter)
 
-// WithClient replaces the HTTP client, for tests or custom transports. Its
-// redirect policy is replaced so redirects are never followed.
-func WithClient(client *http.Client) Option {
-	return func(r *Reporter) { r.client = client }
-}
-
 // WithHeader sets a function that adds headers, such as authorization, to
 // every request. Secrets belong in its closure, never in the URL.
 func WithHeader(header func(http.Header)) Option {

@@ -116,7 +116,7 @@ func TestKeepaliveAndUpdate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err = s.Replace(replacement); err != nil {
+	if _, err = s.Replace(replacement); err != nil {
 		t.Fatal(err)
 	}
 	clock.advance(100 * time.Millisecond)
@@ -249,7 +249,7 @@ func TestUpdateDoesNotMixReportFragments(t *testing.T) {
 	start(t, peer)
 	first := receive(t, peer)
 	replacement, _ := NewScenario([][]inventory.Tag{tags(t, "0009")}, 1, true, false)
-	if err = s.Replace(replacement); err != nil {
+	if _, err = s.Replace(replacement); err != nil {
 		t.Fatal(err)
 	}
 	second := receive(t, peer)

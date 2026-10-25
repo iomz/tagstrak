@@ -256,15 +256,6 @@ type FieldSpec struct {
 	Max uint64
 }
 
-// GCPLengths returns the company prefix lengths the scheme supports.
-func (s *Scheme) GCPLengths() []int {
-	out := make([]int, 0, len(s.def.Options))
-	for _, opt := range s.def.Options {
-		out = append(out, opt.GCPLength)
-	}
-	return out
-}
-
 // FieldSpecs returns the identity fields for one company prefix length.
 func (s *Scheme) FieldSpecs(gcpLength int) ([]FieldSpec, error) {
 	opt, ok := s.def.Option(gcpLength)

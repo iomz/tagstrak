@@ -8,7 +8,7 @@ Slice 4 measures adaptive overhead, convergence, switch stability, and selection
 
 | Package | Imports | Owns |
 | --- | --- | --- |
-| `internal/filter` | `identity` | `Subject`, `Subscription`, `Matcher`, `Compiler`, `Compile`, `CompileIndex`, `CompileLinear`, `CompileAdaptive`, `Set` |
+| `internal/filter` | `identity` | `Subject`, `Subscription`, `Matcher`, `Compiler`, `Compile`, `CompileIndex`, `CompileLinear`, `CompileAdaptive` |
 | `internal/app/tagstrak` | `filter`, `tdt`, `report` | `SubjectOf` adapter, `MatchingProcessor`, routing to delivery |
 
 `internal/filter` never parses pattern text and never imports the translator; `TestFilterDependsOnlyOnIdentity` enforces that.
@@ -30,7 +30,7 @@ ids := m.Match(subject, buf[:0])
 - Encoding-level patterns see only encodings of their own scheme. They use `Pattern.Bits` where published, which is equivalent to field matching for translated tags, and field matching otherwise.
 - Every compiler rejects empty or duplicate IDs, subscriptions without patterns, unset patterns, more than 64 patterns per subscription, and more than `MaxSubscriptions` (10,000) with the same typed errors.
 - Compiled matchers are immutable and copy their input.
-- `Set` holds the current matcher behind `atomic.Pointer`. `Replace` compiles first and publishes the whole matcher, so readers see the old set or the new one, never a mix; on error the current matcher stays.
+- Matchers are immutable. tagstrak's `SubscriptionTable` compiles a whole new matcher and publishes it with its routes behind one `atomic.Pointer`, so readers see the old set or the new one, never a mix; on error the current matcher stays.
 
 Matched IDs are the hand-off to delivery: `MatchingProcessor` routes them to destinations, described in [report.md](report.md).
 Subscriptions come from the configuration file ([configuration.md](configuration.md)); without one, `cmd/tagstrak` starts with an empty set.
@@ -184,7 +184,7 @@ go test -run '^$' -bench 'Workload|Adaptive' -benchmem -count 6 ./internal/filte
 
 | Candidate | Reason |
 | --- | --- |
-| Splay tree | restructures itself on every read, which breaks immutable lock-free reads under `Set`; v1's own benchmarks put it 10 times behind its trie at 10,000 subscriptions ([benchmarks.md](benchmarks.md)) |
+| Splay tree | restructures itself on every read, which breaks immutable lock-free reads; v1's own benchmarks put it 10 times behind its trie at 10,000 subscriptions ([benchmarks.md](benchmarks.md)) |
 | v1 List | equivalent to the linear matcher |
 | Hash index per exact-prefix depth | one lookup per distinct depth plus an allocation-free key hash; more machinery than the trie for the same pattern shapes |
 | Aho–Corasick or other automata | patterns are fixed-position masks, not substring searches |
@@ -208,7 +208,7 @@ go vet ./...
 Every contract test runs against the linear, index, and adaptive matchers: the `patterns.json` conformance corpus against `Translation.Match`, alternative patterns, ordering, deduplication, caller buffers, compile errors, input copying, and allocation-free matching, including the index's reordering path.
 `TestIndexAgreesWithLinear` compares the matchers on 2,000 fixed-seed random subscription sets drawn from every pattern shape, and `FuzzIndexAgreesWithLinear` does the same from fuzzed input.
 Adaptive decisions are tested deterministically with a fake clock and scripted candidates: warmup, hysteresis at and past the threshold, cooldown, round-robin and full shadows, shadow results kept out of the caller's buffer, and every configuration bound; a race test runs sampled and unsampled calls concurrently.
-Tests also cover the zero `Set`, failed replacement, concurrent replacement under the race detector, and the import boundary.
+Tests also cover the import boundary; replacement is tested with `SubscriptionTable` in `internal/app/tagstrak`.
 
 ```sh
 go test -run '^$' -fuzz '^FuzzIndexAgreesWithLinear$' -fuzztime 2m ./internal/filter

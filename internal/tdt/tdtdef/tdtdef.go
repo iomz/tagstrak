@@ -101,13 +101,3 @@ func (s Scheme) OptionByPartition(partition int) (Option, bool) {
 	}
 	return Option{}, false
 }
-
-// Lookup returns the generated scheme definition with the given name.
-func Lookup(name string) (Scheme, bool) {
-	for _, s := range Schemes {
-		if s.Name == name {
-			return s, true
-		}
-	}
-	return Scheme{}, false
-}

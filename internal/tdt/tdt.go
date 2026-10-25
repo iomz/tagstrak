@@ -161,21 +161,10 @@ func WithDefaultFormat(f Format) Option {
 	return func(t *Translator) { t.defaultFormat = f }
 }
 
-// WithDefaultAFI sets the AFI to assume for non-GS1 data that arrives without
-// one. Without it, such input returns ErrUnrecognisedNonGS1.
-func WithDefaultAFI(afi uint8) Option {
-	return func(t *Translator) {
-		t.defaultAFI = afi
-		t.hasDefaultAFI = true
-	}
-}
-
 // Translator translates tag data. It holds no mutable state and is safe for
 // concurrent use.
 type Translator struct {
 	defaultFormat Format
-	defaultAFI    uint8
-	hasDefaultAFI bool
 }
 
 // New builds a Translator.
@@ -238,10 +227,7 @@ func (t *Translator) Translate(in Input) (Translation, error) {
 		return gs1epc.Decode(in.Bits, bitLen)
 	case FormatISO:
 		if !hasAFI {
-			if !t.hasDefaultAFI {
-				return out, fmt.Errorf("%w: no AFI available", ErrUnrecognisedNonGS1)
-			}
-			afi = t.defaultAFI
+			return out, fmt.Errorf("%w: no AFI available", ErrUnrecognisedNonGS1)
 		}
 		return iso.Decode(in.Bits, bitLen, afi)
 	default:
@@ -313,16 +299,6 @@ func GS1FieldSpecs(scheme identity.SchemeID, gcpLength int) ([]FieldSpec, error)
 		return nil, err
 	}
 	return s.FieldSpecs(gcpLength)
-}
-
-// GS1CompanyPrefixLengths returns the company prefix lengths a GS1 scheme
-// supports.
-func GS1CompanyPrefixLengths(scheme identity.SchemeID) ([]int, error) {
-	s, err := gs1epc.Lookup(scheme)
-	if err != nil {
-		return nil, err
-	}
-	return s.GCPLengths(), nil
 }
 
 // KeyTypeOf returns the business key type a GS1 scheme carries.
