@@ -5,7 +5,7 @@
 #   ERP_TOKEN=... go run ./cmd/tagstrak --config examples/tagstrak/tagstrak.toml
 #
 # Reports go to http://127.0.0.1:9000/rfid; any HTTP endpoint that answers a
-# POST with 2xx can receive them (see docs/report.md for the JSON schema).
+# POST with 2xx can receive them (README.md describes the JSON schema).
 #
 # Settings apply in order: defaults, this file, TAGSTRAK_* environment
 # variables, flags. Secrets come only from env or file sources, never from

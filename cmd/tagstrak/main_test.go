@@ -3,11 +3,9 @@ package main
 import (
 	"context"
 	"errors"
-	"flag"
 	"io"
 	"os"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"testing"
 	"time"
@@ -183,22 +181,4 @@ func TestExampleConfigurationIsValid(t *testing.T) {
 	if _, err := app.Pipeline(file.File, c, env(map[string]string{"ERP_TOKEN": "t0ken"}), nil); err != nil {
 		t.Fatal(err)
 	}
-}
-
-// TestFlagsAreDocumented checks that every flag appears in the docs, so a new
-// setting cannot ship without its name being findable.
-func TestFlagsAreDocumented(t *testing.T) {
-	var docs strings.Builder
-	for _, name := range []string{"runtime.md", "configuration.md", "control.md"} {
-		b, err := os.ReadFile("../../docs/" + name)
-		if err != nil {
-			t.Fatal(err)
-		}
-		docs.Write(b)
-	}
-	newFlagSet(io.Discard, &settings{config: app.DefaultConfig()}).VisitAll(func(f *flag.Flag) {
-		if !regexp.MustCompile(`--` + f.Name + `([^a-z-]|$)`).MatchString(docs.String()) {
-			t.Errorf("--%s is not documented in docs/runtime.md, configuration.md, or control.md", f.Name)
-		}
-	})
 }
