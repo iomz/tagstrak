@@ -10,7 +10,7 @@ import (
 )
 
 func TestParseWorkflows(t *testing.T) {
-	for _, args := range [][]string{{"server", "--inventory", "../../examples/rig/inventory.json"}, {"simulator", "--scenario", "../../examples/rig/scenario.json"}} {
+	for _, args := range [][]string{{"reader", "--inventory", "../../examples/rig/inventory.json", "--shuffle", "--seed", "7"}, {"reader", "--scenario", "../../examples/rig/scenario.json"}} {
 		c, s, err := parse(args, io.Discard)
 		if err != nil || s == nil || c.Emulator.MaxClients != 8 {
 			t.Fatal(c, s, err)
@@ -28,11 +28,17 @@ func TestInvalidInputsBeforeRuntime(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, args := range [][]string{
-		{"client"}, {"server"}, {"simulator", "--scenario", path}, {"server", "--inventory", "missing"},
-		{"server", "--inventory", "../../examples/rig/inventory.json", "--max-clients", "0"},
-		{"server", "--inventory", "../../examples/rig/inventory.json", "--report-interval", "0"},
-		{"server", "--inventory", "../../examples/rig/inventory.json", "--frame-bytes", "4294967296"},
-		{"simulator", "--scenario", t.TempDir()},
+		{"client"}, {"reader"}, {"reader", "--scenario", path}, {"reader", "--inventory", "missing"},
+		{"server", "--inventory", "../../examples/rig/inventory.json"},
+		{"simulator", "--scenario", "../../examples/rig/scenario.json"},
+		{"reader", "--scenario", "../../examples/rig/scenario.json", "--inventory", "../../examples/rig/inventory.json"},
+		{"reader", "--scenario", "../../examples/rig/scenario.json", "--seed", "1"},
+		{"reader", "--scenario", "../../examples/rig/scenario.json", "--shuffle"},
+		{"reader", "--scenario", "../../examples/rig/scenario.json", "extra"},
+		{"reader", "--inventory", "../../examples/rig/inventory.json", "--max-clients", "0"},
+		{"reader", "--inventory", "../../examples/rig/inventory.json", "--report-interval", "0"},
+		{"reader", "--inventory", "../../examples/rig/inventory.json", "--frame-bytes", "4294967296"},
+		{"reader", "--scenario", t.TempDir()},
 	} {
 		if _, _, err := parse(args, io.Discard); err == nil {
 			t.Errorf("accepted %v", args)

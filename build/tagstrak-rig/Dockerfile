@@ -1,7 +1,7 @@
 # Builds the tagstrak-rig test rig. From the repository root:
 #
 #   docker build -f build/tagstrak-rig/Dockerfile -t tagstrak-rig .
-#   docker run --rm -p 5084:5084 tagstrak-rig simulator \
+#   docker run --rm -p 5084:5084 tagstrak-rig reader \
 #     --scenario /examples/scenario.json --listen 0.0.0.0:5084
 FROM golang:1.26.10-alpine AS build
 

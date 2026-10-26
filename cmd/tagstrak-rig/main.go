@@ -19,31 +19,31 @@ import (
 	"github.com/iomz/tagstrak/v2/internal/inventory"
 )
 
-// parse converts server or simulator arguments into a validated application
-// configuration and immutable scenario. It writes help and flag diagnostics to
-// output and returns flag.ErrHelp when no mode or an explicit help flag is given.
+const usage = `Usage: tagstrak-rig reader --scenario FILE [flags]
+       tagstrak-rig reader --inventory FILE [--shuffle] [--seed N] [flags]
+       tagstrak-rig uii epc|iso17360|iso17363 [flags]`
+
+// parse converts reader arguments into a validated application configuration
+// and immutable scenario. It writes help and flag diagnostics to output and
+// returns flag.ErrHelp when no subcommand or an explicit help flag is given.
 func parse(args []string, output io.Writer) (app.Config, *emulator.Scenario, error) {
 	config := app.DefaultConfig()
 	if len(args) == 0 || args[0] == "--help" || args[0] == "-h" {
-		fmt.Fprintln(output, "Usage: tagstrak-rig server --inventory FILE [flags]\n       tagstrak-rig simulator --scenario FILE [flags]\n       tagstrak-rig uii epc|iso17360|iso17363 [flags]")
+		fmt.Fprintln(output, usage)
 		return config, nil, flag.ErrHelp
 	}
-	mode := args[0]
-	if mode != "server" && mode != "simulator" {
-		return config, nil, fmt.Errorf("unknown mode %q", mode)
+	if args[0] != "reader" {
+		return config, nil, fmt.Errorf("unknown subcommand %q", args[0])
 	}
-	flags := flag.NewFlagSet("tagstrak-rig "+mode, flag.ContinueOnError)
+	flags := flag.NewFlagSet("tagstrak-rig reader", flag.ContinueOnError)
 	flags.SetOutput(output)
-	var input string
+	var scenarioPath, inventoryPath string
 	var seed int64
 	var shuffle bool
-	if mode == "server" {
-		flags.StringVar(&input, "inventory", "", "Version-1 inventory JSON file (required)")
-		flags.Int64Var(&seed, "seed", 0, "Deterministic shuffle seed")
-		flags.BoolVar(&shuffle, "shuffle", false, "Shuffle each inventory cycle using the seed")
-	} else {
-		flags.StringVar(&input, "scenario", "", "Version-1 scenario JSON file (required)")
-	}
+	flags.StringVar(&scenarioPath, "scenario", "", "Version-1 scenario JSON file to play")
+	flags.StringVar(&inventoryPath, "inventory", "", "Version-1 inventory JSON file to repeat as one cycle")
+	flags.Int64Var(&seed, "seed", 0, "Shuffle seed for --inventory")
+	flags.BoolVar(&shuffle, "shuffle", false, "Shuffle each --inventory cycle using the seed")
 	flags.StringVar(&config.Emulator.Address, "listen", config.Emulator.Address, "LLRP data-plane host:port")
 	flags.StringVar(&config.ControlSocket, "control-socket", "", "Optional Unix control socket in a private directory")
 	flags.IntVar(&config.Emulator.MaxClients, "max-clients", config.Emulator.MaxClients, "Maximum concurrent LLRP clients (1-128)")
@@ -59,9 +59,18 @@ func parse(args []string, output io.Writer) (app.Config, *emulator.Scenario, err
 	if err := flags.Parse(args[1:]); err != nil {
 		return config, nil, err
 	}
-	if flags.NArg() != 0 || input == "" {
-		return config, nil, errors.New("exactly one input file flag is required; positional arguments are not supported")
+	if flags.NArg() != 0 {
+		return config, nil, fmt.Errorf("unexpected arguments: %v", flags.Args())
 	}
+	if (scenarioPath == "") == (inventoryPath == "") {
+		return config, nil, errors.New("exactly one of --scenario or --inventory is required")
+	}
+	set := map[string]bool{}
+	flags.Visit(func(f *flag.Flag) { set[f.Name] = true })
+	if scenarioPath != "" && (set["seed"] || set["shuffle"]) {
+		return config, nil, errors.New("--seed and --shuffle apply only to --inventory; a scenario sets its own")
+	}
+	input := scenarioPath + inventoryPath
 	if frame > 1<<20 {
 		return config, nil, errors.New("frame budget exceeds maximum")
 	}
@@ -76,7 +85,7 @@ func parse(args []string, output io.Writer) (app.Config, *emulator.Scenario, err
 	if !info.Mode().IsRegular() {
 		return config, nil, errors.New("input must be a regular file")
 	}
-	if mode == "server" {
+	if inventoryPath != "" {
 		tags, err := inventory.LoadFile(input, inventory.DefaultLimits())
 		if err != nil {
 			return config, nil, err
