@@ -1,0 +1,119 @@
+# tagstrak configuration reference.
+#
+# Every scalar setting appears here at its default, so this file runs exactly
+# like no file at all; TestReferenceSetsEveryDefault keeps it that way. Copy
+# the keys you want to change. tagstrak.toml next to this file is a smaller,
+# working example that pairs with the tagstrak-rig scenario.
+#
+# The file is TOML (.toml) or JSON (.json) with the same schema. Decoding is
+# strict: unknown keys, a version other than 1, or a file over 1 MiB stop
+# startup. Durations are Go duration strings such as "5s". A key the file
+# omits keeps its default; an explicit zero is kept.
+#
+# Settings apply in order: defaults, this file, TAGSTRAK_* environment
+# variables, flags. Every flag --x-y has the variable TAGSTRAK_X_Y and the key
+# x_y in its section below. Subscriptions, destinations, and secrets come only
+# from the file.
+version = 1
+
+# The LLRP reader. One tagstrak process serves one reader.
+[reader]
+address = "127.0.0.1:5084"
+# Labels every observation and report event from this reader.
+source = "reader-1"
+# Each dial, DNS included.
+connect_timeout = "5s"
+# One deadline for notification, configuration, and response together.
+handshake_timeout = "5s"
+# Each complete frame; detects silent or stalled readers.
+read_timeout = "30s"
+write_timeout = "5s"
+# Reconnect backoff, doubling from retry_min up to retry_max.
+retry_min = "1s"
+retry_max = "30s"
+# Reconnects for the whole process run; successful sessions do not reset it.
+# When it is spent, tagstrak exits nonzero for its supervisor to restart.
+max_retries = 5
+# Bounds on untrusted reader input.
+max_frame_bytes = 1048576
+max_parameter_bytes = 32768
+max_parameters = 4096
+
+# Read-only /healthz, /readyz, and /metrics. No authentication: keep it on
+# loopback or an operations network.
+[telemetry]
+address = "127.0.0.1:8080"
+
+[runtime]
+# Observations buffered between the reader and processing, 1 to 100,000.
+# Overflow fails the run, so size it for the largest burst.
+queue_capacity = 128
+# Per observation.
+consume_timeout = "5s"
+# Shared deadline for draining observations and reports at shutdown. Keep a
+# supervisor's stop timeout above it.
+shutdown_timeout = "10s"
+
+# Report delivery, per destination: a bounded queue, batches, and retries.
+[report]
+# A full queue drops the newest event and counts it.
+queue_capacity = 10000
+# A batch closes at whichever limit comes first.
+batch_events = 500
+batch_bytes = 1048576
+# A partial batch is sent once its first event is this old.
+flush_interval = "1s"
+# Per delivery attempt.
+request_timeout = "5s"
+# Retries back off from backoff_base, doubling to backoff_max, and stop at
+# max_attempts or when retry_budget is spent, whichever comes first. With
+# these defaults the budget ends them: 8 attempts over about 23 seconds.
+max_attempts = 10
+backoff_base = "200ms"
+backoff_max = "10s"
+retry_budget = "30s"
+
+# The subscription matcher. "index" looks candidates up by pattern prefix;
+# "linear" tests every subscription and is the reference. mode = "adaptive"
+# is experimental and takes a [filter.adaptive] table instead of matcher; see
+# go doc ./internal/filter.
+[filter]
+mode = "single"
+matcher = "index"
+
+# Where subscriptions live. "file": the [[subscriptions]] below, re-read on
+# SIGHUP. "api": a state file that the management API replaces; the file then
+# lists no subscriptions, and [control] is required.
+[subscription_store]
+source = "file"
+# state_file = "/var/lib/tagstrak/subscriptions.json"
+
+# The management API is off unless [control] is present. A Unix socket trusts
+# the same user; a loopback address requires a token of at least 32 bytes.
+# Other addresses are refused.
+# [control]
+# socket = "/run/tagstrak/control.sock"
+# address = "127.0.0.1:9090"
+# [control.token]
+# file = "/run/secrets/tagstrak-control"
+
+# Destinations receive JSON report batches by HTTP POST. A URL must not carry
+# credentials; put them in headers.
+# [[destinations]]
+# name = "erp"
+# url = "https://erp.example/rfid"
+#
+# A secret source is exactly one of env or file; inline values are rejected.
+# A file must be private to its owner and at most 4 KiB. Secrets are read
+# once at startup.
+# [destinations.headers.Authorization]
+# env = "ERP_TOKEN"
+# prefix = "Bearer "
+
+# A subscription matches tags against up to 64 patterns and routes matches to
+# its destinations. Without destinations, matches are only logged at debug
+# level.
+# [[subscriptions]]
+# id = "product"
+# patterns = ["urn:epc:idpat:sgtin:0614141.812345.*"]
+# destinations = ["erp"]
