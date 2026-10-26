@@ -39,7 +39,7 @@ Both commands describe every flag and its default with `--help`.
 From a checkout of this repository, start the emulator with the example scenario:
 
 ```sh
-go run ./cmd/tagstrak-rig simulator --scenario examples/rig/scenario.json
+go run ./cmd/tagstrak-rig reader --scenario examples/rig/scenario.json
 ```
 
 In another terminal, start tagstrak with the example configuration:
@@ -307,10 +307,10 @@ It also generates tag data for scenarios and patterns for subscriptions.
 
 ### Scenarios and inventories
 
-`simulator` plays a scenario: a list of inventory cycles, one report per cycle.
+`reader --scenario` plays a scenario: a list of inventory cycles, one report per cycle.
 
 ```sh
-go run ./cmd/tagstrak-rig simulator --scenario examples/rig/scenario.json --report-interval 1s
+go run ./cmd/tagstrak-rig reader --scenario examples/rig/scenario.json --report-interval 1s
 ```
 
 ```json
@@ -331,17 +331,17 @@ go run ./cmd/tagstrak-rig simulator --scenario examples/rig/scenario.json --repo
 Each tag is a lowercase hexadecimal EPC of 2 to 62 bytes, whole 16-bit words; a tag may appear once per cycle.
 A scenario holds at most 1,024 cycles and 100,000 tags in all.
 
-`server` repeats one inventory instead:
+`reader --inventory` repeats one inventory instead, shuffled with `--shuffle` and `--seed` if asked:
 
 ```sh
-go run ./cmd/tagstrak-rig server --inventory examples/rig/inventory.json
+go run ./cmd/tagstrak-rig reader --inventory examples/rig/inventory.json
 ```
 
 ```json
 {"version": 1, "tags": ["3074257bf7194e4000000001", "3174257bf4499602d2000000"]}
 ```
 
-Runs are reproducible: for the same scenario and seed, every connection receives the same report bytes, and `shuffle` draws its ordering from the seed.
+Runs are reproducible: for the same scenario and seed, every connection receives the same report bytes, and shuffling draws its ordering from the seed.
 Each connection starts at the first cycle; a reconnect starts over.
 
 ### Generate tag data
@@ -368,7 +368,7 @@ With `--control-socket`, tagstrak-rig serves `GET /status` and `PUT /scenario` o
 
 ```sh
 dir=$(mktemp -d /tmp/rig.XXXXXX)
-go run ./cmd/tagstrak-rig simulator --scenario examples/rig/scenario.json --control-socket "$dir/control.sock"
+go run ./cmd/tagstrak-rig reader --scenario examples/rig/scenario.json --control-socket "$dir/control.sock"
 
 curl --unix-socket "$dir/control.sock" -X PUT -H 'Content-Type: application/json' \
   --data-binary @examples/rig/scenario.json http://localhost/scenario
@@ -380,7 +380,7 @@ A replacement takes effect at each connection's next cycle boundary and restarts
 
 ```sh
 docker build -f build/tagstrak-rig/Dockerfile -t tagstrak-rig .
-docker run --rm -p 5084:5084 tagstrak-rig simulator --scenario /examples/scenario.json --listen 0.0.0.0:5084
+docker run --rm -p 5084:5084 tagstrak-rig reader --scenario /examples/scenario.json --listen 0.0.0.0:5084
 ```
 
 The image runs as an unprivileged user and carries the example scenario and inventory under `/examples`.

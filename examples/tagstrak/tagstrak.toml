@@ -1,7 +1,7 @@
 # Example tagstrak configuration, a working pair with the tagstrak-rig example
 # scenario, whose tags match both subscriptions below. From the repository root:
 #
-#   go run ./cmd/tagstrak-rig simulator --scenario examples/rig/scenario.json
+#   go run ./cmd/tagstrak-rig reader --scenario examples/rig/scenario.json
 #   ERP_TOKEN=... go run ./cmd/tagstrak --config examples/tagstrak/tagstrak.toml
 #
 # Reports go to http://127.0.0.1:9000/rfid; any HTTP endpoint that answers a
