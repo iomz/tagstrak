@@ -168,6 +168,7 @@ func TestPatternCompanyPrefixErrors(t *testing.T) {
 		{"urn:epc:idpat:sgtin:06141.*.*", "sgtin", "length"},
 		{"urn:epc:pat:sgtin-96:3.06141X1.*.*", "sgtin-96", "charset"},
 		{"urn:epc:pat:sgtin-96:3.0614141061414106.*.*", "sgtin-96", "length"},
+		{"urn:epc:pat:sgtin-96:3.[1-9].*.*", "sgtin-96", "range-not-allowed"},
 	} {
 		_, err := CompilePattern(tc.pattern)
 		var fe *tdtcore.FieldError
@@ -176,6 +177,13 @@ func TestPatternCompanyPrefixErrors(t *testing.T) {
 		}
 		if fe.Scheme != tc.scheme || fe.Field != "gs1companyprefix" || fe.Rule != tc.rule {
 			t.Errorf("%s: got %s %s %s, want %s gs1companyprefix %s", tc.pattern, fe.Scheme, fe.Field, fe.Rule, tc.scheme, tc.rule)
+		}
+	}
+	// A star company prefix followed by an exact field is a misplaced star,
+	// not a malformed prefix.
+	for _, p := range []string{"urn:epc:idpat:sgtin:*.812345.*", "urn:epc:pat:sgtin-96:3.*.812345.*"} {
+		if _, err := CompilePattern(p); !errors.Is(err, identity.ErrPatternStar) {
+			t.Errorf("%s: error = %v, want ErrPatternStar", p, err)
 		}
 	}
 }

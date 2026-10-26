@@ -27,6 +27,8 @@
 		{"name": "not a pattern uri", "input": "urn:epc:id:sgtin:0614141.812345.6789", "error": "ErrMalformedPattern"},
 		{"name": "unsupported pattern key", "input": "urn:epc:idpat:sgln:0614141.12345.*", "error": "ErrUnsupportedScheme"},
 		{"name": "star not in suffix position", "input": "urn:epc:idpat:sgtin:0614141.*.6789", "error": "ErrPatternStar"},
+		{"name": "star company prefix before an exact field", "input": "urn:epc:pat:sgtin-96:3.*.812345.*", "error": "ErrPatternStar"},
+		{"name": "company prefix range", "input": "urn:epc:pat:sgtin-96:3.[1-9].*.*", "error": "ErrFieldValue", "rule": "range-not-allowed"},
 		{"name": "range in an identity pattern", "input": "urn:epc:idpat:sgtin:0614141.812345.[1-9]", "error": "ErrFieldValue", "rule": "range-not-allowed"},
 		{"name": "wrong field count", "input": "urn:epc:idpat:sgtin:0614141.812345", "error": "ErrMalformedPattern"},
 		{"name": "reversed range", "input": "urn:epc:pat:sgtin-96:3.0614141.812345.[9-1]", "error": "ErrFieldValue", "rule": "range-order"},
