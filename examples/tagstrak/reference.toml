@@ -74,12 +74,24 @@ backoff_max = "10s"
 retry_budget = "30s"
 
 # The subscription matcher. "index" looks candidates up by pattern prefix;
-# "linear" tests every subscription and is the reference. mode = "adaptive"
-# is experimental and takes a [filter.adaptive] table instead of matcher; see
-# go doc ./internal/filter.
+# "linear" tests every subscription and is the reference. Both return the
+# same matches.
 [filter]
 mode = "single"
 matcher = "index"
+
+# mode = "adaptive" is experimental. It replaces matcher with the table below,
+# shown at its defaults, and samples candidates to select the cheapest; the
+# selection changes cost, never results.
+# [filter.adaptive]
+# candidates = ["index", "linear"]  # 2 to 4; the first is selected initially
+# sample_every = 100                # at least 10
+# warmup = 20                       # samples per candidate before any switch
+# window = 50                       # recent samples a decision averages
+# hysteresis = 0.10                 # how much cheaper a challenger must be
+# cooldown = 500                    # sampled calls between switches
+# overhead_budget = 0.05            # shadow time as a fraction of matching time
+# shadow = "sampled"                # "full" also needs experimental = true
 
 # Where subscriptions live. "file": the [[subscriptions]] below, re-read on
 # SIGHUP. "api": a state file that the management API replaces; the file then
