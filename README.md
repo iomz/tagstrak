@@ -100,7 +100,8 @@ Subscriptions match tags with GS1 EPC patterns:
 - `urn:epc:pat:sgtin-96:3.0614141.812345.*` matches one encoding, including its filter value.
 
 A pattern names every field of its scheme.
-Each field is a value or `*`; encoding-level patterns also accept a numeric range such as `[1-500]`.
+Each field is a value or `*`, and a `*` may be followed only by more `*`.
+Encoding-level patterns also accept a numeric range such as `[1-500]` in any field after the company prefix.
 A pattern that does not compile stops startup with the field that is wrong.
 A subscription matches when any of its patterns matches, and may hold up to 64 patterns; a process holds up to 10,000 subscriptions.
 
