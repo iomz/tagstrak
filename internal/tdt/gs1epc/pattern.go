@@ -98,6 +98,14 @@ func compileTagPattern(text string) (identity.Pattern, error) {
 // partition option. scheme is the label the pattern itself uses: the identity
 // key in an ID pattern, the encoding in a tag pattern.
 func companyPrefixError(scheme, value string) error {
+	switch {
+	case isAny(value):
+		// Only an all-star pattern may leave the prefix open; any exact field
+		// after it puts a star before a non-star.
+		return fmt.Errorf("%w: %s company prefix", identity.ErrPatternStar, scheme)
+	case isRange(value):
+		return tdtcore.Field(scheme, "gs1companyprefix", "range-not-allowed", value, "a company prefix range cannot select a partition")
+	}
 	if strings.Trim(value, "0123456789") != "" {
 		return tdtcore.Field(scheme, "gs1companyprefix", "charset", value, "a GS1 company prefix is 6-12 digits")
 	}
