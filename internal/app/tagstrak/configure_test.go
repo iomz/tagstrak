@@ -57,6 +57,35 @@ func TestFixtureSetsEverySetting(t *testing.T) {
 	}
 }
 
+// TestReferenceSetsEveryDefault keeps examples/tagstrak/reference.toml a
+// complete reference: it names every scalar setting, at its default.
+func TestReferenceSetsEveryDefault(t *testing.T) {
+	f, err := configfile.Load("../../../examples/tagstrak/reference.toml")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, section := range []any{f.Reader, f.Telemetry, f.Runtime, f.Report} {
+		v := reflect.ValueOf(section)
+		for i := range v.NumField() {
+			if v.Field(i).IsNil() {
+				t.Errorf("%s.%s is not in reference.toml", v.Type().Name(), v.Type().Field(i).Name)
+			}
+		}
+	}
+	if f.Filter.Mode == nil || f.Filter.Matcher == nil || f.Store.Source == nil {
+		t.Error("reference.toml does not name the filter mode, matcher, and subscription source")
+	}
+	if got := ApplyFile(DefaultConfig(), f); !reflect.DeepEqual(got, DefaultConfig()) {
+		t.Errorf("reference.toml differs from the defaults:\n got %+v\nwant %+v", got, DefaultConfig())
+	}
+	if got := ReportConfig(f); got != report.DefaultConfig() {
+		t.Errorf("reference.toml report settings differ from the defaults: %+v", got)
+	}
+	if f.FilterMode() != configfile.ModeSingle || f.FilterMatcher() != configfile.MatcherIndex || f.SubscriptionSource() != configfile.SourceFile {
+		t.Error("reference.toml filter or subscription source differs from the defaults")
+	}
+}
+
 func TestApplyFileMapsEverySetting(t *testing.T) {
 	if got := ApplyFile(DefaultConfig(), configfile.File{Version: configfile.Version}); !reflect.DeepEqual(got, DefaultConfig()) {
 		t.Fatalf("an empty file changed defaults: %+v", got)
