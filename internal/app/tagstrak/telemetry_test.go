@@ -69,10 +69,10 @@ func TestMetricsExposition(t *testing.T) {
 	}
 }
 
-// TestMetricsAreDocumented keeps docs/runtime.md's metrics table and the
+// TestMetricsAreDocumented keeps README.md's metrics table and the
 // exposed families in step, in both directions.
 func TestMetricsAreDocumented(t *testing.T) {
-	doc, err := os.ReadFile("../../../docs/runtime.md")
+	doc, err := os.ReadFile("../../../README.md")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -82,7 +82,7 @@ func TestMetricsAreDocumented(t *testing.T) {
 	}
 	for _, f := range metricFamilies(fullStatus()) {
 		if !documented[f.name] {
-			t.Errorf("%s is exposed but not in the docs/runtime.md metrics table", f.name)
+			t.Errorf("%s is exposed but not in the README.md metrics table", f.name)
 		}
 		delete(documented, f.name)
 	}

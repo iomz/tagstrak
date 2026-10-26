@@ -108,7 +108,7 @@ func count[T ~uint64 | ~int | ~int64 | ~uint32](v T) string { return strconv.For
 func seconds(d time.Duration) string { return strconv.FormatFloat(d.Seconds(), 'f', -1, 64) }
 
 // metricFamilies lists every family /metrics exposes, in output order.
-// docs/runtime.md documents each one; TestMetricsAreDocumented keeps the two
+// README.md documents each one; TestMetricsAreDocumented keeps the two
 // in step.
 func metricFamilies(s Status) []metricFamily {
 	families := []metricFamily{
