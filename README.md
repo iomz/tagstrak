@@ -31,7 +31,7 @@ go install github.com/iomz/tagstrak/v2/cmd/tagstrak-rig@latest
 ```
 
 The module path is `github.com/iomz/tagstrak/v2`.
-`go.mod` sets the Go 1.26.10 toolchain as the floor.
+Go 1.23.2 or later builds it, but build releases with Go 1.26.10 or later, the toolchain `go.mod` names, which carries the current security fixes.
 Both commands describe every flag and its default with `--help`.
 
 ## Quick start
@@ -147,7 +147,7 @@ Delivery is at-least-once while the process runs:
 - **Duplicates:** a retry after a timeout can repeat a batch the destination already committed, so receivers deduplicate on the event `id`.
 - **Ordering:** first in, first out per destination; none across destinations.
 - **Retries:** 2xx is success; 408, 425, 429, 5xx, and transport errors are retried with backoff, honouring `Retry-After`; anything else is a final failure. With the defaults, a destination may be down for about 23 seconds without losing a batch.
-- **Loss:** only on a full queue, a final failure, a crash, or the shutdown deadline. Each is counted per destination; undelivered reports at shutdown make tagstrak exit nonzero.
+- **Loss:** only on a full queue, a final failure, the shutdown deadline, or a crash. The first three are counted per destination, and undelivered reports at shutdown make tagstrak exit nonzero. A crash loses whatever is queued in memory without counting it.
 
 Redirects are never followed, TLS is always verified against the system roots, and destination URLs never appear in logs, errors, or metrics.
 Put credentials in header secrets, never in the URL.

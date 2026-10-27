@@ -11,8 +11,10 @@
 # omits keeps its default; an explicit zero is kept.
 #
 # Settings apply in order: defaults, this file, TAGSTRAK_* environment
-# variables, flags. Every flag --x-y has the variable TAGSTRAK_X_Y and the key
-# x_y in its section below. Subscriptions, destinations, and secrets come only
+# variables, flags. Every flag --x-y has the environment variable
+# TAGSTRAK_X_Y; tagstrak --help lists the flags, and the keys below are named
+# by section, so --reader is [reader] address and --queue-capacity is
+# [runtime] queue_capacity. Subscriptions, destinations, and secrets come only
 # from the file.
 version = 1
 
@@ -80,8 +82,8 @@ retry_budget = "30s"
 mode = "single"
 matcher = "index"
 
-# mode = "adaptive" is experimental. It replaces matcher with the table below,
-# shown at its defaults, and samples candidates to select the cheapest; the
+# mode = "adaptive" is experimental. It replaces matcher, which must then be
+# removed, with the table below, shown at its defaults, and samples candidates to select the cheapest; the
 # selection changes cost, never results.
 # [filter.adaptive]
 # candidates = ["index", "linear"]  # 2 to 4; the first is selected initially

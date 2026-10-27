@@ -7,17 +7,24 @@ When a repository’s documentation and its existing code disagree, follow the c
 
 ## Checks
 
-Every pull request runs these on Go 1.26.10 and 1.27.3, and they must pass locally before you push:
+`.github/workflows/test.yml` runs these on every pull request, and they must pass locally before you push.
+The `test` job runs on Go 1.26.10 and 1.27.3, except `staticcheck`, which runs on Go 1.26.10 only because v0.8.1 cannot read Go 1.27 export data:
 
 ```sh
 test -z "$(gofmt -l .)"
 go mod tidy -diff
 go run ./tools/tdtsync && go generate ./internal/tdt/... && git diff --exit-code
 go vet ./...
-go run honnef.co/go/tools/cmd/staticcheck@v0.8.1 ./...   # Go 1.26.10 only
+go run honnef.co/go/tools/cmd/staticcheck@v0.8.1 ./...
 go run golang.org/x/vuln/cmd/govulncheck@v1.8.0 ./...
 go test -race ./...
+```
+
+The separate `image` job builds the tagstrak-rig image and runs it once:
+
+```sh
 docker build -f build/tagstrak-rig/Dockerfile -t tagstrak-rig .
+docker run --rm tagstrak-rig uii epc --scheme sgtin-96 --company-prefix 0614141 --item-ref 812345 --serial 1
 ```
 
 Analysis tools are pinned and run with `go run`, so they stay out of `go.mod`.
@@ -45,11 +52,11 @@ Bump a pin deliberately, after the new release has been out for a while.
 
 ## Invariants
 
-- `go.mod` declares `go 1.23.2`, so newer language and library features such as `testing.T.Context` and `sync.WaitGroup.Go` are unavailable.
+- `go.mod` declares `go 1.23.2`, the oldest Go that builds the module, and `toolchain go1.26.10`, which development and CI use. Code must stay within Go 1.23: `go vet` rejects newer standard-library APIs, such as `testing.T.Context` (Go 1.24) and `sync.WaitGroup.Go` (Go 1.25).
 - Every budget is bounded: queues, frames, bodies, connections, retries, and timeouts have explicit limits, and overflow is a counted, visible failure.
 - Constructors validate without I/O or goroutines, and every `Run` joins the goroutines it starts. Each package that starts goroutines has a `TestMain` with `goleak.VerifyTestMain`.
 - Secrets travel only as `config.Secret` and are never logged, returned, or put in URLs.
-- New third-party dependencies need a reason recorded on the issue; today there are only `BurntSushi/toml` and, in tests, `goleak`.
+- New third-party dependencies need a reason recorded on the issue; today the direct dependencies are `BurntSushi/toml` and, in tests, `goleak`.
 - Parsers of untrusted input have fuzz targets; commit any input that finds a bug under the package's `testdata/fuzz/`. CI runs only the seeds, so fuzz a changed parser by hand, for example `go test -run '^$' -fuzz '^FuzzDecodeTOML$' -fuzztime 2m ./internal/config`.
 - These tests keep the user documentation honest; update the documentation rather than the test:
   - `TestMetricsAreDocumented`: the `README.md` metrics table matches `/metrics`.
@@ -62,14 +69,14 @@ GS1 Tag Data Translation artefacts are vendored and pinned:
 
 ```sh
 go run ./tools/tdtsync                          # verify vendored files against the lock (offline)
-go run ./tools/tdtsync -update -commit <sha>    # deliberate upgrade; review the regenerated Go in the same commit
+go run ./tools/tdtsync -update -commit "$TDT_COMMIT"    # deliberate upgrade; review the regenerated Go in the same commit
 go generate ./internal/tdt/...                  # offline and deterministic
 ```
 
 The v1 comparison benchmark runs on one otherwise idle machine and never modifies the `v1.0.0` tag:
 
 ```sh
-go run ./tools/benchrun -out results/<date>-<purpose> -count 10 -e2e-runs 10
+go run ./tools/benchrun -out results/2026-10-24-final -count 10 -e2e-runs 10   # name the directory by date and purpose
 ```
 
 ## Workflow
