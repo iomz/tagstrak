@@ -62,12 +62,15 @@ func parse(args []string, output io.Writer) (app.Config, *emulator.Scenario, err
 	if flags.NArg() != 0 {
 		return config, nil, fmt.Errorf("unexpected arguments: %v", flags.Args())
 	}
-	if (scenarioPath == "") == (inventoryPath == "") {
-		return config, nil, errors.New("exactly one of --scenario or --inventory is required")
-	}
 	set := map[string]bool{}
 	flags.Visit(func(f *flag.Flag) { set[f.Name] = true })
-	if scenarioPath != "" && (set["seed"] || set["shuffle"]) {
+	if set["scenario"] == set["inventory"] {
+		return config, nil, errors.New("exactly one of --scenario or --inventory is required")
+	}
+	if scenarioPath == "" && inventoryPath == "" {
+		return config, nil, errors.New("the input file path is empty")
+	}
+	if set["scenario"] && (set["seed"] || set["shuffle"]) {
 		return config, nil, errors.New("--seed and --shuffle apply only to --inventory; a scenario sets its own")
 	}
 	input := scenarioPath + inventoryPath

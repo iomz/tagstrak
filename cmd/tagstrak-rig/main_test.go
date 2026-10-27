@@ -35,6 +35,8 @@ func TestInvalidInputsBeforeRuntime(t *testing.T) {
 		{"reader", "--scenario", "../../examples/rig/scenario.json", "--seed", "1"},
 		{"reader", "--scenario", "../../examples/rig/scenario.json", "--shuffle"},
 		{"reader", "--scenario", "../../examples/rig/scenario.json", "extra"},
+		{"reader", "--scenario", "", "--inventory", "../../examples/rig/inventory.json"},
+		{"reader", "--inventory", ""},
 		{"reader", "--inventory", "../../examples/rig/inventory.json", "--max-clients", "0"},
 		{"reader", "--inventory", "../../examples/rig/inventory.json", "--report-interval", "0"},
 		{"reader", "--inventory", "../../examples/rig/inventory.json", "--frame-bytes", "4294967296"},
